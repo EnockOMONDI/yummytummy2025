@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create PNG Placeholders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        button {
+            display: block;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>PNG Placeholder Generator</h1>
+    <p>Click the buttons below to generate and download PNG placeholders.</p>
+    
+    <h2>Logo</h2>
+    <canvas id="logo" width="200" height="80"></canvas>
+    <button onclick="downloadCanvas('logo', 'logo.png')">Download Logo</button>
+    
+    <h2>Background Slide</h2>
+    <canvas id="bgSlide" width="800" height="600"></canvas>
+    <button onclick="downloadCanvas('bgSlide', 'bg-slide.png')">Download Background Slide</button>
+    
+    <h2>Product Extra</h2>
+    <canvas id="productExtra" width="300" height="400"></canvas>
+    <button onclick="downloadCanvas('productExtra', 'product-extra.png')">Download Product Extra</button>
+    
+    <h2>Product 1</h2>
+    <canvas id="product1" width="300" height="400"></canvas>
+    <button onclick="downloadCanvas('product1', 'product-1.png')">Download Product 1</button>
+    
+    <h2>Process Images</h2>
+    <canvas id="process1" width="200" height="200"></canvas>
+    <button onclick="downloadCanvas('process1', 'process-1.png')">Download Process 1</button>
+    
+    <canvas id="process2" width="200" height="200"></canvas>
+    <button onclick="downloadCanvas('process2', 'process-2.png')">Download Process 2</button>
+    
+    <canvas id="process3" width="200" height="200"></canvas>
+    <button onclick="downloadCanvas('process3', 'process-3.png')">Download Process 3</button>
+    
+    <h2>Testimonial</h2>
+    <canvas id="testimonial1" width="150" height="150"></canvas>
+    <button onclick="downloadCanvas('testimonial1', 'testimonial-1.png')">Download Testimonial 1</button>
+    
+    <h2>Free Delivery Banner</h2>
+    <canvas id="freeDelivery" width="400" height="100"></canvas>
+    <button onclick="downloadCanvas('freeDelivery', 'free-delivery.png')">Download Free Delivery Banner</button>
+    
+    <script>
+        // Function to draw on canvas
+        function drawCanvases() {
+            // Logo
+            const logoCtx = document.getElementById('logo').getContext('2d');
+            logoCtx.fillStyle = '#000000';
+            logoCtx.font = 'bold 30px Arial';
+            logoCtx.fillText('MASLOVE', 40, 50);
+            
+            // Background Slide
+            const bgSlideCtx = document.getElementById('bgSlide').getContext('2d');
+            bgSlideCtx.fillStyle = '#f5f2ed';
+            bgSlideCtx.fillRect(0, 0, 800, 600);
+            bgSlideCtx.fillStyle = '#000000';
+            bgSlideCtx.font = 'bold 60px Arial';
+            bgSlideCtx.fillText('MASLOVE', 250, 300);
+            
+            // Product Extra
+            const productExtraCtx = document.getElementById('productExtra').getContext('2d');
+            productExtraCtx.fillStyle = '#f5f2ed';
+            productExtraCtx.fillRect(0, 0, 300, 400);
+            
+            // Draw jar
+            productExtraCtx.fillStyle = '#ffffff';
+            productExtraCtx.fillRect(75, 100, 150, 200);
+            productExtraCtx.strokeStyle = '#000000';
+            productExtraCtx.lineWidth = 2;
+            productExtraCtx.strokeRect(75, 100, 150, 200);
+            
+            // Draw lid
+            productExtraCtx.fillStyle = '#000000';
+            productExtraCtx.fillRect(90, 80, 120, 20);
+            
+            // Draw label
+            productExtraCtx.fillStyle = '#ffffff';
+            productExtraCtx.fillRect(90, 150, 120, 100);
+            productExtraCtx.strokeStyle = '#000000';
+            productExtraCtx.strokeRect(90, 150, 120, 100);
+            
+            // Draw text
+            productExtraCtx.fillStyle = '#000000';
+            productExtraCtx.font = 'bold 16px Arial';
+            productExtraCtx.fillText('MASLOVE', 110, 180);
+            productExtraCtx.font = '12px Arial';
+            productExtraCtx.fillText('Extra Zmielone', 110, 200);
+            productExtraCtx.fillText('400g', 140, 220);
+            
+            // Product 1
+            const product1Ctx = document.getElementById('product1').getContext('2d');
+            product1Ctx.fillStyle = '#f5f2ed';
+            product1Ctx.fillRect(0, 0, 300, 400);
+            
+            // Draw jar
+            product1Ctx.fillStyle = '#ffffff';
+            product1Ctx.fillRect(75, 100, 150, 200);
+            product1Ctx.strokeStyle = '#000000';
+            product1Ctx.lineWidth = 2;
+            product1Ctx.strokeRect(75, 100, 150, 200);
+            
+            // Draw lid
+            product1Ctx.fillStyle = '#000000';
+            product1Ctx.fillRect(90, 80, 120, 20);
+            
+            // Draw label
+            product1Ctx.fillStyle = '#ffffff';
+            product1Ctx.fillRect(90, 150, 120, 100);
+            product1Ctx.strokeStyle = '#000000';
+            product1Ctx.strokeRect(90, 150, 120, 100);
+            
+            // Draw text
+            product1Ctx.fillStyle = '#000000';
+            product1Ctx.font = 'bold 16px Arial';
+            product1Ctx.fillText('MASLOVE', 110, 180);
+            product1Ctx.font = '12px Arial';
+            product1Ctx.fillText('Krem z nerkowców', 100, 200);
+            product1Ctx.fillText('290g', 140, 220);
+            
+            // Process Images
+            const processCtxs = [
+                document.getElementById('process1').getContext('2d'),
+                document.getElementById('process2').getContext('2d'),
+                document.getElementById('process3').getContext('2d')
+            ];
+            
+            const processLabels = ['Selection', 'Production', 'Store'];
+            
+            processCtxs.forEach((ctx, index) => {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 200, 200);
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 10, 180, 180);
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText(processLabels[index], 60, 100);
+            });
+            
+            // Testimonial
+            const testimonialCtx = document.getElementById('testimonial1').getContext('2d');
+            testimonialCtx.fillStyle = '#f5f2ed';
+            testimonialCtx.beginPath();
+            testimonialCtx.arc(75, 75, 70, 0, Math.PI * 2);
+            testimonialCtx.fill();
+            testimonialCtx.fillStyle = '#000000';
+            testimonialCtx.font = '14px Arial';
+            testimonialCtx.fillText('Testimonial', 45, 75);
+            
+            // Free Delivery Banner
+            const freeDeliveryCtx = document.getElementById('freeDelivery').getContext('2d');
+            freeDeliveryCtx.fillStyle = '#000000';
+            freeDeliveryCtx.fillRect(0, 0, 400, 100);
+            freeDeliveryCtx.fillStyle = '#ffffff';
+            freeDeliveryCtx.font = 'bold 24px Arial';
+            freeDeliveryCtx.fillText('Darmowa dostawa', 100, 60);
+        }
+        
+        // Function to download canvas as PNG
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Draw canvases when page loads
+        window.onload = drawCanvases;
+    </script>
+</body>
+</html>

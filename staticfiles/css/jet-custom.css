@@ -1,0 +1,220 @@
+/* Custom CSS for Django Jet Reboot with Maslove brand colors */
+
+:root {
+    --primary-color: #593500;
+    --secondary-color: #ffffff;
+    --accent-color: #f5f2ed;
+    --highlight-color: #ffc107;
+    --text-color: #333333;
+    --light-gray: #f7f7f7;
+    --medium-gray: #e0e0e0;
+    --dark-gray: #666666;
+    --yellow: #ffc107;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--primary-color);
+}
+
+.sidebar-menu-item.active > a {
+    background-color: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+.sidebar-menu-item > a:hover {
+    background-color: rgba(255, 193, 7, 0.2);
+}
+
+.sidebar-menu-item-icon {
+    color: var(--secondary-color);
+}
+
+.sidebar-menu-item.active .sidebar-menu-item-icon {
+    color: var(--primary-color);
+}
+
+/* Top navigation */
+.top-nav {
+    background-color: var(--secondary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.top-user-tools-welcome {
+    color: var(--primary-color);
+}
+
+.top-user-tools-welcome-msg {
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.button, input[type=submit], input[type=button], .object-tools a {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover, .object-tools a:hover {
+    background-color: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+.button.default, input[type=submit].default {
+    background-color: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+.button.default:hover, input[type=submit].default:hover {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+/* Links */
+a:link, a:visited {
+    color: var(--primary-color);
+}
+
+a:hover {
+    color: var(--highlight-color);
+}
+
+/* Tables */
+thead th {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.row1 {
+    background-color: var(--secondary-color);
+}
+
+.row2 {
+    background-color: var(--accent-color);
+}
+
+/* Form elements */
+.module h2, .module caption, .inline-group h2 {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.module {
+    background-color: var(--secondary-color);
+    border: 1px solid var(--medium-gray);
+}
+
+/* Dashboard */
+.dashboard .module table th {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.dashboard .module table td a {
+    color: var(--primary-color);
+}
+
+.dashboard .module table td a:hover {
+    color: var(--highlight-color);
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+}
+
+.breadcrumbs a {
+    color: var(--primary-color);
+}
+
+.breadcrumbs a:hover {
+    color: var(--highlight-color);
+}
+
+/* Messages */
+.messagelist li.success {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #3c763d;
+}
+
+.messagelist li.warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+
+.messagelist li.error {
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    color: #a94442;
+}
+
+/* Tabs */
+.tab-content {
+    background-color: var(--secondary-color);
+}
+
+.tab-link {
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+}
+
+.tab-link.selected {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.tab-link:hover {
+    background-color: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+/* Logo */
+.branding-logo {
+    max-height: 50px;
+    margin-right: 10px;
+}
+
+/* Dashboard modules */
+.dashboard-module {
+    background-color: var(--secondary-color);
+    border: 1px solid var(--medium-gray);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(89, 53, 0, 0.1);
+}
+
+.dashboard-module-header {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border-radius: 4px 4px 0 0;
+}
+
+.dashboard-module-content {
+    padding: 15px;
+}
+
+/* Recent actions */
+.recent-actions li {
+    border-bottom: 1px solid var(--medium-gray);
+    padding: 8px 0;
+}
+
+.recent-actions .action-time {
+    color: var(--dark-gray);
+}
+
+.recent-actions .action-description {
+    color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .sidebar {
+        width: 100%;
+    }
+    
+    .content {
+        margin-left: 0;
+    }
+}

@@ -1,0 +1,21 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'maslove_store/css/jet-custom.css' %}">
+    <link rel="shortcut icon" href="{% static 'maslove_store/img/favicon.ico' %}">
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            <img src="{% static 'maslove_store/img/logo.svg' %}" alt="Maslove" class="branding-logo">
+            {{ site_header|default:_('Django administration') }}
+        </a>
+    </h1>
+{% endblock %}
+
+{% block welcome-msg %}
+    <span class="top-user-tools-welcome-msg">Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong> to Maslove Admin.</span>
+{% endblock %}

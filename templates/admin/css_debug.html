@@ -1,0 +1,123 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1>CSS Debug Information</h1>
+    
+    <h2>Loaded CSS Files (in order)</h2>
+    <ul id="loaded-css-files">
+        <!-- This will be populated by JavaScript -->
+    </ul>
+    
+    <h2>CSS Variables</h2>
+    <div id="css-variables">
+        <!-- This will be populated by JavaScript -->
+    </div>
+    
+    <h2>Element Styles</h2>
+    <div>
+        <h3>Header</h3>
+        <pre id="header-styles"></pre>
+        
+        <h3>Breadcrumbs</h3>
+        <pre id="breadcrumbs-styles"></pre>
+        
+        <h3>Module Headers</h3>
+        <pre id="module-header-styles"></pre>
+        
+        <h3>Buttons</h3>
+        <pre id="button-styles"></pre>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all loaded stylesheets
+        const styleSheets = Array.from(document.styleSheets);
+        const loadedCssFiles = document.getElementById('loaded-css-files');
+        
+        styleSheets.forEach(sheet => {
+            try {
+                const href = sheet.href || 'Inline Style';
+                const li = document.createElement('li');
+                li.textContent = href;
+                loadedCssFiles.appendChild(li);
+            } catch (e) {
+                // CORS might prevent accessing some stylesheets
+                const li = document.createElement('li');
+                li.textContent = 'Access denied (CORS): ' + e.message;
+                loadedCssFiles.appendChild(li);
+            }
+        });
+        
+        // Get computed styles for various elements
+        const header = document.getElementById('header');
+        const breadcrumbs = document.querySelector('div.breadcrumbs');
+        const moduleHeader = document.querySelector('.module h2');
+        const button = document.querySelector('.button');
+        
+        if (header) {
+            const headerStyles = window.getComputedStyle(header);
+            document.getElementById('header-styles').textContent = 
+                `background-color: ${headerStyles.backgroundColor}\n` +
+                `color: ${headerStyles.color}\n` +
+                `padding: ${headerStyles.padding}\n` +
+                `margin: ${headerStyles.margin}\n` +
+                `border: ${headerStyles.border}`;
+        }
+        
+        if (breadcrumbs) {
+            const breadcrumbsStyles = window.getComputedStyle(breadcrumbs);
+            document.getElementById('breadcrumbs-styles').textContent = 
+                `background-color: ${breadcrumbsStyles.backgroundColor}\n` +
+                `color: ${breadcrumbsStyles.color}\n` +
+                `padding: ${breadcrumbsStyles.padding}\n` +
+                `margin: ${breadcrumbsStyles.margin}\n` +
+                `border: ${breadcrumbsStyles.border}`;
+        }
+        
+        if (moduleHeader) {
+            const moduleHeaderStyles = window.getComputedStyle(moduleHeader);
+            document.getElementById('module-header-styles').textContent = 
+                `background-color: ${moduleHeaderStyles.backgroundColor}\n` +
+                `color: ${moduleHeaderStyles.color}\n` +
+                `padding: ${moduleHeaderStyles.padding}\n` +
+                `margin: ${moduleHeaderStyles.margin}\n` +
+                `border: ${moduleHeaderStyles.border}`;
+        }
+        
+        if (button) {
+            const buttonStyles = window.getComputedStyle(button);
+            document.getElementById('button-styles').textContent = 
+                `background-color: ${buttonStyles.backgroundColor}\n` +
+                `color: ${buttonStyles.color}\n` +
+                `padding: ${buttonStyles.padding}\n` +
+                `margin: ${buttonStyles.margin}\n` +
+                `border: ${buttonStyles.border}`;
+        }
+        
+        // Get CSS variables
+        const cssVariables = document.getElementById('css-variables');
+        const rootStyles = window.getComputedStyle(document.documentElement);
+        const variables = [
+            '--primary-color',
+            '--secondary-color',
+            '--accent-color',
+            '--highlight-color',
+            '--text-color',
+            '--light-gray',
+            '--medium-gray',
+            '--dark-gray',
+            '--yellow'
+        ];
+        
+        variables.forEach(variable => {
+            const value = rootStyles.getPropertyValue(variable);
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>${variable}</strong>: ${value}`;
+            cssVariables.appendChild(div);
+        });
+    });
+</script>
+{% endblock %}

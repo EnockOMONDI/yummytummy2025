@@ -1,0 +1,9 @@
+{% extends "admin/login.html" %}
+{% load static %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <img src="{% static 'maslove_store/img/logo.svg' %}" alt="Maslove" style="max-height: 60px; margin-right: 10px;">
+        <span>Maslove Admin</span>
+    </h1>
+{% endblock %}
