@@ -186,6 +186,60 @@ def cart_remove(request, product_id):
 
     return redirect('yummytummy_store:cart_detail')
 
+@require_POST
+def cart_update(request, cart_key):
+    """Update quantity of a specific cart item using cart key"""
+    form = CartAddProductForm(request.POST)
+
+    if form.is_valid():
+        cd = form.cleaned_data
+
+        if 'cart' in request.session:
+            cart = request.session['cart']
+
+            if cart_key in cart:
+                # Update the quantity for this specific cart item
+                cart[cart_key]['quantity'] = cd['quantity']
+
+                # Mark the session as modified
+                request.session.modified = True
+
+                item_name = cart[cart_key].get('name', 'Item')
+                messages.success(request, f'{item_name} quantity updated to {cd["quantity"]}.')
+            else:
+                messages.error(request, 'Item not found in cart.')
+        else:
+            messages.error(request, 'Cart is empty.')
+    else:
+        # Add error messages for form validation failures
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f'Error in {field}: {error}')
+
+    return redirect('yummytummy_store:cart_detail')
+
+def cart_remove_item(request, cart_key):
+    """Remove a specific cart item using cart key"""
+    if 'cart' in request.session:
+        cart = request.session['cart']
+
+        if cart_key in cart:
+            # Get the item name before removing it
+            item_name = cart[cart_key].get('name', 'Item')
+
+            # Remove the specific cart item
+            del cart[cart_key]
+
+            # Mark the session as modified
+            request.session.modified = True
+            messages.info(request, f'{item_name} removed from your cart.')
+        else:
+            messages.error(request, 'Item not found in cart.')
+    else:
+        messages.error(request, 'Cart is empty.')
+
+    return redirect('yummytummy_store:cart_detail')
+
 def cart_detail(request):
     """View the cart contents"""
     # Ensure the cart exists in the session

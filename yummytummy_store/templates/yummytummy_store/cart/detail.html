@@ -35,11 +35,11 @@
                 </div>
                 <div class="cart-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
                 <div class="cart-quantity">
-                    <form action="{% url 'yummytummy_store:cart_add' item.id %}" method="post" class="update-form">
+                    <form action="{% url 'yummytummy_store:cart_update' item.cart_key %}" method="post" class="update-form">
                         {% csrf_token %}
                         <div class="quantity-selector">
                             <button type="button" class="minus">-</button>
-                            <input type="text" name="quantity" value="{{ item.quantity }}">
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
                             <button type="button" class="plus">+</button>
                         </div>
                         <input type="hidden" name="update" value="True">
@@ -48,7 +48,7 @@
                 </div>
                 <div class="cart-subtotal">KSh {{ item.subtotal|floatformat:"2"|intcomma }}</div>
                 <div class="cart-actions">
-                    <a href="{% url 'yummytummy_store:cart_remove' item.id %}" class="remove-btn">
+                    <a href="{% url 'yummytummy_store:cart_remove_item' item.cart_key %}" class="remove-btn">
                         <i class="fas fa-trash"></i> Remove
                     </a>
                 </div>
@@ -135,4 +135,53 @@
         {% endif %}
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize quantity selectors for cart items
+    const quantitySelectors = document.querySelectorAll('.quantity-selector');
+
+    quantitySelectors.forEach(selector => {
+        const minusBtn = selector.querySelector('.minus');
+        const plusBtn = selector.querySelector('.plus');
+        const quantityInput = selector.querySelector('.quantity-input');
+
+        if (minusBtn && plusBtn && quantityInput) {
+            minusBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                    animateQuantityChange(quantityInput);
+                }
+            });
+
+            plusBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+                animateQuantityChange(quantityInput);
+            });
+
+            // Ensure minimum value
+            quantityInput.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                if (isNaN(value) || value < 1) {
+                    this.value = 1;
+                }
+            });
+        }
+    });
+
+    function animateQuantityChange(input) {
+        input.style.transform = 'scale(1.1)';
+        input.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+
+        setTimeout(() => {
+            input.style.transform = 'scale(1)';
+            input.style.backgroundColor = '';
+        }, 200);
+    }
+});
+</script>
 {% endblock %}

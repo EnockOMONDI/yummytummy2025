@@ -18,6 +18,10 @@ urlpatterns = [
     path('cart/add/<int:product_id>/', views.cart_add, name='cart_add'),
     path('cart/remove/<int:product_id>/', views.cart_remove, name='cart_remove'),
 
+    # Cart URLs with cart key support (for variants)
+    path('cart/update/<str:cart_key>/', views.cart_update, name='cart_update'),
+    path('cart/remove-item/<str:cart_key>/', views.cart_remove_item, name='cart_remove_item'),
+
     # Coupon URLs
     path('coupon/apply/', views.coupon_apply, name='coupon_apply'),
     path('coupon/remove/', views.coupon_remove, name='coupon_remove'),

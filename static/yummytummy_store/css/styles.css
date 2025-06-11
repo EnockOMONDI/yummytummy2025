@@ -965,6 +965,83 @@ ul {
     font-weight: bold;
 }
 
+/* Cart Update Functionality Styles */
+.update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.update-form .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+}
+
+.update-form .quantity-selector button {
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--medium-gray);
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.update-form .quantity-selector button:hover {
+    background-color: var(--yellow);
+    border-color: var(--primary-color);
+}
+
+.update-form .quantity-input {
+    width: 60px;
+    text-align: center;
+    padding: 5px;
+    border: 1px solid var(--medium-gray);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.update-form .quantity-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(89,53,0,0.1);
+}
+
+.update-btn {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.update-btn:hover {
+    background-color: var(--dark-gray);
+    transform: translateY(-1px);
+}
+
+.remove-btn {
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+    color: #c82333;
+    text-decoration: underline;
+}
+
 /* Blog Section */
 .blog-section {
     padding: 80px 0;
@@ -1323,6 +1400,27 @@ ul {
 
     .hero-expanded {
         padding: 15px 0;
+    }
+
+    /* Cart Update Mobile */
+    .update-form .quantity-selector {
+        gap: 3px;
+    }
+
+    .update-form .quantity-selector button {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+
+    .update-form .quantity-input {
+        width: 50px;
+        font-size: 0.9rem;
+    }
+
+    .update-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
     }
 }
 
