@@ -42,12 +42,12 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('price', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('quantity', models.PositiveIntegerField(default=1)),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='maslove_store.order')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='order_items', to='maslove_store.product')),
+                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='yummytummy_store.order')),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='order_items', to='yummytummy_store.product')),
             ],
         ),
         migrations.AddIndex(
             model_name='order',
-            index=models.Index(fields=['-created'], name='maslove_sto_created_65181b_idx'),
+            index=models.Index(fields=['-created'], name='yummytummy_sto_created_65181b_idx'),
         ),
     ]

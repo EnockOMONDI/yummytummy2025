@@ -50,8 +50,8 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('used_at', models.DateTimeField(auto_now_add=True)),
                 ('discount_amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('coupon', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='usages', to='maslove_store.coupon')),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='coupon_usages', to='maslove_store.order')),
+                ('coupon', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='usages', to='yummytummy_store.coupon')),
+                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='coupon_usages', to='yummytummy_store.order')),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='coupon_usages', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='order',
             name='coupon',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='orders', to='maslove_store.coupon'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='orders', to='yummytummy_store.coupon'),
         ),
         migrations.AlterUniqueTogether(
             name='couponusage',
