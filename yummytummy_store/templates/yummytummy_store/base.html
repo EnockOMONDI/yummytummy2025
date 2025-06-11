@@ -1,0 +1,125 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Peanut Butter 100% Nuts | YummyTummy Shop{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'yummytummy_store/css/normalize.css' %}">
+    <link rel="stylesheet" href="{% static 'yummytummy_store/css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="top-header">
+            <div class="container">
+                <nav class="top-nav">
+                    <ul class="main-menu">
+                        <li><a href="{% url 'yummytummy_store:home' %}">HOME</a></li>
+                        <li><a href="{% url 'yummytummy_store:about' %}">ABOUT</a></li>
+                        <li><a href="{% url 'yummytummy_store:product_list' %}">SHOP</a></li>
+                        <li><a href="#">BLOG</a></li>
+                        <li><a href="#">RECIPES</a></li>
+                    </ul>
+                    <a href="{% url 'yummytummy_store:home' %}" class="logo">
+                        <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="Logo YummyTummy">
+                    </a>
+                    <ul class="secondary-menu">
+                        <li><a href="#">BUSINESS COOPERATION</a></li>
+                        <li><a href="#"><img src="{% static 'yummytummy_store/img/eu-flag.svg' %}" alt="EU Flag"></a></li>
+                        <li><a href="#">MY ACCOUNT</a></li>
+                        <li class="cart-icon">
+                            <a href="{% url 'yummytummy_store:cart_detail' %}">
+                                <span class="cart-count">{{ cart_items_count }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="mobile-header">
+            <a href="{% url 'yummytummy_store:home' %}" class="logo">
+                <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="Logo YummyTummy">
+            </a>
+            <div class="mobile-icons">
+                <a href="#" class="user-icon"><i class="fas fa-user"></i></a>
+                <a href="{% url 'yummytummy_store:cart_detail' %}" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
+                <button class="menu-toggle" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <nav class="mobile-nav">
+                <ul>
+                    <li><a href="{% url 'yummytummy_store:home' %}">HOME</a></li>
+                    <li><a href="{% url 'yummytummy_store:about' %}">ABOUT</a></li>
+                    <li><a href="{% url 'yummytummy_store:product_list' %}">SHOP</a></li>
+                    <li><a href="#">BLOG</a></li>
+                    <li><a href="#">RECIPES</a></li>
+                    <li><a href="#">BUSINESS COOPERATION</a></li>
+                    <li><a href="{% url 'yummytummy_store:contact' %}">CONTACT</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+            <button class="close-message">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="social-links">
+                    <a href="#" class="social-link"><img src="{% static 'yummytummy_store/img/facebook-icon.svg' %}" alt="Facebook"></a>
+                    <a href="{% url 'yummytummy_store:home' %}" class="logo"><img src="{% static 'yummytummy_store/img/logo-footer.png' %}" alt="YummyTummy"></a>
+                    <a href="#" class="social-link"><img src="{% static 'yummytummy_store/img/instagram-icon.svg' %}" alt="Instagram"></a>
+                </div>
+                <div class="contact-info">
+                    <a href="tel:660805522" class="phone">660 805 522</a>
+                    <a href="mailto:contact@yummytummy.com" class="email">contact@yummytummy.com</a>
+                    <address class="address">1 Industrial St, 16-010 Wasilkow</address>
+                    <a href="#" class="map-link">view on map</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="#" class="eu-flag"><img src="{% static 'yummytummy_store/img/eu-flag.svg' %}" alt="EU Flag"></a>
+                    <a href="#">B2B Zone</a>
+                </div>
+                <div class="copyright">
+                    © {% now "Y" %} YummyTummy.
+                </div>
+                <div class="legal-links">
+                    <a href="#">Terms & Conditions</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Grants</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{% static 'yummytummy_store/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

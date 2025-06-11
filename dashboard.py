@@ -13,9 +13,9 @@ class CustomIndexDashboard(Dashboard):
         # Column 1
         self.children.append(modules.ModelList(
             _('Products'),
-            models=('maslove_store.models.Product', 'maslove_store.models.Category', 
-                    'maslove_store.models.Ingredient', 'maslove_store.models.ProductVariant',
-                    'maslove_store.models.ProductIngredient'),
+            models=('yummytummy_store.models.Product', 'yummytummy_store.models.Category',
+                    'yummytummy_store.models.Ingredient', 'yummytummy_store.models.ProductVariant',
+                    'yummytummy_store.models.ProductIngredient'),
             column=0,
             order=0
         ))
@@ -23,14 +23,14 @@ class CustomIndexDashboard(Dashboard):
         # Column 2
         self.children.append(modules.ModelList(
             _('Orders'),
-            models=('maslove_store.models.Order', 'maslove_store.models.OrderItem'),
+            models=('yummytummy_store.models.Order', 'yummytummy_store.models.OrderItem'),
             column=1,
             order=0
         ))
-        
+
         self.children.append(modules.ModelList(
             _('Coupons'),
-            models=('maslove_store.models.Coupon', 'maslove_store.models.CouponUsage'),
+            models=('yummytummy_store.models.Coupon', 'yummytummy_store.models.CouponUsage'),
             column=1,
             order=1
         ))
@@ -44,10 +44,10 @@ class CustomIndexDashboard(Dashboard):
         ))
         
         self.children.append(modules.LinkList(
-            _('Maslove Resources'),
+            _('YummyTummy Resources'),
             children=[
                 {
-                    'title': _('Maslove Website'),
+                    'title': _('YummyTummy Website'),
                     'url': '/',
                     'external': False,
                 },

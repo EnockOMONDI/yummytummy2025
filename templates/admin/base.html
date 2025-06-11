@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/jet-custom.css' %}">
+    <link rel="shortcut icon" href="{% static 'yummytummy_store/img/favicon.ico' %}">
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="YummyTummy" class="branding-logo">
+            {{ site_header|default:_('Django administration') }}
+        </a>
+    </h1>
+{% endblock %}
+
+{% block welcome-msg %}
+    <span class="top-user-tools-welcome-msg">Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong> to YummyTummy Admin.</span>
+{% endblock %}

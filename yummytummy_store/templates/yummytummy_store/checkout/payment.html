@@ -1,0 +1,514 @@
+{% extends "yummytummy_store/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Checkout - Payment | YummyTummy Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-section {
+        padding: 60px 0;
+    }
+
+    .checkout-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .checkout-form-container {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .order-summary-container {
+        width: 350px;
+    }
+
+    .checkout-steps {
+        display: flex;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--light-gray);
+        padding-bottom: 20px;
+    }
+
+    .checkout-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .checkout-step.active {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .checkout-step.completed {
+        color: var(--dark-gray);
+    }
+
+    .checkout-step.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--yellow);
+    }
+
+    .checkout-step.completed::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--light-gray);
+    }
+
+    .payment-form {
+        background-color: var(--secondary-color);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .form-section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--light-gray);
+        padding-bottom: 10px;
+    }
+
+    .payment-methods {
+        margin-bottom: 30px;
+    }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid var(--light-gray);
+        border-radius: 5px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .payment-method:hover {
+        border-color: var(--yellow);
+    }
+
+    .payment-method.active {
+        border-color: var(--yellow);
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .payment-method-radio {
+        margin-right: 15px;
+    }
+
+    .payment-method-details {
+        flex: 1;
+    }
+
+    .payment-method-name {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .payment-method-description {
+        font-size: 0.9rem;
+        color: var(--dark-gray);
+    }
+
+    .payment-method-icon {
+        font-size: 1.5rem;
+        margin-left: 15px;
+        color: var(--primary-color);
+    }
+
+    .mpesa-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+        border-left: 4px solid var(--yellow);
+    }
+
+    .mpesa-title {
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: var(--primary-color);
+    }
+
+    .mpesa-instructions {
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+    }
+
+    .mpesa-instructions ol {
+        padding-left: 20px;
+    }
+
+    .mpesa-instructions li {
+        margin-bottom: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--light-gray);
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: var(--yellow);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+
+    .terms-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--light-gray);
+    }
+
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .form-check-input {
+        margin-right: 10px;
+        margin-top: 5px;
+    }
+
+    .form-check-label {
+        font-size: 0.95rem;
+    }
+
+    .order-summary {
+        background-color: var(--secondary-color);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .order-summary-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--light-gray);
+        padding-bottom: 10px;
+    }
+
+    .customer-info {
+        margin-bottom: 20px;
+    }
+
+    .info-group {
+        margin-bottom: 15px;
+    }
+
+    .info-label {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--primary-color);
+    }
+
+    .info-value {
+        color: var(--dark-gray);
+    }
+
+    .order-totals {
+        border-top: 1px solid var(--light-gray);
+        padding-top: 15px;
+    }
+
+    .order-total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .order-total-row.final {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--light-gray);
+    }
+
+    .order-total-row.discount {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .applied-coupon-info {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+
+    .coupon-badge {
+        display: inline-block;
+        background-color: rgba(255, 193, 7, 0.1);
+        border: 1px dashed var(--yellow);
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: var(--primary-color);
+    }
+
+    .payment-button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .payment-button:hover {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+
+    @media (max-width: 768px) {
+        .checkout-container {
+            flex-direction: column;
+        }
+
+        .order-summary-container {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container">
+        <h1 class="section-title">Checkout</h1>
+
+        <div class="checkout-steps">
+            <div class="checkout-step completed">1. Delivery</div>
+            <div class="checkout-step active">2. Payment</div>
+            <div class="checkout-step">3. Confirmation</div>
+        </div>
+
+        <div class="checkout-container">
+            <div class="checkout-form-container">
+                <form method="post" class="payment-form">
+                    {% csrf_token %}
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Payment Method</h3>
+
+                        <div class="payment-methods">
+                            {% for value, text in form.payment_method.field.choices %}
+                            <div class="payment-method {% if form.payment_method.value == value %}active{% endif %}" data-method="{{ value }}">
+                                <input type="radio" name="{{ form.payment_method.name }}" value="{{ value }}" id="id_{{ form.payment_method.name }}_{{ forloop.counter0 }}"
+                                       class="payment-method-radio" {% if form.payment_method.value == value %}checked{% endif %}>
+                                <div class="payment-method-details">
+                                    <div class="payment-method-name">{{ text }}</div>
+                                    <div class="payment-method-description">
+                                        {% if value == 'mpesa' %}
+                                        Pay using M-Pesa mobile money service
+                                        {% elif value == 'card' %}
+                                        Pay using credit or debit card
+                                        {% elif value == 'bank' %}
+                                        Pay using bank transfer
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="payment-method-icon">
+                                    {% if value == 'mpesa' %}
+                                    <i class="fas fa-mobile-alt"></i>
+                                    {% elif value == 'card' %}
+                                    <i class="far fa-credit-card"></i>
+                                    {% elif value == 'bank' %}
+                                    <i class="fas fa-university"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div id="mpesa-details" class="mpesa-section" {% if form.payment_method.value != 'mpesa' %}style="display: none;"{% endif %}>
+                            <h4 class="mpesa-title">M-Pesa Payment Instructions</h4>
+                            <div class="mpesa-instructions">
+                                <ol>
+                                    <li>Enter your Safaricom M-Pesa registered phone number below</li>
+                                    <li>After submitting your order, you will receive a payment prompt on your phone</li>
+                                    <li>Enter your M-Pesa PIN to complete the transaction</li>
+                                    <li>Once payment is confirmed, your order will be processed</li>
+                                </ol>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="{{ form.mpesa_phone.id_for_label }}">M-Pesa Phone Number</label>
+                                {{ form.mpesa_phone }}
+                                {% if form.mpesa_phone.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.mpesa_phone.errors }}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Format: 07XXXXXXXX or 254XXXXXXXXX</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="terms-section">
+                        <div class="form-check">
+                            {{ form.terms_accepted }}
+                            <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                                I have read and agree to the website's terms and conditions, privacy policy, and return policy
+                            </label>
+                        </div>
+                        {% if form.terms_accepted.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.terms_accepted.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="payment-button">Complete Order</button>
+                </form>
+            </div>
+
+            <div class="order-summary-container">
+                <div class="order-summary">
+                    <h3 class="order-summary-title">Order Summary</h3>
+
+                    <div class="customer-info">
+                        <div class="info-group">
+                            <div class="info-label">Contact Information</div>
+                            <div class="info-value">{{ checkout_data.first_name }} {{ checkout_data.last_name }}</div>
+                            <div class="info-value">{{ checkout_data.email }}</div>
+                            <div class="info-value">{{ checkout_data.phone }}</div>
+                        </div>
+
+                        <div class="info-group">
+                            <div class="info-label">Delivery Address</div>
+                            <div class="info-value">{{ checkout_data.address }}</div>
+                            {% if checkout_data.area %}
+                            <div class="info-value">{{ checkout_data.area }}{% if checkout_data.estate %}, {{ checkout_data.estate }}{% endif %}</div>
+                            {% endif %}
+                            {% if checkout_data.building %}
+                            <div class="info-value">{{ checkout_data.building }}</div>
+                            {% endif %}
+                            {% if checkout_data.landmark %}
+                            <div class="info-value">Near: {{ checkout_data.landmark }}</div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+
+                    <div class="order-totals">
+                        <div class="order-total-row">
+                            <div>Subtotal</div>
+                            <div>${{ subtotal_amount }}</div>
+                        </div>
+
+                        {% if discount_amount > 0 %}
+                        <div class="order-total-row discount">
+                            <div>Discount</div>
+                            <div>-${{ discount_amount }}</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="order-total-row">
+                            <div>Shipping</div>
+                            <div>Free</div>
+                        </div>
+                        <div class="order-total-row final">
+                            <div>Total</div>
+                            <div>${{ total_amount }}</div>
+                        </div>
+
+                        {% if checkout_data.coupon_id %}
+                        <div class="applied-coupon-info">
+                            <div class="coupon-badge">
+                                <i class="fas fa-tag"></i> Coupon Applied
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Payment method selection
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        const mpesaDetails = document.getElementById('mpesa-details');
+        const mpesaPhone = document.querySelector('input[name="mpesa_phone"]');
+
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', function() {
+                // Update radio button
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+
+                // Update active class
+                paymentMethods.forEach(m => m.classList.remove('active'));
+                this.classList.add('active');
+
+                // Show/hide M-Pesa details
+                const methodType = this.dataset.method;
+                if (methodType === 'mpesa') {
+                    mpesaDetails.style.display = 'block';
+                    mpesaPhone.setAttribute('required', 'required');
+                } else {
+                    mpesaDetails.style.display = 'none';
+                    mpesaPhone.removeAttribute('required');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

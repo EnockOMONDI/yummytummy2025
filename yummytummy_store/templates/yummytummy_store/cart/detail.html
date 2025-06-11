@@ -1,0 +1,135 @@
+{% extends "yummytummy_store/base.html" %}
+{% load static %}
+{% load humanize %}
+{% load image_filters %}
+
+{% block title %}Your Shopping Cart | YummyTummy Shop{% endblock %}
+
+{% block content %}
+<section class="cart-section">
+    <div class="container">
+        <h1 class="section-title">Your Shopping Cart</h1>
+
+        {% if cart_items %}
+        <div class="cart-table">
+            <div class="cart-header">
+                <div class="cart-product">Product</div>
+                <div class="cart-price">Price</div>
+                <div class="cart-quantity">Quantity</div>
+                <div class="cart-subtotal">Subtotal</div>
+                <div class="cart-actions">Actions</div>
+            </div>
+
+            {% for item in cart_items %}
+            <div class="cart-item">
+                <div class="cart-product">
+                    <div class="cart-product-image">
+                        <img src="{{ item.product|product_image_thumbnail }}" alt="{{ item.name }}" loading="lazy">
+                    </div>
+                    <div class="cart-product-info">
+                        <h3>{{ item.name }}</h3>
+                    </div>
+                </div>
+                <div class="cart-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
+                <div class="cart-quantity">
+                    <form action="{% url 'yummytummy_store:cart_add' item.id %}" method="post" class="update-form">
+                        {% csrf_token %}
+                        <div class="quantity-selector">
+                            <button type="button" class="minus">-</button>
+                            <input type="text" name="quantity" value="{{ item.quantity }}">
+                            <button type="button" class="plus">+</button>
+                        </div>
+                        <input type="hidden" name="update" value="True">
+                        <button type="submit" class="update-btn">Update</button>
+                    </form>
+                </div>
+                <div class="cart-subtotal">KSh {{ item.subtotal|floatformat:"2"|intcomma }}</div>
+                <div class="cart-actions">
+                    <a href="{% url 'yummytummy_store:cart_remove' item.id %}" class="remove-btn">
+                        <i class="fas fa-trash"></i> Remove
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="cart-summary">
+            <!-- Coupon Form -->
+            <div class="coupon-section">
+                <h3>Have a coupon?</h3>
+                <form action="{% url 'yummytummy_store:coupon_apply' %}" method="post" class="coupon-form">
+                    {% csrf_token %}
+                    <div class="coupon-input-group">
+                        {{ coupon_form.code }}
+                        <button type="submit" class="apply-coupon-btn">Apply</button>
+                    </div>
+                </form>
+
+                {% if coupon %}
+                <div class="applied-coupon">
+                    <div class="coupon-info">
+                        <span class="coupon-code">{{ coupon.code }}</span>
+                        {% if coupon.discount_type == 'percentage' %}
+                        <span class="coupon-value">{{ coupon.discount_value }}% OFF</span>
+                        {% else %}
+                        <span class="coupon-value">KSh {{ coupon.discount_value|floatformat:"2"|intcomma }} OFF</span>
+                        {% endif %}
+                    </div>
+                    <form action="{% url 'yummytummy_store:coupon_remove' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="remove-coupon-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="cart-totals">
+                <div class="totals-row">
+                    <span>Subtotal:</span>
+                    <span>KSh {{ subtotal|floatformat:"2"|intcomma }}</span>
+                </div>
+
+                {% if discount > 0 %}
+                <div class="totals-row discount">
+                    <span>Discount:</span>
+                    <span>-KSh {{ discount|floatformat:"2"|intcomma }}</span>
+                </div>
+                {% endif %}
+
+                <div class="totals-row">
+                    <span>Shipping:</span>
+                    <span>Free</span>
+                </div>
+
+                <div class="totals-row total">
+                    <span class="total-label">Total:</span>
+                    <span class="total-amount">KSh {{ total|floatformat:"2"|intcomma }}</span>
+                </div>
+            </div>
+
+            <div class="cart-buttons">
+                <a href="{% url 'yummytummy_store:product_list' %}" class="continue-shopping">
+                    <i class="fas fa-arrow-left"></i> Continue Shopping
+                </a>
+                <a href="{% url 'yummytummy_store:checkout' %}" class="checkout-btn">
+                    Proceed to Checkout <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <i class="fas fa-shopping-cart fa-4x"></i>
+            </div>
+            <p>Your cart is empty.</p>
+            <p class="empty-cart-message">Looks like you haven't added any products to your cart yet.</p>
+            <a href="{% url 'yummytummy_store:product_list' %}" class="continue-shopping">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
