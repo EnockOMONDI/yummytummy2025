@@ -137,19 +137,104 @@
         <h3 class="showcase-subtitle">THE BEST BUTTER IN THE WORLD</h3>
         <div class="product-slider">
             {% for product in featured_products %}
-            <div class="product-card">
-                <div class="product-image">
-                    <img src="{{ product|product_image_list }}" alt="{{ product.name }}" loading="lazy">
+            <div class="product-card carousel-card" data-product-id="{{ product.id }}">
+                <!-- Carousel Container -->
+                <div class="variant-carousel" data-current-index="0">
+                    <!-- Carousel Navigation Arrows -->
+                    {% if product.variants.exists %}
+                    <button class="carousel-nav prev" aria-label="Previous size">
+                        <svg width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M10 12l-4-4 4-4" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                    <button class="carousel-nav next" aria-label="Next size">
+                        <svg width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </button>
+                    {% endif %}
+
+                    <!-- Carousel Slides -->
+                    <div class="carousel-slides">
+                        <!-- Base Product Slide -->
+                        {% if product.size %}
+                        <div class="carousel-slide active"
+                             data-variant-id="base"
+                             data-price="{{ product.price }}"
+                             data-size="{{ product.size }}">
+                            <div class="product-image">
+                                <img src="{{ product|product_image_list }}" alt="{{ product.name }} - {{ product.size }}" loading="lazy">
+                                <div class="size-overlay">{{ product.size }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Product Variant Slides -->
+                        {% for variant in product.variants.all %}
+                        <div class="carousel-slide"
+                             data-variant-id="{{ variant.id }}"
+                             data-price="{{ product.price|add:variant.additional_price }}"
+                             data-size="{{ variant.name }}">
+                            <div class="product-image">
+                                <img src="{{ product|product_image_list }}" alt="{{ product.name }} - {{ variant.name }}" loading="lazy">
+                                <div class="size-overlay">{{ variant.name }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Carousel Dots Navigation -->
+                    {% if product.variants.exists %}
+                    <div class="carousel-dots">
+                        {% if product.size %}
+                        <button class="dot active" data-slide="0" aria-label="Select {{ product.size }}">
+                            <span class="dot-label">{{ product.size }}</span>
+                        </button>
+                        {% endif %}
+                        {% for variant in product.variants.all %}
+                        <button class="dot" data-slide="{% if product.size %}{{ forloop.counter }}{% else %}{{ forloop.counter0 }}{% endif %}" aria-label="Select {{ variant.name }}">
+                            <span class="dot-label">{{ variant.name }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
+
+                <!-- Product Info -->
                 <h3 class="product-title">
                     <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
                 </h3>
-                <div class="product-price">
-                    <span class="currency">KSh</span>
-                    <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
-                    <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+
+                <!-- Dynamic Size and Price Display -->
+                <div class="current-variant-info">
+                    <div class="current-size" id="current-size-{{ product.id }}">
+                        {% if product.size %}{{ product.size }}{% else %}Standard{% endif %}
+                    </div>
+                    <div class="product-price" id="carousel-price-{{ product.id }}">
+                        <span class="currency">KSh</span>
+                        <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                        <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                    </div>
                 </div>
-                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post">
+
+                <!-- Auto-cycle Toggle (Optional) -->
+                {% if product.variants.exists %}
+                <div class="carousel-controls">
+                    <button class="auto-cycle-btn" data-auto-cycle="false" title="Auto-cycle through sizes">
+                        <svg class="play-icon" width="12" height="12" viewBox="0 0 12 12">
+                            <path d="M3 2l6 4-6 4V2z" fill="currentColor"/>
+                        </svg>
+                        <svg class="pause-icon" width="12" height="12" viewBox="0 0 12 12" style="display: none;">
+                            <rect x="2" y="2" width="2" height="8" fill="currentColor"/>
+                            <rect x="8" y="2" width="2" height="8" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <span class="cycle-label">Auto-cycle</span>
+                </div>
+                {% endif %}
+
+                <!-- Add to Cart Form -->
+                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="carousel-cart-form">
                     {% csrf_token %}
                     <div class="quantity-selector">
                         <button type="button" class="minus">-</button>
@@ -157,7 +242,12 @@
                         <button type="button" class="plus">+</button>
                     </div>
                     <input type="hidden" name="update" value="False">
-                    <button type="submit" class="add-to-cart">Add to cart</button>
+                    <input type="hidden" name="selected_variant" value="{% if product.size %}base{% else %}{{ product.variants.first.id }}{% endif %}" class="selected-variant-input">
+                    <button type="submit" class="add-to-cart carousel">
+                        <span class="add-text">Add</span>
+                        <span class="current-size-text">{% if product.size %}{{ product.size }}{% else %}{{ product.variants.first.name }}{% endif %}</span>
+                        <span class="to-cart-text">to Cart</span>
+                    </button>
                 </form>
             </div>
             {% empty %}
@@ -166,4 +256,8 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'yummytummy_store/js/carousel-variants.js' %}"></script>
 {% endblock %}

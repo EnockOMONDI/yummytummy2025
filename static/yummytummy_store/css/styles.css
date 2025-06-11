@@ -615,6 +615,261 @@ ul {
     color: var(--primary-color);
 }
 
+/* Carousel Variants Styles */
+.carousel-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.variant-carousel {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(89,53,0,0.8);
+    color: var(--secondary-color);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.variant-carousel:hover .carousel-nav {
+    opacity: 1;
+    visibility: visible;
+}
+
+.carousel-nav:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.prev {
+    left: 10px;
+}
+
+.carousel-nav.next {
+    right: 10px;
+}
+
+.carousel-slides {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.carousel-slide.prev {
+    transform: translateX(-100%);
+}
+
+.carousel-slide .product-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-slide .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.size-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(89,53,0,0.3);
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.dot {
+    background-color: var(--light-gray);
+    border: 2px solid var(--medium-gray);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+    min-width: 50px;
+    text-align: center;
+}
+
+.dot:hover {
+    background-color: var(--yellow);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.dot.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--secondary-color);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(89,53,0,0.3);
+}
+
+.dot-label {
+    display: block;
+}
+
+.current-variant-info {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.current-size {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+    padding: 5px 15px;
+    background-color: rgba(89,53,0,0.1);
+    border-radius: 15px;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.current-size.updating {
+    transform: scale(1.1);
+    background-color: rgba(255, 193, 7, 0.2);
+}
+
+.product-price {
+    transition: all 0.4s ease;
+}
+
+.product-price.price-updating {
+    transform: scale(1.05);
+    color: var(--yellow);
+}
+
+.carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-size: 0.8rem;
+    color: var(--dark-gray);
+}
+
+.auto-cycle-btn {
+    background-color: var(--accent-color);
+    border: 1px solid var(--medium-gray);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.auto-cycle-btn:hover {
+    background-color: var(--yellow);
+    border-color: var(--primary-color);
+}
+
+.auto-cycle-btn.active {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.auto-cycle-btn.active .play-icon {
+    display: none;
+}
+
+.auto-cycle-btn.active .pause-icon {
+    display: block !important;
+}
+
+.cycle-label {
+    font-size: 0.75rem;
+    user-select: none;
+}
+
+.add-to-cart.carousel {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.add-to-cart.carousel:hover {
+    background-color: var(--dark-gray);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(89,53,0,0.3);
+}
+
+.current-size-text {
+    background-color: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.carousel-cart-form {
+    margin-top: 15px;
+}
+
 /* Blog Section */
 .blog-section {
     padding: 80px 0;
@@ -831,6 +1086,26 @@ ul {
         justify-content: center;
     }
 
+    /* Carousel Variants Responsive */
+    .carousel-slides {
+        height: 220px;
+    }
+
+    .carousel-nav {
+        width: 28px;
+        height: 28px;
+    }
+
+    .carousel-dots {
+        gap: 6px;
+    }
+
+    .dot {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+        min-width: 45px;
+    }
+
     .footer-top {
         flex-direction: column;
         gap: 30px;
@@ -886,6 +1161,61 @@ ul {
         gap: 20px;
         align-items: center;
         text-align: center;
+    }
+
+    /* Carousel Variants Mobile */
+    .carousel-slides {
+        height: 200px;
+    }
+
+    .carousel-nav {
+        width: 24px;
+        height: 24px;
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .carousel-nav.prev {
+        left: 5px;
+    }
+
+    .carousel-nav.next {
+        right: 5px;
+    }
+
+    .carousel-dots {
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .dot {
+        padding: 4px 8px;
+        font-size: 0.65rem;
+        min-width: 40px;
+    }
+
+    .current-size {
+        font-size: 0.9rem;
+        padding: 4px 12px;
+    }
+
+    .carousel-controls {
+        font-size: 0.75rem;
+    }
+
+    .auto-cycle-btn {
+        width: 24px;
+        height: 24px;
+    }
+
+    .add-to-cart.carousel {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .current-size-text {
+        font-size: 0.8rem;
+        padding: 1px 6px;
     }
 }
 
