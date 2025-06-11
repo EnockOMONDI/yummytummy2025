@@ -50,7 +50,7 @@
 
             <div class="right-content">
                 {% if highlighted_product %}
-                <div class="product-preview highlighted-product">
+                <div class="product-preview highlighted-product expandable-card" data-product-id="{{ highlighted_product.id }}">
                     <div class="squirrel-icon">
 
                     </div>
@@ -59,26 +59,121 @@
                         {{ highlighted_product.get_feature_type_display }}
                     </div>
                     {% endif %}
-                    <h3>{{ highlighted_product.name|upper }}{% if highlighted_product.size %}<br>{{ highlighted_product.size }}{% endif %}</h3>
-                    <div class="price">
-                        <span class="currency">KSh</span>
-                        <span class="amount">{{ highlighted_product.price|floatformat:"0"|intcomma }}</span>
-                        <span class="decimal">.{{ highlighted_product.price|floatformat:"2"|slice:"3:" }}</span>
-                    </div>
-                    <form action="{% url 'yummytummy_store:cart_add' highlighted_product.id %}" method="post">
-                        {% csrf_token %}
-                        <div class="quantity-selector">
-                            <button type="button" class="minus">-</button>
-                            {% if cart_product_form %}
-                                {{ cart_product_form.quantity }}
+
+                    <!-- Compact View (Default) -->
+                    <div class="card-compact hero-compact">
+                        <h3>{{ highlighted_product.name|upper }}{% if highlighted_product.size %}<br>{{ highlighted_product.size }}{% endif %}</h3>
+
+                        <!-- Price Summary -->
+                        <div class="product-price-summary hero-price">
+                            {% if highlighted_product.variants.exists %}
+                            <div class="price-range-compact hero-range">
+                                <span class="from-label">From</span>
+                                <span class="currency">KSh</span>
+                                <span class="amount">{{ highlighted_product.price|floatformat:"0"|intcomma }}</span>
+                                <span class="range-indicator">+</span>
+                            </div>
                             {% else %}
-                                <input type="number" name="quantity" value="1" min="1" class="form-control">
+                            <div class="price">
+                                <span class="currency">KSh</span>
+                                <span class="amount">{{ highlighted_product.price|floatformat:"0"|intcomma }}</span>
+                                <span class="decimal">.{{ highlighted_product.price|floatformat:"2"|slice:"3:" }}</span>
+                            </div>
                             {% endif %}
-                            <button type="button" class="plus">+</button>
                         </div>
-                        <input type="hidden" name="update" value="False">
-                        <button type="submit" class="add-to-cart">ADD TO CART</button>
-                    </form>
+
+                        <!-- Expand/Collapse Button or Direct Add to Cart -->
+                        {% if highlighted_product.variants.exists %}
+                        <button type="button" class="expand-btn hero-expand" data-expanded="false">
+                            <span class="expand-text">View Sizes</span>
+                            <span class="collapse-text">Close</span>
+                            <svg class="expand-icon" width="16" height="16" viewBox="0 0 16 16">
+                                <path d="M8 12l-4-4h8l-4 4z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        {% else %}
+                        <form action="{% url 'yummytummy_store:cart_add' highlighted_product.id %}" method="post" class="hero-quick-add-form">
+                            {% csrf_token %}
+                            <div class="quantity-selector">
+                                <button type="button" class="minus">-</button>
+                                {% if cart_product_form %}
+                                    {{ cart_product_form.quantity }}
+                                {% else %}
+                                    <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                {% endif %}
+                                <button type="button" class="plus">+</button>
+                            </div>
+                            <input type="hidden" name="update" value="False">
+                            <button type="submit" class="add-to-cart">ADD TO CART</button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- Expanded View (Hidden by default) -->
+                    {% if highlighted_product.variants.exists %}
+                    <div class="card-expanded hero-expanded" style="display: none;">
+                        <div class="variants-header">
+                            <h4>Choose Your Size</h4>
+                            <p class="variants-subtitle">Select the perfect size for your needs</p>
+                        </div>
+
+                        <div class="variants-grid hero-variants">
+                            <!-- Base Product Option -->
+                            {% if highlighted_product.size %}
+                            <div class="variant-option" data-variant-id="base" data-price="{{ highlighted_product.price }}">
+                                <div class="variant-card">
+                                    <div class="variant-size">{{ highlighted_product.size }}</div>
+                                    <div class="variant-price">
+                                        <span class="currency">KSh</span>
+                                        <span class="amount">{{ highlighted_product.price|floatformat:"0"|intcomma }}</span>
+                                    </div>
+                                    <div class="variant-description">Standard size</div>
+                                    <form action="{% url 'yummytummy_store:cart_add' highlighted_product.id %}" method="post" class="variant-form">
+                                        {% csrf_token %}
+                                        <div class="quantity-selector mini">
+                                            <button type="button" class="minus">-</button>
+                                            <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                            <button type="button" class="plus">+</button>
+                                        </div>
+                                        <input type="hidden" name="update" value="False">
+                                        <input type="hidden" name="selected_variant" value="base">
+                                        <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Product Variants -->
+                            {% for variant in highlighted_product.variants.all %}
+                            <div class="variant-option" data-variant-id="{{ variant.id }}" data-price="{{ highlighted_product.price|add:variant.additional_price }}">
+                                <div class="variant-card">
+                                    <div class="variant-size">{{ variant.name }}</div>
+                                    <div class="variant-price">
+                                        <span class="currency">KSh</span>
+                                        <span class="amount">{{ highlighted_product.price|add:variant.additional_price|floatformat:"0"|intcomma }}</span>
+                                    </div>
+                                    {% if variant.additional_price > 0 %}
+                                    <div class="variant-description">+KSh {{ variant.additional_price|floatformat:"0"|intcomma }} extra</div>
+                                    {% else %}
+                                    <div class="variant-description">Same price</div>
+                                    {% endif %}
+                                    <form action="{% url 'yummytummy_store:cart_add' highlighted_product.id %}" method="post" class="variant-form">
+                                        {% csrf_token %}
+                                        <div class="quantity-selector mini">
+                                            <button type="button" class="minus">-</button>
+                                            <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                            <button type="button" class="plus">+</button>
+                                        </div>
+                                        <input type="hidden" name="update" value="False">
+                                        <input type="hidden" name="selected_variant" value="{{ variant.id }}">
+                                        <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
