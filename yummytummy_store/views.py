@@ -305,7 +305,7 @@ def coupon_apply(request):
             if cart_total < coupon.min_order_amount:
                 messages.error(
                     request,
-                    f"This coupon requires a minimum order of ${coupon.min_order_amount:.2f}."
+                    f"This coupon requires a minimum order of KSh {coupon.min_order_amount:,.2f}."
                 )
                 return redirect('yummytummy_store:cart_detail')
 
@@ -337,12 +337,12 @@ def coupon_apply(request):
             if coupon.discount_type == 'percentage':
                 messages.success(
                     request,
-                    f"Coupon '{code}' applied successfully! {coupon.discount_value:.0f}% discount (${discount:.2f}) has been applied to your cart."
+                    f"Coupon '{code}' applied successfully! {coupon.discount_value:.0f}% discount (KSh {discount:,.2f}) has been applied to your cart."
                 )
             else:
                 messages.success(
                     request,
-                    f"Coupon '{code}' applied successfully! ${discount:.2f} discount has been applied to your cart."
+                    f"Coupon '{code}' applied successfully! KSh {discount:,.2f} discount has been applied to your cart."
                 )
 
         except Coupon.DoesNotExist:

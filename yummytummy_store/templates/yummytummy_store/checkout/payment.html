@@ -448,13 +448,13 @@
                     <div class="order-totals">
                         <div class="order-total-row">
                             <div>Subtotal</div>
-                            <div>${{ subtotal_amount }}</div>
+                            <div>KSh {{ subtotal_amount|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if discount_amount > 0 %}
                         <div class="order-total-row discount">
                             <div>Discount</div>
-                            <div>-${{ discount_amount }}</div>
+                            <div>-KSh {{ discount_amount|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endif %}
 
@@ -464,7 +464,7 @@
                         </div>
                         <div class="order-total-row final">
                             <div>Total</div>
-                            <div>${{ total_amount }}</div>
+                            <div>KSh {{ total_amount|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if checkout_data.coupon_id %}

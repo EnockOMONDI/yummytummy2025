@@ -386,7 +386,7 @@
                                 <div class="item-name">{{ item.name }}</div>
                                 <div class="item-quantity">Quantity: {{ item.quantity }}</div>
                             </div>
-                            <div class="item-price">${{ item.subtotal }}</div>
+                            <div class="item-price">KSh {{ item.subtotal|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endfor %}
                     </div>
@@ -394,13 +394,13 @@
                     <div class="order-totals">
                         <div class="order-total-row">
                             <div>Subtotal</div>
-                            <div>${{ subtotal }}</div>
+                            <div>KSh {{ subtotal|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if discount > 0 %}
                         <div class="order-total-row discount">
                             <div>Discount</div>
-                            <div>-${{ discount }}</div>
+                            <div>-KSh {{ discount|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endif %}
 
@@ -410,7 +410,7 @@
                         </div>
                         <div class="order-total-row final">
                             <div>Total</div>
-                            <div>${{ total }}</div>
+                            <div>KSh {{ total|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if coupon %}
@@ -420,7 +420,7 @@
                                 {% if coupon.discount_type == 'percentage' %}
                                 ({{ coupon.discount_value }}% OFF)
                                 {% else %}
-                                (${{ coupon.discount_value }} OFF)
+                                (KSh {{ coupon.discount_value|floatformat:"2"|intcomma }} OFF)
                                 {% endif %}
                             </div>
                         </div>

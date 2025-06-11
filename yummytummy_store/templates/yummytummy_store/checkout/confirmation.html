@@ -333,7 +333,7 @@
                                 <div class="item-quantity">{{ item.quantity }}</div>
                                 <div class="item-name">{{ item.product.name }}</div>
                             </div>
-                            <div class="item-price">${{ item.price }}</div>
+                            <div class="item-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endfor %}
                     </div>
@@ -341,13 +341,13 @@
                     <div class="order-summary">
                         <div class="summary-row">
                             <div>Subtotal</div>
-                            <div>${{ order.subtotal_amount }}</div>
+                            <div>KSh {{ order.subtotal_amount|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if order.discount_amount > 0 %}
                         <div class="summary-row discount">
                             <div>Discount</div>
-                            <div>-${{ order.discount_amount }}</div>
+                            <div>-KSh {{ order.discount_amount|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endif %}
 
@@ -357,7 +357,7 @@
                         </div>
                         <div class="summary-row total">
                             <div>Total</div>
-                            <div>${{ order.total_amount }}</div>
+                            <div>KSh {{ order.total_amount|floatformat:"2"|intcomma }}</div>
                         </div>
 
                         {% if order.coupon %}
@@ -367,7 +367,7 @@
                                 {% if order.coupon.discount_type == 'percentage' %}
                                 ({{ order.coupon.discount_value }}% OFF)
                                 {% else %}
-                                (${{ order.coupon.discount_value }} OFF)
+                                (KSh {{ order.coupon.discount_value|floatformat:"2"|intcomma }} OFF)
                                 {% endif %}
                             </div>
                         </div>
