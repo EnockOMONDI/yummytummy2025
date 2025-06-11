@@ -951,6 +951,20 @@ ul {
     margin-bottom: 15px;
 }
 
+/* Cart Variant Info Styles */
+.variant-info {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    margin: 5px 0 0 0;
+    font-style: italic;
+}
+
+.variant-info::before {
+    content: "• ";
+    color: var(--yellow);
+    font-weight: bold;
+}
+
 /* Blog Section */
 .blog-section {
     padding: 80px 0;

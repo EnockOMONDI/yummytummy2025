@@ -28,6 +28,9 @@
                     </div>
                     <div class="cart-product-info">
                         <h3>{{ item.name }}</h3>
+                        {% if item.variant_name %}
+                        <p class="variant-info">Size: {{ item.variant_name }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="cart-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>

@@ -9,6 +9,7 @@ class CartAddProductForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control', 'value': 1})
     )
     update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+    selected_variant = forms.CharField(required=False, widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

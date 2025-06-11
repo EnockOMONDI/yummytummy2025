@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse
-from .models import Category, Product, Ingredient, Order, OrderItem, Coupon, CouponUsage
+from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage
 from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm
 
 def home(request):
@@ -113,25 +113,46 @@ def cart_add(request, product_id):
         # Get the cart from the session
         cart = request.session['cart']
 
-        # Convert product_id to string as session keys must be strings
-        product_id_str = str(product_id)
+        # Handle variant selection
+        selected_variant = cd.get('selected_variant')
+        variant = None
+        variant_price = product.price
+        variant_name = product.name
 
-        # Update or add the product to the cart
-        if product_id_str in cart:
-            if cd['update']:
-                cart[product_id_str]['quantity'] = cd['quantity']
-            else:
-                cart[product_id_str]['quantity'] += cd['quantity']
+        if selected_variant and selected_variant != 'base':
+            try:
+                variant = ProductVariant.objects.get(id=selected_variant, product=product)
+                variant_price = product.price + variant.additional_price
+                variant_name = f"{product.name} - {variant.name}"
+            except ProductVariant.DoesNotExist:
+                # Fall back to base product if variant not found
+                pass
+
+        # Create a unique cart key that includes variant information
+        if variant:
+            cart_key = f"{product_id}_variant_{variant.id}"
         else:
-            cart[product_id_str] = {
+            cart_key = f"{product_id}_base"
+
+        # Update or add the product/variant to the cart
+        if cart_key in cart:
+            if cd['update']:
+                cart[cart_key]['quantity'] = cd['quantity']
+            else:
+                cart[cart_key]['quantity'] += cd['quantity']
+        else:
+            cart[cart_key] = {
+                'product_id': product_id,
+                'variant_id': variant.id if variant else None,
                 'quantity': cd['quantity'],
-                'price': str(product.price),
-                'name': product.name,
+                'price': str(variant_price),
+                'name': variant_name,
+                'variant_name': variant.name if variant else None,
             }
 
         # Mark the session as modified to ensure it gets saved
         request.session.modified = True
-        messages.success(request, f'{product.name} added to your cart.')
+        messages.success(request, f'{variant_name} added to your cart.')
     else:
         # Add error messages for form validation failures
         for field, errors in form.errors.items():
@@ -144,15 +165,21 @@ def cart_remove(request, product_id):
     """Remove a product from the cart"""
     if 'cart' in request.session:
         cart = request.session['cart']
-        product_id_str = str(product_id)
 
-        if product_id_str in cart:
-            # Get the product name before removing it for the message
-            product_name = cart[product_id_str].get('name', 'Item')
+        # Find and remove all cart items for this product (base and variants)
+        items_to_remove = []
+        product_name = 'Item'
 
-            # Remove the item from the cart
-            del cart[product_id_str]
+        for cart_key, item_data in cart.items():
+            if item_data.get('product_id') == int(product_id):
+                items_to_remove.append(cart_key)
+                product_name = item_data.get('name', 'Item')
 
+        # Remove all found items
+        for cart_key in items_to_remove:
+            del cart[cart_key]
+
+        if items_to_remove:
             # Mark the session as modified
             request.session.modified = True
             messages.info(request, f'{product_name} removed from your cart.')
@@ -170,7 +197,7 @@ def cart_detail(request):
     subtotal = 0
 
     # Process cart items
-    for product_id, item_data in cart.items():
+    for cart_key, item_data in cart.items():
         try:
             # Convert price to float safely
             price = float(item_data['price'])
@@ -178,9 +205,21 @@ def cart_detail(request):
             item_subtotal = price * quantity
             subtotal += item_subtotal
 
+            # Get the actual product for additional information
+            product_id = item_data.get('product_id')
+            product = None
+            if product_id:
+                try:
+                    product = Product.objects.get(id=product_id)
+                except Product.DoesNotExist:
+                    continue
+
             cart_items.append({
+                'cart_key': cart_key,
                 'id': product_id,
+                'product': product,
                 'name': item_data['name'],
+                'variant_name': item_data.get('variant_name'),
                 'price': price,
                 'quantity': quantity,
                 'subtotal': item_subtotal,
@@ -339,7 +378,7 @@ def checkout(request):
     cart_items = []
     subtotal = 0
 
-    for product_id, item_data in cart.items():
+    for cart_key, item_data in cart.items():
         try:
             price = float(item_data['price'])
             quantity = int(item_data['quantity'])
@@ -347,8 +386,10 @@ def checkout(request):
             subtotal += item_subtotal
 
             cart_items.append({
-                'id': product_id,
+                'cart_key': cart_key,
+                'id': item_data.get('product_id'),
                 'name': item_data['name'],
+                'variant_name': item_data.get('variant_name'),
                 'price': price,
                 'quantity': quantity,
                 'subtotal': item_subtotal,
@@ -482,15 +523,26 @@ def payment(request):
 
             # Create order items
             cart = request.session['cart']
-            for product_id, item_data in cart.items():
+            for cart_key, item_data in cart.items():
                 try:
+                    product_id = item_data.get('product_id')
                     product = Product.objects.get(id=product_id)
                     price = float(item_data['price'])
                     quantity = int(item_data['quantity'])
+                    variant_id = item_data.get('variant_id')
+
+                    # Get variant if specified
+                    variant = None
+                    if variant_id:
+                        try:
+                            variant = ProductVariant.objects.get(id=variant_id)
+                        except ProductVariant.DoesNotExist:
+                            pass
 
                     OrderItem.objects.create(
                         order=order,
                         product=product,
+                        variant=variant,
                         price=price,
                         quantity=quantity
                     )

@@ -211,6 +211,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
+    variant = models.ForeignKey(ProductVariant, related_name='order_items', on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in Kenyan Shillings (KES)")
     quantity = models.PositiveIntegerField(default=1)
 
