@@ -1,5 +1,7 @@
 {% extends "maslove_store/base.html" %}
 {% load static %}
+{% load humanize %}
+{% load image_filters %}
 
 {% block title %}Your Shopping Cart | Maslove Shop{% endblock %}
 
@@ -21,7 +23,12 @@
             {% for item in cart_items %}
             <div class="cart-item">
                 <div class="cart-product">
-                    <h3>{{ item.name }}</h3>
+                    <div class="cart-product-image">
+                        <img src="{{ item.product|product_image_thumbnail }}" alt="{{ item.name }}" loading="lazy">
+                    </div>
+                    <div class="cart-product-info">
+                        <h3>{{ item.name }}</h3>
+                    </div>
                 </div>
                 <div class="cart-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
                 <div class="cart-quantity">

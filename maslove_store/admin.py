@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from pyuploadcare.dj.forms import FileWidget
+from pyuploadcare.dj.models import ImageField
 from .models import (
     Category, Product, ProductVariant, Ingredient, ProductIngredient,
     Order, OrderItem, Coupon, CouponUsage
@@ -21,7 +23,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'formatted_price', 'is_available', 'is_featured', 'feature_type', 'created', 'updated']
+    list_display = ['name', 'category', 'formatted_price', 'product_image', 'is_available', 'is_featured', 'feature_type', 'created', 'updated']
     list_filter = ['is_available', 'is_featured', 'feature_type', 'created', 'updated', 'category']
     list_editable = ['is_available', 'is_featured', 'feature_type']
     prepopulated_fields = {'slug': ('name',)}
@@ -29,11 +31,41 @@ class ProductAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
     inlines = [ProductVariantInline, ProductIngredientInline]
 
+    # Use Uploadcare widget for the image field
+    formfield_overrides = {
+        ImageField: {'widget': FileWidget(attrs={
+            'data-images-only': 'true',
+            'data-preview-step': 'true',
+            'data-image-shrink': '1024x1024',
+            'data-crop': 'free',
+            'data-validators': 'image, max-size: 10485760'
+        })},
+    }
+
     def formatted_price(self, obj):
         # Pre-format the value first, then pass it to format_html
         formatted_value = 'KSh {:,.2f}'.format(obj.price)
         return format_html('<span>{}</span>', formatted_value)
     formatted_price.short_description = 'Price (KES)'
+
+    def product_image(self, obj):
+        """Display product image thumbnail in admin list view"""
+        try:
+            if obj.image:
+                return format_html('<img src="{}/-/preview/100x100/" width="50" height="50" style="object-fit: cover;" />',
+                                  obj.image.cdn_url)
+        except (AttributeError, ValueError):
+            pass
+
+        try:
+            if obj.legacy_image:
+                return format_html('<img src="{}" width="50" height="50" style="object-fit: cover;" />',
+                                  obj.legacy_image.url)
+        except (AttributeError, ValueError):
+            pass
+
+        return format_html('<span style="color: #999;">No image</span>')
+    product_image.short_description = 'Image'
 
     fieldsets = (
         ('Basic Information', {
@@ -44,7 +76,8 @@ class ProductAdmin(admin.ModelAdmin):
             'description': 'Enter price in Kenyan Shillings (KES)'
         }),
         ('Images', {
-            'fields': ('image',)
+            'fields': ('image',),
+            'description': 'Upload product images using Uploadcare. Images will be optimized automatically.'
         }),
         ('Status', {
             'fields': ('is_available', 'is_featured', 'feature_type')

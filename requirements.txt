@@ -4,7 +4,8 @@ asgiref==3.8.1  # Required by Django
 sqlparse==0.4.4  # Required by Django
 
 # Image Processing
-Pillow==11.2.1  # For ImageField in models
+Pillow==11.2.1
+pyuploadcare==5.0.0  # For ImageField in models
 
 # Form Handling
 django-crispy-forms==1.13.0  # For enhanced form rendering
@@ -26,3 +27,4 @@ defusedxml==0.7.1  # Secure XML processing
 
 # Utilities
 six==1.16.0  # Python 2 and 3 compatibility utilities
+pyuploadcare==4.1.0  # For image hosting and management

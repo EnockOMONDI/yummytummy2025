@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'crispy_forms',
     'crispy_bootstrap4',
+    'pyuploadcare.dj',
 
     # Custom apps
     'maslove_store.apps.MasloveStoreConfig',
@@ -157,3 +158,19 @@ SESSION_SAVE_EVERY_REQUEST = True  # Save the session on every request
 # Secondary color: #ffffff (white)
 # Accent color: #f5f2ed (cream)
 # Highlight color: #ffc107 (yellow)
+
+# Uploadcare settings
+UPLOADCARE = {
+    'pub_key': '1528b06f591935e6491d',
+    'secret': 'd3980def5fa035e7eed2',
+    'widget_version': '3.x',
+    'widget_build': 'min',
+    'cdn_base': 'https://ucarecdn.com/',
+    'use_hosted_assets': True,
+    'validators': {
+        'image': {
+            'allowed_extensions': ['jpeg', 'jpg', 'png', 'webp'],
+            'max_size': 10 * 1024 * 1024,  # 10MB
+        },
+    },
+}

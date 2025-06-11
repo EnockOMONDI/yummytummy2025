@@ -152,10 +152,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if we're on the product detail page or product list page
             const isProductDetail = this.closest('.product-detail') !== null;
             const isProductPreview = this.closest('.product-preview') !== null;
+            const isHighlightedProduct = this.closest('.highlighted-product') !== null;
 
-            // Only prevent default for product preview (list page)
-            // Allow normal form submission for product detail page
-            if (!isProductDetail) {
+            // Only prevent default for product preview (list page) but NOT for highlighted product
+            // Allow normal form submission for product detail page and highlighted product
+            if (!isProductDetail && !isHighlightedProduct) {
                 e.preventDefault();
             }
 
@@ -172,10 +173,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productContainer = this.closest('.product-preview');
                 productImage = productContainer.querySelector('img');
                 quantity = productContainer.querySelector('.quantity-selector input');
+            } else if (isHighlightedProduct) {
+                // Highlighted product on homepage
+                const productContainer = this.closest('.highlighted-product');
+                productImage = productContainer.querySelector('img');
+                quantity = productContainer.querySelector('.quantity-selector input');
             } else {
-                // Neither product detail nor preview found
-                if (isProductDetail) {
-                    // If on product detail page, allow form submission
+                // Neither product detail, preview, nor highlighted product found
+                if (isProductDetail || isHighlightedProduct) {
+                    // If on product detail page or highlighted product, allow form submission
                     return true;
                 } else {
                     return;
@@ -238,16 +244,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.body.removeChild(message);
                     }, 3000);
 
-                    // If on product detail page, submit the form
-                    if (isProductDetail) {
+                    // If on product detail page or highlighted product, submit the form
+                    if (isProductDetail || isHighlightedProduct) {
                         const form = this.closest('form');
                         if (form) {
                             form.submit();
                         }
                     }
                 }, 1000);
-            } else if (isProductDetail) {
-                // If on product detail page but couldn't find image, still submit the form
+            } else if (isProductDetail || isHighlightedProduct) {
+                // If on product detail page or highlighted product but couldn't find image, still submit the form
                 const form = this.closest('form');
                 if (form) {
                     form.submit();

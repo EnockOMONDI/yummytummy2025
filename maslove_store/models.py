@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+from pyuploadcare.dj.models import ImageField
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -47,7 +48,8 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in Kenyan Shillings (KES)")
     size = models.CharField(max_length=50, blank=True)
-    image = models.ImageField(upload_to='products/%Y/%m/%d', blank=True)
+    image = ImageField(blank=True, manual_crop="", help_text="Upload product image")
+    legacy_image = models.ImageField(upload_to='products/%Y/%m/%d', blank=True, null=True, editable=False)
     slug = models.SlugField(max_length=200, unique=True)
     is_available = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
@@ -58,6 +60,23 @@ class Product(models.Model):
     def get_formatted_price(self):
         """Return the price formatted with KES currency symbol and thousands separator"""
         return f"KSh {self.price:,.2f}"
+
+    def get_image_url(self):
+        """Return the image URL, handling both Uploadcare and legacy images"""
+        try:
+            if self.image:
+                return self.image.cdn_url
+        except (AttributeError, ValueError):
+            # Handle cases where Uploadcare image might be corrupted or invalid
+            pass
+
+        if self.legacy_image:
+            try:
+                return self.legacy_image.url
+            except (AttributeError, ValueError):
+                pass
+
+        return None
 
     class Meta:
         ordering = ['name']
@@ -76,6 +95,11 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+
+        # If this is a new product with a legacy image but no Uploadcare image,
+        # we'll keep the legacy image for backward compatibility
+        # In the future, when updating the product, the admin can upload a new image via Uploadcare
+
         super().save(*args, **kwargs)
 
 

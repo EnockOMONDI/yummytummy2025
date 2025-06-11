@@ -132,6 +132,11 @@ def cart_add(request, product_id):
         # Mark the session as modified to ensure it gets saved
         request.session.modified = True
         messages.success(request, f'{product.name} added to your cart.')
+    else:
+        # Add error messages for form validation failures
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f'Error in {field}: {error}')
 
     return redirect('maslove_store:cart_detail')
 

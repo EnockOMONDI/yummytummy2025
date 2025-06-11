@@ -1,5 +1,7 @@
 {% extends "maslove_store/base.html" %}
 {% load static %}
+{% load humanize %}
+{% load image_filters %}
 
 {% block title %}
 {% if category %}{{ category.name }}{% else %}Products{% endif %} | Maslove Shop
@@ -56,11 +58,7 @@
                 {% endif %}
                 <div class="product-image-container">
                     <a href="{{ product.get_absolute_url }}" class="product-image-link">
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-img">
-                        {% else %}
-                        <img src="{% static 'maslove_store/img/product-1.png' %}" alt="{{ product.name }}" class="product-img">
-                        {% endif %}
+                        <img src="{{ product|product_image_list }}" alt="{{ product.name }}" class="product-img" loading="lazy">
                         <div class="image-overlay">
                             <span class="view-details">View Details</span>
                         </div>
