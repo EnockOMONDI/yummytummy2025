@@ -34,30 +34,60 @@
                     {{ product.description|linebreaks }}
                 </div>
 
-                {% if product.variants.exists %}
-                <div class="product-variants">
-                    <h3>Available Variants</h3>
-                    <div class="variants-list">
-                        {% for variant in product.variants.all %}
-                        <div class="variant">
-                            <span class="variant-name">{{ variant.name }}</span>
-                            {% if variant.additional_price > 0 %}
-                            <span class="variant-price">+KSh {{ variant.additional_price|floatformat:"2"|intcomma }}</span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
                 <div class="product-purchase">
-                    <div class="price">
-                        <span class="currency">KSh</span>
-                        <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
-                        <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                    <!-- Dynamic Price Display -->
+                    <div class="price-section">
+                        <div class="price" id="current-price">
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                        </div>
+                        {% if product.variants.exists %}
+                        <div class="price-range-info">
+                            <span class="price-range-text">Price varies by size</span>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="add-to-cart-form">
+                    {% if product.variants.exists %}
+                    <!-- Interactive Variant Selection -->
+                    <div class="variant-selection-section">
+                        <h3 class="variant-section-title">Choose Size</h3>
+                        <div class="variant-options">
+                            <!-- Base Product Option -->
+                            <div class="variant-option" data-variant="base" data-price="{{ product.price }}" data-name="Standard">
+                                <input type="radio" name="selected_variant" value="base" id="variant-base" checked>
+                                <label for="variant-base" class="variant-label">
+                                    <div class="variant-info">
+                                        <span class="variant-name">Standard</span>
+                                        <span class="variant-price">KSh {{ product.price|floatformat:"2"|intcomma }}</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Product Variants -->
+                            {% for variant in product.variants.all %}
+                            <div class="variant-option" data-variant="{{ variant.id }}" data-price="{{ variant.calculated_price }}" data-name="{{ variant.name }}">
+                                <input type="radio" name="selected_variant" value="{{ variant.id }}" id="variant-{{ variant.id }}">
+                                <label for="variant-{{ variant.id }}" class="variant-label">
+                                    <div class="variant-info">
+                                        <span class="variant-name">{{ variant.name }}</span>
+                                        <span class="variant-price">KSh {{ variant.calculated_price|floatformat:"2"|intcomma }}</span>
+                                    </div>
+                                    {% if variant.additional_price > 0 %}
+                                    <div class="variant-additional">
+                                        <span class="additional-price">+KSh {{ variant.additional_price|floatformat:"2"|intcomma }}</span>
+                                    </div>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cart Form -->
+                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="add-to-cart-form" id="product-cart-form">
                         {% csrf_token %}
                         <div class="quantity-selector">
                             <button type="button" class="minus">-</button>
@@ -65,11 +95,339 @@
                             <button type="button" class="plus">+</button>
                         </div>
                         {{ cart_product_form.update }}
-                        <button type="submit" class="add-to-cart">Add to cart</button>
+                        <input type="hidden" name="selected_variant" value="base" id="selected-variant-input">
+                        <button type="submit" class="add-to-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="button-text">Add to cart</span>
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Product Detail Variant Styles */
+    .price-section {
+        margin-bottom: 25px;
+    }
+
+    .price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .price-range-info {
+        font-size: 0.9rem;
+        color: var(--dark-gray);
+        font-style: italic;
+    }
+
+    .variant-selection-section {
+        margin-bottom: 30px;
+    }
+
+    .variant-section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+
+    .variant-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .variant-option {
+        position: relative;
+    }
+
+    .variant-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .variant-label {
+        display: block;
+        padding: 15px 20px;
+        border: 2px solid var(--light-gray);
+        border-radius: 12px;
+        background-color: var(--secondary-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .variant-label:hover {
+        border-color: var(--yellow);
+        background-color: rgba(255, 193, 7, 0.05);
+    }
+
+    .variant-option input[type="radio"]:checked + .variant-label {
+        border-color: var(--primary-color);
+        background-color: var(--cream);
+        box-shadow: 0 0 0 3px rgba(89, 53, 0, 0.1);
+    }
+
+    .variant-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .variant-name {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .variant-price {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .variant-additional {
+        margin-top: 5px;
+    }
+
+    .additional-price {
+        font-size: 0.9rem;
+        color: var(--dark-gray);
+        font-style: italic;
+    }
+
+    /* Enhanced Add to Cart Form */
+    .add-to-cart-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        border: 2px solid var(--light-gray);
+        border-radius: 30px;
+        overflow: hidden;
+        width: fit-content;
+        margin: 0 auto;
+    }
+
+    .quantity-selector button {
+        width: 50px;
+        height: 50px;
+        background-color: var(--light-gray);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .quantity-selector button:hover {
+        background-color: var(--yellow);
+    }
+
+    .quantity-selector input {
+        width: 80px;
+        height: 50px;
+        border: none;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
+    }
+
+    .add-to-cart {
+        width: 100%;
+        padding: 15px 0;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        border: none;
+        border-radius: 30px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .add-to-cart:hover {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .add-to-cart:active {
+        transform: translateY(0);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .variant-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .variant-label {
+            padding: 12px 15px;
+        }
+
+        .price {
+            font-size: 1.8rem;
+        }
+
+        .quantity-selector {
+            margin: 0;
+        }
+
+        .quantity-selector button {
+            width: 45px;
+            height: 45px;
+        }
+
+        .quantity-selector input {
+            width: 70px;
+            height: 45px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variant selection functionality
+    const variantOptions = document.querySelectorAll('.variant-option input[type="radio"]');
+    const currentPrice = document.getElementById('current-price');
+    const selectedVariantInput = document.getElementById('selected-variant-input');
+
+    variantOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            if (this.checked) {
+                const variantOption = this.closest('.variant-option');
+                const price = variantOption.getAttribute('data-price');
+                const variantValue = variantOption.getAttribute('data-variant');
+
+                // Update the displayed price
+                updatePrice(price);
+
+                // Update the hidden input for form submission
+                selectedVariantInput.value = variantValue;
+
+                // Add visual feedback
+                animatePriceChange();
+            }
+        });
+    });
+
+    function updatePrice(newPrice) {
+        const priceFloat = parseFloat(newPrice);
+        const priceFormatted = priceFloat.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        const [wholePart, decimalPart] = priceFormatted.split('.');
+
+        currentPrice.innerHTML = `
+            <span class="currency">KSh</span>
+            <span class="amount">${wholePart}</span>
+            <span class="decimal">.${decimalPart}</span>
+        `;
+    }
+
+    function animatePriceChange() {
+        currentPrice.style.transform = 'scale(1.05)';
+        currentPrice.style.color = 'var(--yellow)';
+
+        setTimeout(() => {
+            currentPrice.style.transform = 'scale(1)';
+            currentPrice.style.color = 'var(--primary-color)';
+        }, 300);
+    }
+
+    // Initialize quantity selector
+    const quantityInput = document.querySelector('.quantity-selector input');
+    const minusBtn = document.querySelector('.quantity-selector .minus');
+    const plusBtn = document.querySelector('.quantity-selector .plus');
+
+    if (minusBtn && plusBtn && quantityInput) {
+        minusBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+                animateQuantityChange();
+            }
+        });
+
+        plusBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value) || 1;
+            quantityInput.value = currentValue + 1;
+            animateQuantityChange();
+        });
+
+        // Ensure minimum value
+        quantityInput.addEventListener('change', function() {
+            const value = parseInt(this.value);
+            if (isNaN(value) || value < 1) {
+                this.value = 1;
+            }
+        });
+    }
+
+    function animateQuantityChange() {
+        quantityInput.style.transform = 'scale(1.1)';
+        quantityInput.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+
+        setTimeout(() => {
+            quantityInput.style.transform = 'scale(1)';
+            quantityInput.style.backgroundColor = '';
+        }, 200);
+    }
+
+    // Add loading state to cart form
+    const cartForm = document.getElementById('product-cart-form');
+
+    if (cartForm) {
+        cartForm.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('.add-to-cart');
+            const buttonText = submitBtn.querySelector('.button-text');
+            const originalText = buttonText.textContent;
+
+            buttonText.textContent = 'Adding...';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+
+            // Re-enable after 3 seconds (in case of slow response)
+            setTimeout(() => {
+                buttonText.textContent = originalText;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            }, 3000);
+        });
+    }
+});
+</script>
 {% endblock %}

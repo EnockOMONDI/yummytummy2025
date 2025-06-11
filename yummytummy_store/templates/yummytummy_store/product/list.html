@@ -71,27 +71,111 @@
                     {% if product.size %}
                     <div class="product-size">{{ product.size }}</div>
                     {% endif %}
+
+                    <!-- Price Display -->
                     <div class="product-price">
+                        {% if product.variants.exists %}
+                        <div class="price-range">
+                            <span class="from-label">From</span>
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                        </div>
+                        {% else %}
                         <span class="currency">KSh</span>
                         <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
                         <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                        {% endif %}
                     </div>
-                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="cart-form">
-                        {% csrf_token %}
-                        <div class="enhanced-quantity-selector">
-                            <button type="button" class="quantity-btn minus" aria-label="Decrease quantity">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="text" name="quantity" value="1" class="quantity-input" aria-label="Product quantity">
-                            <button type="button" class="quantity-btn plus" aria-label="Increase quantity">
-                                <i class="fas fa-plus"></i>
+
+                    <!-- Variant Selection and Cart Form -->
+                    <div class="product-list-cart-section" data-product-id="{{ product.id }}">
+                        {% if product.variants.exists %}
+                        <!-- Expandable Variant Selection -->
+                        <div class="variant-toggle-section">
+                            <button type="button" class="variant-toggle-btn" data-product-id="{{ product.id }}">
+                                <span class="toggle-text">View Sizes</span>
+                                <i class="fas fa-chevron-down toggle-icon"></i>
                             </button>
                         </div>
-                        <input type="hidden" name="update" value="False">
-                        <button type="submit" class="enhanced-add-to-cart">
-                            <i class="fas fa-shopping-cart"></i> Add to cart
-                        </button>
-                    </form>
+
+                        <!-- Expandable Variant Options -->
+                        <div class="variant-options-container" id="variants-{{ product.id }}" style="display: none;">
+                            <div class="variant-options">
+                                <!-- Base Product Option -->
+                                <div class="variant-option" data-variant="base" data-price="{{ product.price }}">
+                                    <div class="variant-info">
+                                        <span class="variant-name">Standard</span>
+                                        <span class="variant-price">KSh {{ product.price|floatformat:"2"|intcomma }}</span>
+                                    </div>
+                                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-cart-form">
+                                        {% csrf_token %}
+                                        <div class="enhanced-quantity-selector">
+                                            <button type="button" class="quantity-btn minus" aria-label="Decrease quantity">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="text" name="quantity" value="1" class="quantity-input" aria-label="Product quantity">
+                                            <button type="button" class="quantity-btn plus" aria-label="Increase quantity">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="update" value="False">
+                                        <input type="hidden" name="selected_variant" value="base">
+                                        <button type="submit" class="variant-add-to-cart">
+                                            <i class="fas fa-shopping-cart"></i> Add to cart
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Variant Options -->
+                                {% for variant in product.variants.all %}
+                                <div class="variant-option" data-variant="{{ variant.id }}" data-price="{{ variant.calculated_price }}">
+                                    <div class="variant-info">
+                                        <span class="variant-name">{{ variant.name }}</span>
+                                        <span class="variant-price">KSh {{ variant.calculated_price|floatformat:"2"|intcomma }}</span>
+                                    </div>
+                                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-cart-form">
+                                        {% csrf_token %}
+                                        <div class="enhanced-quantity-selector">
+                                            <button type="button" class="quantity-btn minus" aria-label="Decrease quantity">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="text" name="quantity" value="1" class="quantity-input" aria-label="Product quantity">
+                                            <button type="button" class="quantity-btn plus" aria-label="Increase quantity">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="update" value="False">
+                                        <input type="hidden" name="selected_variant" value="{{ variant.id }}">
+                                        <button type="submit" class="variant-add-to-cart">
+                                            <i class="fas fa-shopping-cart"></i> Add to cart
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Simple Cart Form for Products Without Variants -->
+                        <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="cart-form">
+                            {% csrf_token %}
+                            <div class="enhanced-quantity-selector">
+                                <button type="button" class="quantity-btn minus" aria-label="Decrease quantity">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="text" name="quantity" value="1" class="quantity-input" aria-label="Product quantity">
+                                <button type="button" class="quantity-btn plus" aria-label="Increase quantity">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" name="update" value="False">
+                            <input type="hidden" name="selected_variant" value="base">
+                            <button type="submit" class="enhanced-add-to-cart">
+                                <i class="fas fa-shopping-cart"></i> Add to cart
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% empty %}
@@ -418,6 +502,118 @@
         transform: scale(0.98);
     }
 
+    /* Product List Variant Styles */
+    .price-range .from-label {
+        font-size: 0.8rem;
+        color: var(--dark-gray);
+        margin-right: 5px;
+    }
+
+    .variant-toggle-section {
+        margin-bottom: 15px;
+    }
+
+    .variant-toggle-btn {
+        width: 100%;
+        padding: 8px 12px;
+        background-color: var(--light-gray);
+        border: 1px solid var(--medium-gray);
+        border-radius: 20px;
+        color: var(--primary-color);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .variant-toggle-btn:hover {
+        background-color: var(--yellow);
+        border-color: var(--primary-color);
+    }
+
+    .variant-toggle-btn .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .variant-toggle-btn.expanded .toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .variant-options-container {
+        margin-bottom: 15px;
+        border: 1px solid var(--light-gray);
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: var(--cream);
+    }
+
+    .variant-option {
+        padding: 12px;
+        border-bottom: 1px solid var(--light-gray);
+        transition: background-color 0.2s ease;
+    }
+
+    .variant-option:last-child {
+        border-bottom: none;
+    }
+
+    .variant-option:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .variant-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .variant-name {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .variant-price {
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .variant-cart-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .variant-cart-form .enhanced-quantity-selector {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .variant-add-to-cart {
+        flex-grow: 1;
+        padding: 8px 12px;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        border: none;
+        border-radius: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 0.9rem;
+    }
+
+    .variant-add-to-cart:hover {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+
     /* Empty Products State */
     .empty-products-container {
         grid-column: 1 / -1;
@@ -491,4 +687,111 @@
         }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variant toggle functionality
+    const variantToggleBtns = document.querySelectorAll('.variant-toggle-btn');
+
+    variantToggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const variantsContainer = document.getElementById(`variants-${productId}`);
+            const toggleIcon = this.querySelector('.toggle-icon');
+            const toggleText = this.querySelector('.toggle-text');
+
+            if (variantsContainer.style.display === 'none' || variantsContainer.style.display === '') {
+                // Show variants
+                variantsContainer.style.display = 'block';
+                this.classList.add('expanded');
+                toggleText.textContent = 'Hide Sizes';
+
+                // Animate the container
+                variantsContainer.style.opacity = '0';
+                variantsContainer.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    variantsContainer.style.transition = 'all 0.3s ease';
+                    variantsContainer.style.opacity = '1';
+                    variantsContainer.style.transform = 'translateY(0)';
+                }, 10);
+            } else {
+                // Hide variants
+                variantsContainer.style.transition = 'all 0.3s ease';
+                variantsContainer.style.opacity = '0';
+                variantsContainer.style.transform = 'translateY(-10px)';
+
+                setTimeout(() => {
+                    variantsContainer.style.display = 'none';
+                    this.classList.remove('expanded');
+                    toggleText.textContent = 'View Sizes';
+                }, 300);
+            }
+        });
+    });
+
+    // Initialize quantity selectors for all forms
+    const quantitySelectors = document.querySelectorAll('.enhanced-quantity-selector');
+
+    quantitySelectors.forEach(selector => {
+        const minusBtn = selector.querySelector('.minus');
+        const plusBtn = selector.querySelector('.plus');
+        const quantityInput = selector.querySelector('.quantity-input');
+
+        if (minusBtn && plusBtn && quantityInput) {
+            minusBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                    animateQuantityChange(quantityInput);
+                }
+            });
+
+            plusBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+                animateQuantityChange(quantityInput);
+            });
+
+            // Ensure minimum value
+            quantityInput.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                if (isNaN(value) || value < 1) {
+                    this.value = 1;
+                }
+            });
+        }
+    });
+
+    function animateQuantityChange(input) {
+        input.style.transform = 'scale(1.1)';
+        input.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+
+        setTimeout(() => {
+            input.style.transform = 'scale(1)';
+            input.style.backgroundColor = '';
+        }, 200);
+    }
+
+    // Add loading state to cart forms
+    const cartForms = document.querySelectorAll('.cart-form, .variant-cart-form');
+
+    cartForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            submitBtn.disabled = true;
+
+            // Re-enable after 3 seconds (in case of slow response)
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 3000);
+        });
+    });
+});
+</script>
 {% endblock %}
