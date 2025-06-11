@@ -137,28 +137,116 @@
         <h3 class="showcase-subtitle">THE BEST BUTTER IN THE WORLD</h3>
         <div class="product-slider">
             {% for product in featured_products %}
-            <div class="product-card">
-                <div class="product-image">
-                    <img src="{{ product|product_image_list }}" alt="{{ product.name }}" loading="lazy">
-                </div>
-                <h3 class="product-title">
-                    <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
-                </h3>
-                <div class="product-price">
-                    <span class="currency">KSh</span>
-                    <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
-                    <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
-                </div>
-                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post">
-                    {% csrf_token %}
-                    <div class="quantity-selector">
-                        <button type="button" class="minus">-</button>
-                        <input type="number" name="quantity" value="1" min="1" class="form-control">
-                        <button type="button" class="plus">+</button>
+            <div class="product-card expandable-card" data-product-id="{{ product.id }}">
+                <!-- Compact View (Default) -->
+                <div class="card-compact">
+                    <div class="product-image">
+                        <img src="{{ product|product_image_list }}" alt="{{ product.name }}" loading="lazy">
                     </div>
-                    <input type="hidden" name="update" value="False">
-                    <button type="submit" class="add-to-cart">Add to cart</button>
-                </form>
+                    <h3 class="product-title">
+                        <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                    </h3>
+                    <div class="product-price-summary">
+                        {% if product.variants.exists %}
+                        <div class="price-range-compact">
+                            <span class="from-label">From</span>
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="range-indicator">+</span>
+                        </div>
+                        {% else %}
+                        <div class="single-price">
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Expand/Collapse Button -->
+                    {% if product.variants.exists %}
+                    <button type="button" class="expand-btn" data-expanded="false">
+                        <span class="expand-text">View Sizes</span>
+                        <span class="collapse-text">Close</span>
+                        <svg class="expand-icon" width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M8 12l-4-4h8l-4 4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    {% else %}
+                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="quick-add-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="update" value="False">
+                        <button type="submit" class="add-to-cart compact">Quick Add</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Expanded View (Hidden by default) -->
+                {% if product.variants.exists %}
+                <div class="card-expanded" style="display: none;">
+                    <div class="variants-header">
+                        <h4>Choose Your Size</h4>
+                        <p class="variants-subtitle">Select the perfect size for your needs</p>
+                    </div>
+
+                    <div class="variants-grid">
+                        <!-- Base Product Option -->
+                        {% if product.size %}
+                        <div class="variant-option" data-variant-id="base" data-price="{{ product.price }}">
+                            <div class="variant-card">
+                                <div class="variant-size">{{ product.size }}</div>
+                                <div class="variant-price">
+                                    <span class="currency">KSh</span>
+                                    <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                                </div>
+                                <div class="variant-description">Standard size</div>
+                                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-form">
+                                    {% csrf_token %}
+                                    <div class="quantity-selector mini">
+                                        <button type="button" class="minus">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                        <button type="button" class="plus">+</button>
+                                    </div>
+                                    <input type="hidden" name="update" value="False">
+                                    <input type="hidden" name="selected_variant" value="base">
+                                    <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Product Variants -->
+                        {% for variant in product.variants.all %}
+                        <div class="variant-option" data-variant-id="{{ variant.id }}" data-price="{{ product.price|add:variant.additional_price }}">
+                            <div class="variant-card">
+                                <div class="variant-size">{{ variant.name }}</div>
+                                <div class="variant-price">
+                                    <span class="currency">KSh</span>
+                                    <span class="amount">{{ product.price|add:variant.additional_price|floatformat:"0"|intcomma }}</span>
+                                </div>
+                                {% if variant.additional_price > 0 %}
+                                <div class="variant-description">+KSh {{ variant.additional_price|floatformat:"0"|intcomma }} extra</div>
+                                {% else %}
+                                <div class="variant-description">Same price</div>
+                                {% endif %}
+                                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-form">
+                                    {% csrf_token %}
+                                    <div class="quantity-selector mini">
+                                        <button type="button" class="minus">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                        <button type="button" class="plus">+</button>
+                                    </div>
+                                    <input type="hidden" name="update" value="False">
+                                    <input type="hidden" name="selected_variant" value="{{ variant.id }}">
+                                    <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
             {% empty %}
             <p>No products available at the moment.</p>
@@ -166,4 +254,8 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'yummytummy_store/js/expandable-cards.js' %}"></script>
 {% endblock %}
