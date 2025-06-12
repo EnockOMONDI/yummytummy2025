@@ -313,6 +313,74 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* M-Pesa Status Styles */
+    .payment-info {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid var(--yellow);
+    }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .payment-icon {
+        font-size: 1.2rem;
+        color: var(--yellow);
+    }
+
+    .mpesa-success, .mpesa-pending, .mpesa-failed {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+    }
+
+    .mpesa-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .mpesa-pending {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+    }
+
+    .mpesa-failed {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .success-icon {
+        color: #28a745;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .pending-icon {
+        color: #ffc107;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .failed-icon {
+        color: #dc3545;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
 </style>
 {% endblock %}
 
@@ -417,7 +485,35 @@
                             <div class="payment-icon"><i class="fas fa-mobile-alt"></i></div>
                             <div>M-Pesa payment to phone number: {{ order.mpesa_phone }}</div>
                         </div>
-                        <p>A payment prompt has been sent to your phone. Please complete the transaction by entering your M-Pesa PIN when prompted.</p>
+
+                        {% if order.payment_status == 'completed' and order.mpesa_receipt_number %}
+                        <div class="mpesa-success">
+                            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <strong>Payment Successful!</strong><br>
+                                M-Pesa Receipt: {{ order.mpesa_receipt_number }}<br>
+                                {% if order.mpesa_transaction_date %}
+                                Transaction Date: {{ order.mpesa_transaction_date|date:"M d, Y H:i" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% elif order.payment_status == 'processing' %}
+                        <div class="mpesa-pending">
+                            <div class="pending-icon"><i class="fas fa-clock"></i></div>
+                            <div>
+                                <strong>Payment Pending</strong><br>
+                                A payment prompt has been sent to your phone. Please complete the transaction by entering your M-Pesa PIN when prompted.
+                            </div>
+                        </div>
+                        {% elif order.payment_status == 'failed' %}
+                        <div class="mpesa-failed">
+                            <div class="failed-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div>
+                                <strong>Payment Failed</strong><br>
+                                Please contact our support team for assistance with your payment.
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

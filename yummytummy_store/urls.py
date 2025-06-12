@@ -36,4 +36,8 @@ urlpatterns = [
     path('account/dashboard/', views.order_tracking_dashboard, name='order_tracking_dashboard'),
     path('account/order/<int:order_id>/', views.order_detail_tracking, name='order_detail_tracking'),
     path('account/profile/', views.account_profile, name='account_profile'),
+
+    # M-Pesa Integration URLs
+    path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('mpesa/test-auth/', views.test_mpesa_auth, name='test_mpesa_auth'),
 ]

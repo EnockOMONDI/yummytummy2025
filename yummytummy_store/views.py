@@ -9,8 +9,11 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus
 from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm
+from .mpesa_service import MPesaService
 from .services import OrderTrackingEmailService, OrderTrackingService
 
 def home(request):
@@ -588,8 +591,6 @@ def payment(request):
             # Add M-Pesa phone number if applicable
             if payment_method == 'mpesa':
                 order.mpesa_phone = form.cleaned_data['mpesa_phone']
-                # Generate a random transaction ID for simulation
-                order.transaction_id = f"MPESA{get_random_string(8).upper()}"
 
             # Add coupon if applicable
             if coupon_id:
@@ -651,6 +652,47 @@ def payment(request):
                 auto_account = OrderTrackingEmailService.create_auto_account_record(
                     user_account, order, temp_password
                 )
+
+            # Process M-Pesa payment if applicable
+            if payment_method == 'mpesa':
+                try:
+                    # Generate callback URL for M-Pesa (use a public URL for testing)
+                    # For development, we'll use a placeholder URL since localhost won't work with M-Pesa
+                    callback_url = 'https://webhook.site/unique-id'  # Replace with actual public URL in production
+
+                    # Initialize M-Pesa service
+                    mpesa_service = MPesaService()
+
+                    # Initiate STK Push
+                    mpesa_response = mpesa_service.initiate_stk_push(
+                        phone_number=order.mpesa_phone,
+                        amount=float(order.total_amount),
+                        order_id=order.id,
+                        callback_url=callback_url
+                    )
+
+                    if mpesa_response['success']:
+                        # Update order with M-Pesa details
+                        order.mpesa_checkout_request_id = mpesa_response.get('checkout_request_id')
+                        order.mpesa_merchant_request_id = mpesa_response.get('merchant_request_id')
+                        order.payment_status = 'processing'
+                        order.save()
+
+                        messages.success(request,
+                            "M-Pesa payment initiated! Please check your phone for the payment prompt.")
+                    else:
+                        # M-Pesa initiation failed
+                        order.payment_status = 'failed'
+                        order.save()
+                        messages.error(request,
+                            f"M-Pesa payment failed: {mpesa_response.get('error', 'Unknown error')}")
+
+                except Exception as e:
+                    # Handle M-Pesa errors gracefully
+                    order.payment_status = 'failed'
+                    order.save()
+                    messages.error(request,
+                        "There was an error processing your M-Pesa payment. Please try again or contact support.")
 
             # Create initial order tracking status
             OrderTrackingService.create_initial_tracking_status(order)
@@ -835,3 +877,125 @@ def account_profile(request):
         'auto_account': auto_account,
     }
     return render(request, 'yummytummy_store/account/profile.html', context)
+
+
+# M-Pesa Integration Views
+
+@csrf_exempt
+def mpesa_callback(request):
+    """
+    Handle M-Pesa payment callback from Safaricom
+    """
+    if request.method == 'POST':
+        try:
+            import json
+            import logging
+
+            logger = logging.getLogger(__name__)
+
+            # Parse the callback data
+            callback_data = json.loads(request.body.decode('utf-8'))
+            logger.info(f"M-Pesa callback received: {callback_data}")
+
+            # Extract callback information
+            stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
+            merchant_request_id = stk_callback.get('MerchantRequestID')
+            checkout_request_id = stk_callback.get('CheckoutRequestID')
+            result_code = stk_callback.get('ResultCode')
+            result_desc = stk_callback.get('ResultDesc')
+
+            # Find the order using checkout request ID
+            try:
+                order = Order.objects.get(mpesa_checkout_request_id=checkout_request_id)
+
+                if result_code == 0:
+                    # Payment successful
+                    callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+
+                    # Extract payment details
+                    amount = None
+                    receipt_number = None
+                    transaction_date = None
+                    phone_number = None
+
+                    for item in callback_metadata:
+                        name = item.get('Name')
+                        value = item.get('Value')
+
+                        if name == 'Amount':
+                            amount = value
+                        elif name == 'MpesaReceiptNumber':
+                            receipt_number = value
+                        elif name == 'TransactionDate':
+                            transaction_date = value
+                        elif name == 'PhoneNumber':
+                            phone_number = value
+
+                    # Update order with payment details
+                    order.payment_status = 'completed'
+                    order.transaction_id = receipt_number
+                    order.mpesa_receipt_number = receipt_number
+
+                    if transaction_date:
+                        from datetime import datetime
+                        try:
+                            # Parse M-Pesa date format (YYYYMMDDHHMMSS)
+                            order.mpesa_transaction_date = datetime.strptime(str(transaction_date), '%Y%m%d%H%M%S')
+                        except ValueError:
+                            pass
+
+                    order.save()
+
+                    # Create payment confirmed tracking status
+                    OrderTrackingStatus.objects.create(
+                        order=order,
+                        status='payment_confirmed',
+                        message=f'M-Pesa payment confirmed. Receipt: {receipt_number}'
+                    )
+
+                    logger.info(f"M-Pesa payment successful for order {order.id}: {receipt_number}")
+
+                else:
+                    # Payment failed
+                    order.payment_status = 'failed'
+                    order.save()
+
+                    logger.warning(f"M-Pesa payment failed for order {order.id}: {result_desc}")
+
+            except Order.DoesNotExist:
+                logger.error(f"Order not found for M-Pesa callback: {checkout_request_id}")
+
+        except Exception as e:
+            logger.error(f"Error processing M-Pesa callback: {str(e)}")
+
+    # Return success response to M-Pesa
+    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
+
+
+def test_mpesa_auth(request):
+    """
+    Test M-Pesa authentication (for debugging only)
+    """
+    if not settings.DEBUG:
+        return JsonResponse({'error': 'Not available in production'})
+
+    try:
+        mpesa_service = MPesaService()
+        access_token = mpesa_service.get_access_token()
+
+        if access_token:
+            return JsonResponse({
+                'success': True,
+                'message': 'M-Pesa authentication successful',
+                'token_length': len(access_token)
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'M-Pesa authentication failed'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

@@ -163,6 +163,24 @@
         margin-bottom: 8px;
     }
 
+    .mpesa-note {
+        background-color: #e8f4fd;
+        border: 1px solid #bee5eb;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #0c5460;
+    }
+
+    .mpesa-note i {
+        color: #17a2b8;
+        flex-shrink: 0;
+    }
+
     .form-group {
         margin-bottom: 20px;
     }
@@ -380,10 +398,14 @@
                             <div class="mpesa-instructions">
                                 <ol>
                                     <li>Enter your Safaricom M-Pesa registered phone number below</li>
-                                    <li>After submitting your order, you will receive a payment prompt on your phone</li>
-                                    <li>Enter your M-Pesa PIN to complete the transaction</li>
-                                    <li>Once payment is confirmed, your order will be processed</li>
+                                    <li>After submitting your order, you will receive an STK Push notification on your phone</li>
+                                    <li>Enter your M-Pesa PIN to authorize the payment of <strong>KSh {{ total_amount|floatformat:"2"|intcomma }}</strong></li>
+                                    <li>Once payment is confirmed, you will receive an M-Pesa receipt and your order will be processed</li>
                                 </ol>
+                                <div class="mpesa-note">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Make sure your phone is on and you have sufficient M-Pesa balance</span>
+                                </div>
                             </div>
 
                             <div class="form-group">

@@ -127,10 +127,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'get_order_number', 'first_name', 'last_name', 'email',
                     'payment_status', 'payment_method', 'formatted_subtotal', 'formatted_discount', 'formatted_total', 'created']
     list_filter = ['payment_status', 'payment_method', 'created', 'updated']
-    search_fields = ['first_name', 'last_name', 'email', 'transaction_id']
+    search_fields = ['first_name', 'last_name', 'email', 'transaction_id', 'mpesa_receipt_number']
     date_hierarchy = 'created'
     inlines = [OrderItemInline, OrderCouponUsageInline]
-    readonly_fields = ['get_order_number', 'subtotal_amount', 'discount_amount', 'formatted_subtotal', 'formatted_discount', 'formatted_total']
+    readonly_fields = ['get_order_number', 'subtotal_amount', 'discount_amount', 'formatted_subtotal', 'formatted_discount', 'formatted_total',
+                      'mpesa_checkout_request_id', 'mpesa_merchant_request_id', 'mpesa_receipt_number', 'mpesa_transaction_date']
     fieldsets = (
         ('Customer Information', {
             'fields': (('first_name', 'last_name'), ('email', 'phone'))
@@ -138,9 +139,18 @@ class OrderAdmin(admin.ModelAdmin):
         ('Delivery Address', {
             'fields': ('address', 'area', 'estate', 'building', 'landmark')
         }),
-        ('Order Details', {
-            'fields': (('payment_status', 'payment_method'), 'mpesa_phone', 'transaction_id',
-                      ('formatted_subtotal', 'formatted_discount', 'formatted_total'), 'coupon', 'order_notes'),
+        ('Payment Information', {
+            'fields': (('payment_status', 'payment_method'), 'mpesa_phone', 'transaction_id'),
+            'description': 'Payment method and status information'
+        }),
+        ('M-Pesa Details', {
+            'fields': ('mpesa_checkout_request_id', 'mpesa_merchant_request_id',
+                      'mpesa_receipt_number', 'mpesa_transaction_date'),
+            'description': 'M-Pesa transaction details (automatically populated)',
+            'classes': ('collapse',)
+        }),
+        ('Order Totals', {
+            'fields': (('formatted_subtotal', 'formatted_discount', 'formatted_total'), 'coupon', 'order_notes'),
             'description': 'All monetary values are in Kenyan Shillings (KES)'
         }),
     )

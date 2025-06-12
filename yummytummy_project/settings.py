@@ -214,6 +214,11 @@ LOGGING = {
             'level': config('DJANGO_LOG_LEVEL', default='INFO'),
             'propagate': False,
         },
+        'yummytummy_store.mpesa_service': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
@@ -228,6 +233,18 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='YummyTummy Store <nor
 
 # Email timeout settings
 EMAIL_TIMEOUT = 30
+
+# SSL settings for email (for development - disable SSL verification)
+import ssl
+EMAIL_USE_SSL = False
+EMAIL_SSL_CERTFILE = None
+EMAIL_SSL_KEYFILE = None
+
+# For development, you might want to use console backend to avoid SSL issues
+if DEBUG:
+    # Uncomment the line below to use console email backend for development
+    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    pass
 
 # Uploadcare settings for image management
 UPLOADCARE = {
@@ -244,3 +261,14 @@ UPLOADCARE = {
         },
     },
 }
+
+# M-Pesa Configuration
+MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='174379')
+MPESA_PHONE_NUMBER = config('MPESA_PHONE_NUMBER', default='254703731756')
+MPESA_PASSKEY = config('MPESA_PASSKEY', default='bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
+MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='lU7OGiM7596xKzz9NoErGruBj5rMAyP0')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='24Pez2DXUqFwHD3f')
+
+# M-Pesa API URLs (Sandbox for testing, Production for live)
+MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')  # 'sandbox' or 'production'
+MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke' if MPESA_ENVIRONMENT == 'sandbox' else 'https://api.safaricom.co.ke'

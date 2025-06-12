@@ -182,6 +182,13 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='mpesa')
     mpesa_phone = models.CharField(max_length=20, blank=True)
     transaction_id = models.CharField(max_length=100, blank=True)
+
+    # M-Pesa specific fields
+    mpesa_checkout_request_id = models.CharField(max_length=100, blank=True, help_text="M-Pesa STK Push Checkout Request ID")
+    mpesa_merchant_request_id = models.CharField(max_length=100, blank=True, help_text="M-Pesa Merchant Request ID")
+    mpesa_receipt_number = models.CharField(max_length=100, blank=True, help_text="M-Pesa Receipt Number")
+    mpesa_transaction_date = models.DateTimeField(null=True, blank=True, help_text="M-Pesa Transaction Date")
+
     order_notes = models.TextField(blank=True)
 
     # Pricing
