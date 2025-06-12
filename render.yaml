@@ -7,8 +7,8 @@ databases:
 services:
   - type: web
     name: yummytummy-store
+    env: python
     plan: free
-    branch: yummy2
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
@@ -23,13 +23,13 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: yummytummy_project.settings
       - key: DEBUG
-        value: False
+        value: "False"
       - key: ALLOWED_HOSTS
         value: "*"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com,https://yummytummy.co.ke,https://www.yummytummy.co.ke"
+        value: "https://*.onrender.com"
       - key: SECURE_SSL_REDIRECT
-        value: True
+        value: "True"
       - key: SECURE_PROXY_SSL_HEADER
         value: "HTTP_X_FORWARDED_PROTO,https"
       # Email Configuration
