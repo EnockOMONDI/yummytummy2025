@@ -364,7 +364,6 @@ class Coupon(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
-        from django.db.models import Q
 
         # Convert code to uppercase for validation
         if self.code:

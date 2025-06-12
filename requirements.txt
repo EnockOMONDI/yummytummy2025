@@ -5,26 +5,26 @@ sqlparse==0.4.4  # Required by Django
 
 # Image Processing
 Pillow==11.2.1
-pyuploadcare==5.0.0  # For ImageField in models
 
 # Form Handling
 django-crispy-forms==1.13.0  # For enhanced form rendering
 crispy-bootstrap4==2024.10  # Bootstrap 4 template pack for crispy forms
 
 # Database
-psycopg2==2.9.9  # PostgreSQL adapter (for production)
+psycopg2-binary==2.9.9  # PostgreSQL adapter (for production)
 
 # Deployment
-gunicorn==20.1.0  # WSGI HTTP Server
-whitenoise==5.3.0  # Static file serving
+gunicorn==21.2.0  # WSGI HTTP Server
+whitenoise==6.6.0  # Static file serving
 
 # Environment Variables
 python-decouple==3.8  # For managing environment variables
-python-dotenv==1.0.1  # Alternative for environment variables
 
 # Security
 defusedxml==0.7.1  # Secure XML processing
 
 # Utilities
 six==1.16.0  # Python 2 and 3 compatibility utilities
-pyuploadcare==4.1.0  # For image hosting and management
+
+# Production Dependencies
+dj-database-url==2.1.0  # Database URL parsing
