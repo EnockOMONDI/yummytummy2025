@@ -5,9 +5,10 @@ sqlparse==0.4.4  # Required by Django
 
 # Image Processing
 Pillow==11.2.1
+pyuploadcare==3.0.0  # Uploadcare image management
 
 # Form Handling
-django-crispy-forms==1.13.0  # For enhanced form rendering
+django-crispy-forms==2.3  # For enhanced form rendering (compatible with crispy-bootstrap4 2024.10)
 crispy-bootstrap4==2024.10  # Bootstrap 4 template pack for crispy forms
 
 # Database
