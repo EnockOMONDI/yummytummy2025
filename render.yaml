@@ -39,7 +39,7 @@ services:
       - key: EMAIL_HOST_PASSWORD
         value: "roqu frlt wvof rqxk"
       - key: DEFAULT_FROM_EMAIL
-        value: "YummyTummy Store <dedeexpeditions@gmail.com>"
+        value: "YummyTummy Goodies"
       # Uploadcare Configuration
       - key: UPLOADCARE_PUBLIC_KEY
         value: "1528b06f591935e6491d"
