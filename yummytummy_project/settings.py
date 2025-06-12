@@ -44,6 +44,16 @@ if not DEBUG:
 
     # CSRF settings for production
     CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+    CSRF_COOKIE_SECURE = True  # Only send CSRF cookies over HTTPS
+
+    # Session security settings for production
+    SESSION_COOKIE_SECURE = True  # Only send session cookies over HTTPS
+    SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookies
+    SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection for session cookies
+
+    # Additional CSRF security
+    CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookies
+    CSRF_COOKIE_SAMESITE = 'Lax'  # Additional CSRF protection
 
 
 # Application definition
