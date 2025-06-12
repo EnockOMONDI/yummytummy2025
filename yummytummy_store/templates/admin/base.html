@@ -1,21 +1,100 @@
-{% extends 'admin/base.html' %}
-{% load static %}
-
+<!DOCTYPE html>
+{% load i18n static %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:"rtl,ltr" }}">
+<head>
+<title>{% block title %}{{ title }} | YummyTummy Admin{% endblock %}</title>
+<!-- YummyTummy Custom Admin Styles Only -->
+<link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/jet-custom.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/admin-login.css' %}">
+{% block extrastyle %}{% endblock %}
 {% block extrahead %}
-    {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/jet-custom.css' %}">
     <link rel="shortcut icon" href="{% static 'yummytummy_store/img/favicon.ico' %}">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
 {% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+</head>
+{% load i18n %}
 
-{% block branding %}
-    <h1 id="site-name">
-        <a href="{% url 'admin:index' %}">
-            <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="YummyTummy" class="branding-logo">
-            {{ site_header|default:_('Django administration') }}
-        </a>
-    </h1>
-{% endblock %}
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
+  data-admin-utc-offset="{% now "Z" %}">
 
-{% block welcome-msg %}
-    <span class="top-user-tools-welcome-msg">Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong> to YummyTummy Admin.</span>
-{% endblock %}
+<!-- Container -->
+<div id="container">
+
+    {% if not is_popup %}
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+        {% block branding %}
+            <h1 id="site-name">
+                <a href="{% url 'admin:index' %}">
+                    <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="YummyTummy" style="max-height: 40px; margin-right: 10px; vertical-align: middle;">
+                    <span style="vertical-align: middle;">YummyTummy Admin</span>
+                </a>
+            </h1>
+        {% endblock %}
+        </div>
+        {% block usertools %}
+        {% if has_permission %}
+        <div id="user-tools">
+            {% block welcome-msg %}
+                <span class="top-user-tools-welcome-msg">Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong> to YummyTummy Admin.</span>
+            {% endblock %}
+            {% block userlinks %}
+                {% if site_url %}
+                    <a href="{{ site_url }}">{% trans 'View site' %}</a> /
+                {% endif %}
+                {% if user.is_active and user.is_staff %}
+                    {% url 'django-admindocs-docroot' as docsroot %}
+                    {% if docsroot %}
+                        <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+                    {% endif %}
+                {% endif %}
+                {% if user.has_usable_password %}
+                <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+                {% endif %}
+                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+            {% endblock %}
+        </div>
+        {% endif %}
+        {% endblock %}
+        {% block nav-global %}{% endblock %}
+    </div>
+    <!-- END Header -->
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    {% if title %} &rsaquo; {{ title }}{% endif %}
+    </div>
+    {% endblock %}
+    {% endif %}
+
+    {% block messages %}
+        {% if messages %}
+        <ul class="messagelist">{% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+        {% endfor %}</ul>
+        {% endif %}
+    {% endblock messages %}
+
+    <!-- Content -->
+    <div id="content" class="{% block coltype %}colM{% endblock %}">
+        {% block pretitle %}{% endblock %}
+        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block content %}
+        {% block object-tools %}{% endblock %}
+        {{ content }}
+        {% endblock %}
+        {% block sidebar %}{% endblock %}
+        <br class="clear">
+    </div>
+    <!-- END Content -->
+
+    {% if not is_popup %}
+    {% block footer %}<div id="footer"></div>{% endblock %}
+    {% endif %}
+</div>
+<!-- END Container -->
+
+</body>
+</html>

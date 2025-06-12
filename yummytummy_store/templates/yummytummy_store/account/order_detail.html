@@ -1,0 +1,410 @@
+{% extends 'yummytummy_store/base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.get_order_number }} - Tracking{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary-color);
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .back-link:hover {
+        color: var(--yellow);
+        transform: translateX(-5px);
+    }
+    
+    .order-header {
+        background: linear-gradient(135deg, var(--primary-color), #7a4f00);
+        color: var(--secondary-color);
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .order-title {
+        font-size: 2rem;
+        margin: 0 0 10px 0;
+    }
+    
+    .order-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .order-date {
+        opacity: 0.9;
+    }
+    
+    .order-status-badge {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+    }
+    
+    .progress-section {
+        background: var(--secondary-color);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .progress-title {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .progress-bar {
+        background-color: var(--light-gray);
+        border-radius: 10px;
+        height: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        background: linear-gradient(90deg, var(--yellow), var(--primary-color));
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-percentage {
+        text-align: center;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .section-card {
+        background: var(--secondary-color);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--light-gray);
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-details {
+        flex-grow: 1;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+    
+    .item-variant {
+        color: var(--dark-gray);
+        font-size: 0.9rem;
+    }
+    
+    .item-quantity {
+        color: var(--dark-gray);
+        font-size: 0.9rem;
+    }
+    
+    .item-price {
+        font-weight: 600;
+        color: var(--primary-color);
+        text-align: right;
+    }
+    
+    .order-total {
+        border-top: 2px solid var(--primary-color);
+        padding-top: 15px;
+        margin-top: 15px;
+        text-align: right;
+    }
+    
+    .total-label {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .shipping-info p {
+        margin: 5px 0;
+        color: var(--dark-gray);
+    }
+    
+    .tracking-history {
+        background: var(--secondary-color);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: var(--light-gray);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -23px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--yellow);
+        border: 3px solid var(--secondary-color);
+        box-shadow: 0 0 0 2px var(--primary-color);
+    }
+    
+    .timeline-item.current::before {
+        background-color: var(--primary-color);
+        box-shadow: 0 0 0 2px var(--yellow);
+    }
+    
+    .timeline-content {
+        background: var(--cream);
+        border-radius: 10px;
+        padding: 20px;
+        border-left: 4px solid var(--yellow);
+    }
+    
+    .timeline-item.current .timeline-content {
+        border-left-color: var(--primary-color);
+        background: rgba(255, 193, 7, 0.1);
+    }
+    
+    .timeline-status {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .timeline-date {
+        color: var(--dark-gray);
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    .timeline-message {
+        color: var(--dark-gray);
+        line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+        .order-detail-container {
+            padding: 15px;
+        }
+        
+        .content-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .order-meta {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .order-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .item-price {
+            text-align: left;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-container">
+    <!-- Back Link -->
+    <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Dashboard
+    </a>
+
+    <!-- Order Header -->
+    <div class="order-header">
+        <h1 class="order-title">Order #{{ order.get_order_number }}</h1>
+        <div class="order-meta">
+            <div class="order-date">Placed on {{ order.created|date:"F d, Y" }}</div>
+            <div class="order-status-badge">
+                {% if latest_status %}
+                    {{ latest_status.get_status_display }}
+                {% else %}
+                    Processing
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+        <h2 class="progress-title">
+            <i class="fas fa-truck"></i>
+            Order Progress
+        </h2>
+        <div class="progress-percentage">{{ progress_percentage }}% Complete</div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Order Items -->
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="fas fa-shopping-bag"></i>
+                Order Items
+            </h3>
+            
+            {% for item in order_items %}
+            <div class="order-item">
+                <div class="item-details">
+                    <div class="item-name">{{ item.display_name }}</div>
+                    {% if item.variant %}
+                    <div class="item-variant">Size: {{ item.variant.name }}</div>
+                    {% endif %}
+                    <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                </div>
+                <div class="item-price">KSh {{ item.total|floatformat:"2" }}</div>
+            </div>
+            {% endfor %}
+
+            <div class="order-total">
+                <div class="total-label">Total Amount:</div>
+                <div class="total-amount">{{ order.get_formatted_total }}</div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="section-card">
+            <h3 class="section-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Shipping Address
+            </h3>
+            <div class="shipping-info">
+                <p><strong>{{ order.first_name }} {{ order.last_name }}</strong></p>
+                <p>{{ order.address }}</p>
+                {% if order.building %}<p>{{ order.building }}</p>{% endif %}
+                {% if order.estate %}<p>{{ order.estate }}</p>{% endif %}
+                {% if order.area %}<p>{{ order.area }}</p>{% endif %}
+                {% if order.landmark %}<p>Near {{ order.landmark }}</p>{% endif %}
+                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                <p><strong>Email:</strong> {{ order.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking History -->
+    <div class="tracking-history">
+        <h2 class="section-title">
+            <i class="fas fa-history"></i>
+            Tracking History
+        </h2>
+
+        <div class="timeline">
+            {% for status in tracking_history %}
+            <div class="timeline-item {% if forloop.first %}current{% endif %}">
+                <div class="timeline-content">
+                    <div class="timeline-status">
+                        <i class="{{ status.get_status_icon }}"></i>
+                        {{ status.get_status_display }}
+                    </div>
+                    <div class="timeline-date">{{ status.created_at|date:"F d, Y - g:i A" }}</div>
+                    {% if status.message %}
+                    <div class="timeline-message">{{ status.message }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="timeline-item current">
+                <div class="timeline-content">
+                    <div class="timeline-status">
+                        <i class="fas fa-check-circle"></i>
+                        Order Received
+                    </div>
+                    <div class="timeline-date">{{ order.created|date:"F d, Y - g:i A" }}</div>
+                    <div class="timeline-message">Your order has been received and is being processed.</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

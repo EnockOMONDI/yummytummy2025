@@ -1,13 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.contrib import messages
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse
-from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage
+from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus
 from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm
+from .services import OrderTrackingEmailService, OrderTrackingService
 
 def home(request):
     """View for the homepage"""
@@ -539,8 +543,30 @@ def payment(request):
         if form.is_valid():
             payment_method = form.cleaned_data['payment_method']
 
+            # Automatic Account Creation Logic
+            user_account = None
+            auto_account = None
+            temp_password = None
+
+            # Check if user already exists
+            existing_user = User.objects.filter(email=checkout_data['email']).first()
+
+            if existing_user:
+                # Link order to existing user
+                user_account = existing_user
+            else:
+                # Create new user account automatically
+                user_account, temp_password = OrderTrackingEmailService.create_user_account(checkout_data)
+
+                # Create AutoCreatedAccount record for tracking (will be linked after order creation)
+                auto_account_data = {
+                    'user': user_account,
+                    'temp_password': temp_password
+                }
+
             # Create the order
             order = Order(
+                user=user_account,  # Link order to user account
                 first_name=checkout_data['first_name'],
                 last_name=checkout_data['last_name'],
                 email=checkout_data['email'],
@@ -556,6 +582,7 @@ def payment(request):
                 subtotal_amount=subtotal_amount,
                 discount_amount=discount_amount,
                 total_amount=total_amount,
+                auto_created_account=bool(temp_password),  # Mark if account was auto-created
             )
 
             # Add M-Pesa phone number if applicable
@@ -615,9 +642,37 @@ def payment(request):
                 CouponUsage.objects.create(
                     coupon=coupon,
                     order=order,
-                    user=request.user if request.user.is_authenticated else None,
+                    user=user_account,
                     discount_amount=discount_amount
                 )
+
+            # Create AutoCreatedAccount record if account was auto-created
+            if temp_password:
+                auto_account = OrderTrackingEmailService.create_auto_account_record(
+                    user_account, order, temp_password
+                )
+
+            # Create initial order tracking status
+            OrderTrackingService.create_initial_tracking_status(order)
+
+            # Send appropriate confirmation email
+            try:
+                if temp_password and auto_account:
+                    # Send email with account creation details
+                    email_sent = OrderTrackingEmailService.send_order_confirmation_with_account(
+                        order, user_account, temp_password, auto_account, request
+                    )
+                else:
+                    # Send regular order confirmation email
+                    email_sent = OrderTrackingEmailService.send_regular_order_confirmation(
+                        order, request
+                    )
+
+                if not email_sent:
+                    messages.warning(request, "Order created successfully, but there was an issue sending the confirmation email.")
+
+            except Exception as e:
+                messages.warning(request, f"Order created successfully, but email could not be sent: {str(e)}")
 
             # Store order ID in session for confirmation page
             request.session['order_id'] = order.id
@@ -669,3 +724,114 @@ def order_confirmation(request):
         'order_items': order_items,
     }
     return render(request, 'yummytummy_store/checkout/confirmation.html', context)
+
+
+# Order Tracking and Authentication Views
+
+def first_time_login(request, token):
+    """Handle first-time login with token from email"""
+    try:
+        auto_account = AutoCreatedAccount.objects.get(
+            first_login_token=token,
+            first_login_completed=False
+        )
+
+        # Check if token is still valid
+        if not auto_account.is_token_valid():
+            messages.error(request, "This login link has expired. Please contact support for assistance.")
+            return redirect('yummytummy_store:home')
+
+        # Log the user in
+        login(request, auto_account.user)
+
+        # Mark first login as completed
+        auto_account.mark_first_login_completed()
+
+        messages.success(request, f"Welcome to YummyTummy, {auto_account.user.first_name}! Your account has been activated.")
+        messages.info(request, "For security, please consider changing your password in your account settings.")
+
+        # Redirect to order tracking dashboard
+        return redirect('yummytummy_store:order_tracking_dashboard')
+
+    except AutoCreatedAccount.DoesNotExist:
+        messages.error(request, "Invalid or expired login link. Please contact support for assistance.")
+        return redirect('yummytummy_store:home')
+
+
+@login_required
+def order_tracking_dashboard(request):
+    """User dashboard for viewing order history and tracking"""
+    # Get user's orders
+    orders = Order.objects.filter(user=request.user).order_by('-created')
+
+    # Get order tracking information
+    orders_with_tracking = []
+    for order in orders:
+        latest_status = order.get_latest_tracking_status()
+        progress_percentage = OrderTrackingService.get_order_progress_percentage(order)
+
+        orders_with_tracking.append({
+            'order': order,
+            'latest_status': latest_status,
+            'progress_percentage': progress_percentage,
+            'tracking_history': order.tracking_statuses.all()[:3],  # Show last 3 updates
+        })
+
+    context = {
+        'orders_with_tracking': orders_with_tracking,
+        'user': request.user,
+    }
+    return render(request, 'yummytummy_store/account/dashboard.html', context)
+
+
+@login_required
+def order_detail_tracking(request, order_id):
+    """Detailed view of a specific order with full tracking history"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # Get complete tracking history
+    tracking_history = OrderTrackingService.get_order_tracking_history(order)
+    progress_percentage = OrderTrackingService.get_order_progress_percentage(order)
+
+    # Get order items with variant information
+    order_items = []
+    for item in order.items.all():
+        item_data = {
+            'product': item.product,
+            'variant': item.variant,
+            'quantity': item.quantity,
+            'price': item.price,
+            'total': item.get_cost(),
+            'display_name': f"{item.product.name} - {item.variant.name}" if item.variant else item.product.name,
+        }
+        order_items.append(item_data)
+
+    context = {
+        'order': order,
+        'order_items': order_items,
+        'tracking_history': tracking_history,
+        'progress_percentage': progress_percentage,
+        'latest_status': order.get_latest_tracking_status(),
+    }
+    return render(request, 'yummytummy_store/account/order_detail.html', context)
+
+
+@login_required
+def account_profile(request):
+    """User account profile page"""
+    # Get user's recent orders
+    recent_orders = Order.objects.filter(user=request.user).order_by('-created')[:5]
+
+    # Get account creation info if available
+    auto_account = None
+    try:
+        auto_account = AutoCreatedAccount.objects.get(user=request.user)
+    except AutoCreatedAccount.DoesNotExist:
+        pass
+
+    context = {
+        'user': request.user,
+        'recent_orders': recent_orders,
+        'auto_account': auto_account,
+    }
+    return render(request, 'yummytummy_store/account/profile.html', context)

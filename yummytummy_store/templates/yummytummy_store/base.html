@@ -12,6 +12,100 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Account Dropdown Styles -->
+    <style>
+        /* Account Dropdown Styles */
+        .account-dropdown {
+            position: relative;
+        }
+
+        .account-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .account-toggle:hover {
+            color: var(--yellow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--secondary-color);
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            margin-top: 10px;
+        }
+
+        .account-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--cream);
+            color: var(--primary-color);
+        }
+
+        .dropdown-item.logout:hover {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--light-gray);
+            margin: 5px 0;
+        }
+
+        .mobile-account-section {
+            border-top: 1px solid var(--light-gray);
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .dropdown-menu {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                background: transparent;
+            }
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -33,7 +127,39 @@
                     <ul class="secondary-menu">
                         <li><a href="#">BUSINESS COOPERATION</a></li>
                         <li><a href="#"><img src="{% static 'yummytummy_store/img/eu-flag.svg' %}" alt="EU Flag"></a></li>
-                        <li><a href="#">MY ACCOUNT</a></li>
+                        <li class="account-dropdown">
+                            {% if user.is_authenticated %}
+                                <a href="#" class="account-toggle">
+                                    <i class="fas fa-user"></i>
+                                    {{ user.first_name|default:user.username }}
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a href="{% url 'yummytummy_store:account_profile' %}" class="dropdown-item">
+                                        <i class="fas fa-user-circle"></i>
+                                        My Profile
+                                    </a>
+                                    <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="dropdown-item">
+                                        <i class="fas fa-box"></i>
+                                        My Orders
+                                    </a>
+                                    <a href="{% url 'password_change' %}" class="dropdown-item">
+                                        <i class="fas fa-key"></i>
+                                        Change Password
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="{% url 'logout' %}" class="dropdown-item logout">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Logout
+                                    </a>
+                                </div>
+                            {% else %}
+                                <a href="{% url 'login' %}">
+                                    <i class="fas fa-user"></i>
+                                    MY ACCOUNT
+                                </a>
+                            {% endif %}
+                        </li>
                         <li class="cart-icon">
                             <a href="{% url 'yummytummy_store:cart_detail' %}">
                                 <span class="cart-count">{{ cart_items_count }}</span>
@@ -48,7 +174,15 @@
                 <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="Logo YummyTummy">
             </a>
             <div class="mobile-icons">
-                <a href="#" class="user-icon"><i class="fas fa-user"></i></a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'yummytummy_store:account_profile' %}" class="user-icon">
+                        <i class="fas fa-user"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="user-icon">
+                        <i class="fas fa-user"></i>
+                    </a>
+                {% endif %}
                 <a href="{% url 'yummytummy_store:cart_detail' %}" class="cart-icon"><i class="fas fa-shopping-cart"></i></a>
                 <button class="menu-toggle" aria-label="Toggle Menu">
                     <span></span>
@@ -65,6 +199,29 @@
                     <li><a href="#">RECIPES</a></li>
                     <li><a href="#">BUSINESS COOPERATION</a></li>
                     <li><a href="{% url 'yummytummy_store:contact' %}">CONTACT</a></li>
+                    {% if user.is_authenticated %}
+                        <li class="mobile-account-section">
+                            <a href="{% url 'yummytummy_store:account_profile' %}">
+                                <i class="fas fa-user-circle"></i> My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}">
+                                <i class="fas fa-box"></i> My Orders
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>

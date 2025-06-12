@@ -23,6 +23,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin/css-debug/', TemplateView.as_view(template_name='admin/css_debug.html'), name='admin_css_debug'),
+    path('accounts/', include('django.contrib.auth.urls')),  # Built-in auth views (login, logout, etc.)
     path('', include('yummytummy_store.urls', namespace='yummytummy_store')),
 ]
 

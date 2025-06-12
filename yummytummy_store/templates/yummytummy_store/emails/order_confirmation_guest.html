@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f2ed;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #593500;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #593500;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            color: #666;
+            font-style: italic;
+        }
+        .confirmation-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #c3e6cb;
+        }
+        .confirmation-message h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+        }
+        .order-details {
+            border: 2px solid #593500;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .order-header {
+            background-color: #593500;
+            color: #ffffff;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+        }
+        .order-number {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .item-details {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-weight: bold;
+            color: #593500;
+        }
+        .item-variant {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .item-quantity {
+            color: #666;
+            margin-top: 5px;
+        }
+        .item-price {
+            font-weight: bold;
+            color: #593500;
+            text-align: right;
+        }
+        .order-total {
+            border-top: 2px solid #593500;
+            padding-top: 15px;
+            margin-top: 15px;
+            text-align: right;
+        }
+        .total-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #593500;
+        }
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #593500;
+        }
+        .shipping-info {
+            background-color: #f5f2ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .shipping-info h3 {
+            color: #593500;
+            margin-top: 0;
+        }
+        .guest-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .guest-info h4 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+        }
+        .footer a {
+            color: #593500;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .email-container {
+                padding: 20px;
+            }
+            .order-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .item-price {
+                text-align: left;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">YummyTummy</div>
+            <div class="tagline">Pure Honey, Pure Goodness</div>
+        </div>
+
+        <!-- Confirmation Message -->
+        <div class="confirmation-message">
+            <h2>✅ Order Confirmed!</h2>
+            <p>Thank you for your order, {{ customer_name }}! We're preparing your delicious honey for delivery.</p>
+        </div>
+
+        <!-- Order Details -->
+        <div class="order-details">
+            <div class="order-header">
+                <div class="order-number">Order #{{ order_number }}</div>
+                <div>Order Date: {{ order.created|date:"F d, Y" }}</div>
+            </div>
+
+            <!-- Order Items -->
+            {% for item in order_items %}
+            <div class="order-item">
+                <div class="item-details">
+                    <div class="item-name">{{ item.display_name }}</div>
+                    {% if item.variant_name %}
+                    <div class="item-variant">Size: {{ item.variant_name }}</div>
+                    {% endif %}
+                    <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                </div>
+                <div class="item-price">{{ item.formatted_total }}</div>
+            </div>
+            {% endfor %}
+
+            <!-- Order Total -->
+            <div class="order-total">
+                <div class="total-label">Total Amount:</div>
+                <div class="total-amount">{{ order.get_formatted_total }}</div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="shipping-info">
+            <h3>Shipping Address</h3>
+            <p>
+                {{ order.first_name }} {{ order.last_name }}<br>
+                {{ order.address }}<br>
+                {% if order.building %}{{ order.building }}<br>{% endif %}
+                {% if order.estate %}{{ order.estate }}<br>{% endif %}
+                {% if order.area %}{{ order.area }}<br>{% endif %}
+                {% if order.landmark %}Near {{ order.landmark }}<br>{% endif %}
+                Phone: {{ order.phone }}
+            </p>
+        </div>
+
+        <!-- Guest Order Information -->
+        <div class="guest-info">
+            <h4>Order Tracking Information</h4>
+            <p>
+                <strong>Order Number:</strong> {{ order_number }}<br>
+                <strong>Email:</strong> {{ order.email }}
+            </p>
+            <p>
+                Please save this email for your records. You can use your order number and email 
+                to track your order status if needed.
+            </p>
+            <p>
+                <strong>Estimated Delivery:</strong> 3-7 business days<br>
+                We'll send you updates as your order progresses.
+            </p>
+        </div>
+
+        <!-- What's Next -->
+        <div class="guest-info">
+            <h4>What happens next?</h4>
+            <ol>
+                <li>We'll process your order within 24 hours</li>
+                <li>You'll receive email updates about your order status</li>
+                <li>Your fresh honey will be carefully packaged</li>
+                <li>We'll deliver it straight to your doorstep</li>
+            </ol>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Thank you for choosing {{ site_name }}!<br>
+                Questions? Contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+            </p>
+            <p style="font-size: 0.9rem; color: #999;">
+                This email was sent to confirm your order. 
+                Please keep this email for your records.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

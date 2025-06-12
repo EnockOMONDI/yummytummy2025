@@ -1,7 +1,10 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils import timezone
+from django.contrib.auth.models import User
 from pyuploadcare.dj.models import ImageField
+import secrets
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -111,6 +114,15 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.name}"
 
+    @property
+    def calculated_price(self):
+        """Calculate the total price for this variant (base price + additional price)"""
+        return self.product.price + self.additional_price
+
+    def get_formatted_price(self):
+        """Return the calculated price formatted with KES currency symbol and thousands separator"""
+        return f"KSh {self.calculated_price:,.2f}"
+
 
 class ProductIngredient(models.Model):
     product = models.ForeignKey(Product, related_name='ingredients', on_delete=models.CASCADE)
@@ -136,10 +148,15 @@ class Order(models.Model):
         ('bank', 'Bank Transfer'),
     ]
 
+    # Customer Information
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                           related_name='orders', help_text="User account (if account exists)")
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
+
+    # Shipping Address
     address = models.CharField(max_length=250)
     area = models.CharField(max_length=100, blank=True, help_text="Area/Neighborhood")
     estate = models.CharField(max_length=100, blank=True, help_text="Estate/Community name")
@@ -149,13 +166,25 @@ class Order(models.Model):
     postal_code = models.CharField(max_length=20, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     county = models.CharField(max_length=100, blank=True, null=True)
+
+    # Order Tracking Fields
+    auto_created_account = models.BooleanField(default=False,
+                                             help_text="Whether an account was automatically created for this order")
+    account_creation_email_sent = models.BooleanField(default=False,
+                                                    help_text="Whether the account creation email was sent")
+
+    # Timestamps
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    # Payment Information
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='mpesa')
     mpesa_phone = models.CharField(max_length=20, blank=True)
     transaction_id = models.CharField(max_length=100, blank=True)
     order_notes = models.TextField(blank=True)
+
+    # Pricing
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Total amount in Kenyan Shillings (KES)")
     coupon = models.ForeignKey('Coupon', related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Discount amount in Kenyan Shillings (KES)")
@@ -195,6 +224,29 @@ class Order(models.Model):
     def get_formatted_discount(self):
         """Return the discount amount formatted with KES currency symbol and thousands separator"""
         return f"KSh {self.discount_amount:,.2f}"
+
+    def get_customer_name(self):
+        """Get the full customer name"""
+        return f"{self.first_name} {self.last_name}"
+
+    def get_latest_tracking_status(self):
+        """Get the most recent tracking status for this order"""
+        return self.tracking_statuses.first()
+
+    def get_current_status_display(self):
+        """Get the current status display text"""
+        latest_status = self.get_latest_tracking_status()
+        if latest_status:
+            return latest_status.get_status_display()
+        return self.get_payment_status_display()
+
+    def has_account(self):
+        """Check if this order is associated with a user account"""
+        return self.user is not None
+
+    def is_guest_order(self):
+        """Check if this is a guest order (no associated user account)"""
+        return self.user is None
 
     def save(self, *args, **kwargs):
         # Calculate subtotal if not already set
@@ -354,3 +406,117 @@ class CouponUsage(models.Model):
     def get_formatted_discount_amount(self):
         """Return the discount amount formatted with KES currency symbol and thousands separator"""
         return f"KSh {self.discount_amount:,.2f}"
+
+
+# Order Tracking Models for Automatic Account Creation
+
+class AutoCreatedAccount(models.Model):
+    """
+    Model to track accounts that were automatically created during checkout.
+    This helps manage the order tracking system and first-time login process.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='auto_created_account')
+    created_during_order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='auto_account_record')
+    initial_password_sent = models.BooleanField(default=False, help_text="Whether the initial password email was sent")
+    first_login_token = models.CharField(max_length=64, unique=True, null=True, blank=True,
+                                       help_text="Token for first-time login from email")
+    token_expires = models.DateTimeField(null=True, blank=True, help_text="When the first-login token expires")
+    first_login_completed = models.BooleanField(default=False, help_text="Whether user has completed first login")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['first_login_token']),
+            models.Index(fields=['token_expires']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f'Auto-created account for {self.user.email} (Order {self.created_during_order.id})'
+
+    def generate_first_login_token(self):
+        """Generate a secure token for first-time login"""
+        self.first_login_token = secrets.token_urlsafe(32)
+        self.token_expires = timezone.now() + timezone.timedelta(days=7)  # Token valid for 7 days
+        self.save()
+        return self.first_login_token
+
+    def is_token_valid(self):
+        """Check if the first-login token is still valid"""
+        if not self.first_login_token or not self.token_expires:
+            return False
+        return timezone.now() < self.token_expires
+
+    def mark_first_login_completed(self):
+        """Mark that the user has completed their first login"""
+        self.first_login_completed = True
+        self.first_login_token = None  # Clear the token after use
+        self.token_expires = None
+        self.save()
+
+
+class OrderTrackingStatus(models.Model):
+    """
+    Model to track order status updates for the order tracking system.
+    This provides detailed status information beyond the basic payment status.
+    """
+    STATUS_CHOICES = [
+        ('order_received', 'Order Received'),
+        ('payment_confirmed', 'Payment Confirmed'),
+        ('processing', 'Processing'),
+        ('packaging', 'Packaging'),
+        ('shipped', 'Shipped'),
+        ('out_for_delivery', 'Out for Delivery'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='tracking_statuses')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    message = models.TextField(blank=True, help_text="Additional details about this status update")
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                 help_text="Admin user who created this status update")
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['order', '-created_at']),
+            models.Index(fields=['status']),
+        ]
+        verbose_name_plural = 'Order Tracking Statuses'
+
+    def __str__(self):
+        return f'Order {self.order.id} - {self.get_status_display()}'
+
+    def get_status_icon(self):
+        """Return appropriate icon class for the status"""
+        status_icons = {
+            'order_received': 'fas fa-check-circle',
+            'payment_confirmed': 'fas fa-credit-card',
+            'processing': 'fas fa-cogs',
+            'packaging': 'fas fa-box',
+            'shipped': 'fas fa-truck',
+            'out_for_delivery': 'fas fa-shipping-fast',
+            'delivered': 'fas fa-home',
+            'cancelled': 'fas fa-times-circle',
+            'refunded': 'fas fa-undo',
+        }
+        return status_icons.get(self.status, 'fas fa-info-circle')
+
+    def get_status_color(self):
+        """Return appropriate color class for the status"""
+        status_colors = {
+            'order_received': 'text-info',
+            'payment_confirmed': 'text-success',
+            'processing': 'text-warning',
+            'packaging': 'text-warning',
+            'shipped': 'text-primary',
+            'out_for_delivery': 'text-primary',
+            'delivered': 'text-success',
+            'cancelled': 'text-danger',
+            'refunded': 'text-secondary',
+        }
+        return status_colors.get(self.status, 'text-muted')

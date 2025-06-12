@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - Account Created</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f2ed;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #593500;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #593500;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            color: #666;
+            font-style: italic;
+        }
+        .account-created {
+            background-color: #ffc107;
+            color: #593500;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #593500;
+        }
+        .account-created h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+        }
+        .credentials-box {
+            background-color: #f5f2ed;
+            border: 2px solid #593500;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credentials-box h3 {
+            color: #593500;
+            margin-top: 0;
+        }
+        .credential-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        .credential-label {
+            font-weight: bold;
+            color: #593500;
+        }
+        .credential-value {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+        .login-button {
+            display: inline-block;
+            background-color: #593500;
+            color: #ffffff;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .login-button:hover {
+            background-color: #ffc107;
+            color: #593500;
+        }
+        .order-details {
+            border: 2px solid #593500;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .order-header {
+            background-color: #593500;
+            color: #ffffff;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 6px 6px 0 0;
+        }
+        .order-number {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .item-details {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-weight: bold;
+            color: #593500;
+        }
+        .item-variant {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .item-quantity {
+            color: #666;
+            margin-top: 5px;
+        }
+        .item-price {
+            font-weight: bold;
+            color: #593500;
+            text-align: right;
+        }
+        .order-total {
+            border-top: 2px solid #593500;
+            padding-top: 15px;
+            margin-top: 15px;
+            text-align: right;
+        }
+        .total-label {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #593500;
+        }
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #593500;
+        }
+        .shipping-info {
+            background-color: #f5f2ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .shipping-info h3 {
+            color: #593500;
+            margin-top: 0;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .important-note h4 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+        }
+        .footer a {
+            color: #593500;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .email-container {
+                padding: 20px;
+            }
+            .order-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .item-price {
+                text-align: left;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">YummyTummy</div>
+            <div class="tagline">Pure Honey, Pure Goodness</div>
+        </div>
+
+        <!-- Account Created Notice -->
+        <div class="account-created">
+            <h2>🎉 Account Created Successfully!</h2>
+            <p>We've automatically created an account for you to track your orders and enjoy a personalized shopping experience.</p>
+        </div>
+
+        <!-- Account Credentials -->
+        <div class="credentials-box">
+            <h3>Your Account Details</h3>
+            <div class="credential-item">
+                <span class="credential-label">Email/Username:</span>
+                <span class="credential-value">{{ user.email }}</span>
+            </div>
+            <div class="credential-item">
+                <span class="credential-label">Temporary Password:</span>
+                <span class="credential-value">{{ temp_password }}</span>
+            </div>
+        </div>
+
+        <!-- Login Button -->
+        <div style="text-align: center;">
+            <a href="{{ login_url }}" class="login-button">
+                🔐 Login to Your Account
+            </a>
+        </div>
+
+        <div class="important-note">
+            <h4>Important Security Information:</h4>
+            <ul>
+                <li>This login link is valid for {{ token_expires_days }} days</li>
+                <li>Please change your password after your first login</li>
+                <li>Keep your login credentials secure and don't share them</li>
+                <li>If you have any issues, contact us at {{ support_email }}</li>
+            </ul>
+        </div>
+
+        <!-- Order Details -->
+        <div class="order-details">
+            <div class="order-header">
+                <div class="order-number">Order #{{ order_number }}</div>
+                <div>Thank you for your order, {{ customer_name }}!</div>
+            </div>
+
+            <!-- Order Items -->
+            {% for item in order_items %}
+            <div class="order-item">
+                <div class="item-details">
+                    <div class="item-name">{{ item.display_name }}</div>
+                    {% if item.variant_name %}
+                    <div class="item-variant">Size: {{ item.variant_name }}</div>
+                    {% endif %}
+                    <div class="item-quantity">Quantity: {{ item.quantity }}</div>
+                </div>
+                <div class="item-price">{{ item.formatted_total }}</div>
+            </div>
+            {% endfor %}
+
+            <!-- Order Total -->
+            <div class="order-total">
+                <div class="total-label">Total Amount:</div>
+                <div class="total-amount">{{ order.get_formatted_total }}</div>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="shipping-info">
+            <h3>Shipping Address</h3>
+            <p>
+                {{ order.first_name }} {{ order.last_name }}<br>
+                {{ order.address }}<br>
+                {% if order.building %}{{ order.building }}<br>{% endif %}
+                {% if order.estate %}{{ order.estate }}<br>{% endif %}
+                {% if order.area %}{{ order.area }}<br>{% endif %}
+                {% if order.landmark %}Near {{ order.landmark }}<br>{% endif %}
+                Phone: {{ order.phone }}
+            </p>
+        </div>
+
+        <!-- What's Next -->
+        <div class="important-note">
+            <h4>What happens next?</h4>
+            <ol>
+                <li>We'll process your order within 24 hours</li>
+                <li>You'll receive tracking updates via email</li>
+                <li>Login to your account to view real-time order status</li>
+                <li>Your honey will be delivered fresh to your doorstep</li>
+            </ol>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Thank you for choosing {{ site_name }}!<br>
+                Questions? Contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+            </p>
+            <p style="font-size: 0.9rem; color: #999;">
+                This email was sent because you placed an order with us. 
+                Your account was created automatically to enhance your shopping experience.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

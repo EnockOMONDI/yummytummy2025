@@ -1,15 +1,112 @@
-{% extends "admin/login.html" %}
-{% load static %}
-
+<!DOCTYPE html>
+{% load i18n static %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}" dir="{{ LANGUAGE_BIDI|yesno:"rtl,ltr" }}">
+<head>
+<title>{% block title %}{% trans 'Log in' %} | {{ site_title|default:_('Django site admin') }}{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/login.css" %}{% endblock %}">
 {% block extrastyle %}
-    {{ block.super }}
     <link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/jet-custom.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/admin-login.css' %}">
 {% endblock %}
-
-{% block branding %}
-    <h1 id="site-name">
-        <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="YummyTummy" style="max-height: 60px; margin-right: 10px;">
-        <span>YummyTummy Admin</span>
-    </h1>
+{% block responsive %}
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/responsive.css" %}">
 {% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE">{% endblock %}
+<link rel="shortcut icon" href="{% static 'yummytummy_store/img/favicon.ico' %}">
+</head>
+
+<body class="{% block bodyclass %}login{% endblock %}"
+  data-admin-utc-offset="{% now "Z" %}">
+
+<!-- Container -->
+<div id="container">
+
+    <!-- Header -->
+    {% block header %}
+    <div id="header">
+        <div id="branding">
+        {% block branding %}
+            <h1 id="site-name">
+                <img src="{% static 'yummytummy_store/img/logo.svg' %}" alt="YummyTummy" style="max-height: 60px; margin-right: 10px; vertical-align: middle;">
+                <span style="vertical-align: middle;">YummyTummy Admin</span>
+            </h1>
+        {% endblock %}
+        </div>
+        {% block usertools %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <!-- Content -->
+    {% block messages %}
+        {% if messages %}
+        <ul class="messagelist">{% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+        {% endfor %}</ul>
+        {% endif %}
+    {% endblock messages %}
+
+    <!-- Content -->
+    <div id="content" class="{% block coltype %}colM{% endblock %}">
+        {% block pretitle %}{% endblock %}
+        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block content %}
+        {% if form.errors and not form.non_field_errors %}
+            <p class="errornote">
+            {% if form.errors.items|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+            </p>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="errornote">
+                    {{ error }}
+                </p>
+            {% endfor %}
+        {% endif %}
+
+        <div id="content-main">
+            {% if user.is_authenticated %}
+            <p class="errornote">
+            {% blocktrans trimmed %}
+                You are authenticated as {{ username }}, but are not authorized to
+                access this page. Would you like to login to a different account?
+            {% endblocktrans %}
+            </p>
+            {% endif %}
+
+            <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+              <div class="form-row">
+                {{ form.username.errors }}
+                {{ form.username.label_tag }} {{ form.username }}
+              </div>
+              <div class="form-row">
+                {{ form.password.errors }}
+                {{ form.password.label_tag }} {{ form.password }}
+                <input type="hidden" name="next" value="{{ next }}">
+              </div>
+              {% url 'admin_password_reset' as password_reset_url %}
+              {% if password_reset_url %}
+              <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
+              </div>
+              {% endif %}
+              <div class="submit-row">
+                <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}">
+              </div>
+            </form>
+
+        </div>
+        {% endblock %}
+        {% block sidebar %}{% endblock %}
+        <br class="clear">
+    </div>
+
+    <!-- Footer -->
+    {% block footer %}<div id="footer"></div>{% endblock %}
+</div>
+
+<!-- END Container -->
+
+</body>
+</html>

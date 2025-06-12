@@ -254,21 +254,58 @@
         color: var(--dark-gray);
     }
 
-    .continue-shopping-btn {
-        display: inline-block;
+    .confirmation-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .continue-shopping-btn, .track-order-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
         padding: 12px 25px;
-        background-color: var(--yellow);
-        color: var(--primary-color);
         border-radius: 5px;
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s;
+        flex: 1;
+        justify-content: center;
+        min-width: 200px;
+    }
+
+    .continue-shopping-btn {
+        background-color: var(--yellow);
+        color: var(--primary-color);
     }
 
     .continue-shopping-btn:hover {
         background-color: var(--primary-color);
         color: var(--secondary-color);
         transform: translateY(-2px);
+    }
+
+    .track-order-btn {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .track-order-btn:hover {
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .confirmation-actions {
+            flex-direction: column;
+        }
+
+        .continue-shopping-btn, .track-order-btn {
+            min-width: auto;
+        }
     }
 
     @media (max-width: 768px) {
@@ -426,9 +463,16 @@
                     <li>You will receive a shipping notification when your order is on its way.</li>
                     <li>Your delicious YummyTummy peanut butter will arrive at your doorstep soon!</li>
                 </ol>
-                <a href="{% url 'yummytummy_store:product_list' %}" class="continue-shopping-btn">
-                    <i class="fas fa-arrow-left"></i> Return to Shop
-                </a>
+                <div class="confirmation-actions">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="track-order-btn">
+                        <i class="fas fa-box"></i> Track Your Orders
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'yummytummy_store:product_list' %}" class="continue-shopping-btn">
+                        <i class="fas fa-arrow-left"></i> Return to Shop
+                    </a>
+                </div>
             </div>
         </div>
     </div>

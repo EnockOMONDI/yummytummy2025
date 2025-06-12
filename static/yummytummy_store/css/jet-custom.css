@@ -1,4 +1,4 @@
-/* Custom CSS for Django Admin with YummyTummy brand colors - Enhanced for Readability & Modern Design */
+/* YummyTummy Admin Interface - Complete Override of Django Admin Styles */
 
 :root {
     /* YummyTummy Brand Colors */
@@ -7,20 +7,20 @@
     --accent-color: #f5f2ed;
     --highlight-color: #ffc107;
 
-    /* Enhanced Color Palette for Better Readability */
+    /* Enhanced Color Palette for Better Readability & Contrast */
     --primary-dark: #3d2400;
     --primary-light: #8b5a00;
-    --text-color: #2c2c2c;
-    --text-light: #666666;
-    --text-muted: #999999;
+    --text-color: #2c2c2c;          /* High contrast for readability */
+    --text-light: #4a4a4a;          /* Improved contrast from #666666 */
+    --text-muted: #6c6c6c;          /* Improved contrast from #999999 */
     --border-color: #d4d4d4;
     --border-light: #e8e8e8;
     --shadow-color: rgba(89, 53, 0, 0.1);
     --shadow-hover: rgba(89, 53, 0, 0.15);
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --error-color: #dc3545;
-    --info-color: #17a2b8;
+    --success-color: #155724;       /* Darker green for better contrast */
+    --warning-color: #856404;       /* Darker yellow for better contrast */
+    --error-color: #721c24;         /* Darker red for better contrast */
+    --info-color: #0c5460;          /* Darker blue for better contrast */
 
     /* Border Radius Values */
     --radius-small: 4px;
@@ -38,110 +38,166 @@
 }
 
 /* =================================================================
-   GLOBAL STYLES & BASE ELEMENTS
+   RESET & OVERRIDE DJANGO ADMIN DEFAULTS
    ================================================================= */
 
-/* Body and base styling */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5;
-    color: var(--text-color);
-    background-color: #fafafa;
+/* Reset all Django admin styles to prevent conflicts */
+* {
+    box-sizing: border-box;
 }
 
-/* Enhanced text readability */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-color);
-    font-weight: 600;
-    line-height: 1.3;
-    margin-bottom: var(--spacing-md);
+/* Remove any default Django admin navigation that might appear */
+.nav-sidebar,
+.nav-global,
+.module h2 a.section:link,
+.module h2 a.section:visited {
+    display: none !important;
+}
+
+/* Ensure our custom navigation takes precedence */
+#nav-sidebar {
+    display: none !important;
 }
 
 /* =================================================================
-   HEADER & NAVIGATION
+   GLOBAL STYLES & BASE ELEMENTS
    ================================================================= */
 
-/* Main admin header */
+/* Body and base styling - Override Django admin completely */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    line-height: 1.5 !important;
+    color: var(--text-color) !important;
+    background-color: #fafafa !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Container styling */
+#container {
+    background-color: #fafafa !important;
+    min-height: 100vh !important;
+}
+
+/* Enhanced text readability with proper contrast ratios */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color) !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    margin-bottom: var(--spacing-md) !important;
+}
+
+/* Ensure all text has proper contrast */
+p, span, div, label, td, th, li, a {
+    color: var(--text-color) !important;
+}
+
+/* Override any light text that might be hard to read */
+.text-muted, .help-text, .help {
+    color: var(--text-muted) !important;
+}
+
+/* =================================================================
+   HEADER & NAVIGATION - OVERRIDE DJANGO ADMIN COMPLETELY
+   ================================================================= */
+
+/* Main admin header - Complete override */
 #header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
     color: var(--secondary-color) !important;
-    box-shadow: 0 2px 8px var(--shadow-color);
+    box-shadow: 0 2px 8px var(--shadow-color) !important;
     border: none !important;
     padding: var(--spacing-md) var(--spacing-lg) !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    width: 100% !important;
 }
 
+/* Hide any duplicate navigation elements */
+#header .nav-global,
+#header .nav-sidebar,
+#nav-global,
+.nav-global {
+    display: none !important;
+}
+
+/* Header links */
 #header a {
     color: var(--secondary-color) !important;
-    text-decoration: none;
-    transition: all 0.3s ease;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
 }
 
 #header a:hover {
     color: var(--highlight-color) !important;
-    transform: translateY(-1px);
+    transform: translateY(-1px) !important;
+    text-decoration: none !important;
 }
 
-/* Branding section */
+/* Branding section - Complete override */
 #branding {
     background: transparent !important;
     padding: var(--spacing-sm) 0 !important;
+    float: left !important;
 }
 
-#branding h1 {
+#branding h1,
+#site-name {
     color: var(--secondary-color) !important;
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
     margin: 0 !important;
-    display: flex;
-    align-items: center;
+    display: flex !important;
+    align-items: center !important;
 }
 
-#branding h1 a {
-    color: var(--secondary-color) !important;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-#branding h1 a:hover {
-    color: var(--highlight-color) !important;
-    transform: scale(1.02);
-}
-
-/* Site name styling */
+#branding h1 a,
 #site-name a {
     color: var(--secondary-color) !important;
-    text-decoration: none;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: all 0.3s ease !important;
 }
 
+#branding h1 a:hover,
 #site-name a:hover {
     color: var(--highlight-color) !important;
+    transform: scale(1.02) !important;
+    text-decoration: none !important;
 }
 
-/* User tools */
+/* User tools - Complete override */
+#user-tools,
 .user-tools {
     color: var(--secondary-color) !important;
-    font-weight: 500;
+    font-weight: 500 !important;
+    float: right !important;
+    margin-top: var(--spacing-sm) !important;
 }
 
+#user-tools a,
 .user-tools a {
     color: var(--secondary-color) !important;
-    text-decoration: none;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-small);
-    transition: all 0.3s ease;
-    margin-left: var(--spacing-xs);
+    text-decoration: none !important;
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    border-radius: var(--radius-small) !important;
+    transition: all 0.3s ease !important;
+    margin-left: var(--spacing-xs) !important;
 }
 
+#user-tools a:hover,
 .user-tools a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1) !important;
     color: var(--highlight-color) !important;
-    transform: translateY(-1px);
+    transform: translateY(-1px) !important;
+    text-decoration: none !important;
+}
+
+/* Welcome message */
+.top-user-tools-welcome-msg {
+    color: var(--secondary-color) !important;
+    margin-right: var(--spacing-md) !important;
 }
 
 /* =================================================================
@@ -182,55 +238,98 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 2px 4px var(--shadow-hover);
 }
 
-/* Breadcrumbs */
+/* =================================================================
+   CONTENT AREA & LAYOUT
+   ================================================================= */
+
+/* Content area - Override Django admin layout */
+#content {
+    background-color: #fafafa !important;
+    padding: var(--spacing-lg) !important;
+    margin: 0 !important;
+    min-height: calc(100vh - 80px) !important;
+}
+
+/* Breadcrumbs - High contrast */
 .breadcrumbs {
-    background: linear-gradient(90deg, var(--accent-color) 0%, #f8f5f0 100%);
-    color: var(--text-color);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--radius-medium);
-    margin-bottom: var(--spacing-lg);
-    box-shadow: 0 1px 3px var(--shadow-color);
-    font-weight: 500;
+    background: linear-gradient(90deg, var(--accent-color) 0%, #f8f5f0 100%) !important;
+    color: var(--text-color) !important;
+    padding: var(--spacing-md) var(--spacing-lg) !important;
+    border-radius: var(--radius-medium) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    box-shadow: 0 1px 3px var(--shadow-color) !important;
+    font-weight: 500 !important;
+    border: 1px solid var(--border-color) !important;
 }
 
 .breadcrumbs a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-small);
+    color: var(--primary-color) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    border-radius: var(--radius-small) !important;
 }
 
 .breadcrumbs a:hover {
-    color: var(--highlight-color);
-    background-color: rgba(255, 193, 7, 0.1);
-    transform: translateY(-1px);
+    color: var(--highlight-color) !important;
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    transform: translateY(-1px) !important;
+    text-decoration: none !important;
+}
+
+/* Page title */
+#content h1,
+.content h1 {
+    color: var(--text-color) !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    margin-bottom: var(--spacing-lg) !important;
+    border-bottom: 2px solid var(--primary-color) !important;
+    padding-bottom: var(--spacing-sm) !important;
+}
+
+/* Remove any sidebar navigation that might appear */
+#nav-sidebar,
+.nav-sidebar,
+.sidebar {
+    display: none !important;
+}
+
+/* Ensure main content takes full width */
+.main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* =================================================================
-   BUTTONS & INTERACTIVE ELEMENTS
+   BUTTONS & INTERACTIVE ELEMENTS - HIGH CONTRAST
    ================================================================= */
 
-/* Primary buttons */
+/* Primary buttons - Ensure high contrast ratios */
 .button,
 input[type=submit],
 input[type=button],
 .object-tools a,
 .addlink,
-.changelink {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: var(--secondary-color);
-    border: none;
-    border-radius: var(--radius-medium);
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    cursor: pointer;
-    font-size: 0.9rem;
+.changelink,
+.submit-row input,
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: var(--secondary-color) !important;
+    border: none !important;
+    border-radius: var(--radius-medium) !important;
+    padding: var(--spacing-sm) var(--spacing-lg) !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px var(--shadow-color) !important;
+    cursor: pointer !important;
+    font-size: 0.9rem !important;
+    min-height: 36px !important;
+    line-height: 1.4 !important;
 }
 
 .button:hover,
@@ -238,37 +337,57 @@ input[type=submit]:hover,
 input[type=button]:hover,
 .object-tools a:hover,
 .addlink:hover,
-.changelink:hover {
-    background: linear-gradient(135deg, var(--highlight-color) 0%, #e6ac00 100%);
-    color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px var(--shadow-hover);
+.changelink:hover,
+.submit-row input:hover,
+.btn:hover {
+    background: linear-gradient(135deg, var(--highlight-color) 0%, #e6ac00 100%) !important;
+    color: var(--primary-dark) !important;  /* Darker text for better contrast on yellow */
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px var(--shadow-hover) !important;
+    text-decoration: none !important;
 }
 
-/* Default/primary buttons */
+/* Default/primary buttons - High contrast */
 .button.default,
-input[type=submit].default {
-    background: linear-gradient(135deg, var(--highlight-color) 0%, #e6ac00 100%);
-    color: var(--primary-color);
-    font-weight: 700;
+input[type=submit].default,
+.default {
+    background: linear-gradient(135deg, var(--highlight-color) 0%, #e6ac00 100%) !important;
+    color: var(--primary-dark) !important;  /* Dark text on yellow for high contrast */
+    font-weight: 700 !important;
 }
 
 .button.default:hover,
-input[type=submit].default:hover {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: var(--secondary-color);
+input[type=submit].default:hover,
+.default:hover {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: var(--secondary-color) !important;
 }
 
-/* Secondary buttons */
+/* Secondary buttons - High contrast */
 .button.secondary {
-    background: var(--secondary-color);
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
+    background: var(--secondary-color) !important;
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color) !important;
 }
 
 .button.secondary:hover {
-    background: var(--primary-color);
-    color: var(--secondary-color);
+    background: var(--primary-color) !important;
+    color: var(--secondary-color) !important;
+}
+
+/* Delete/danger buttons - High contrast */
+.deletelink,
+.button.delete,
+input[type=submit].delete {
+    background: linear-gradient(135deg, var(--error-color) 0%, #5a1a1a 100%) !important;
+    color: var(--secondary-color) !important;
+}
+
+.deletelink:hover,
+.button.delete:hover,
+input[type=submit].delete:hover {
+    background: linear-gradient(135deg, #8b0000 0%, var(--error-color) 100%) !important;
+    color: var(--secondary-color) !important;
 }
 
 /* Links */
@@ -444,13 +563,24 @@ tbody td a:hover {
     background-color: rgba(249, 249, 249, 0.8);
 }
 
-/* Form labels */
-.form-row label {
-    color: var(--text-color);
-    font-weight: 600;
-    margin-bottom: var(--spacing-sm);
-    display: block;
-    font-size: 0.95rem;
+/* Form labels - High contrast */
+.form-row label,
+label,
+.field-box label,
+.inline-group .form-row label {
+    color: var(--text-color) !important;
+    font-weight: 600 !important;
+    margin-bottom: var(--spacing-sm) !important;
+    display: block !important;
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+}
+
+/* Required field indicators */
+.required:after {
+    content: " *" !important;
+    color: var(--error-color) !important;
+    font-weight: bold !important;
 }
 
 /* Input fields */

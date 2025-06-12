@@ -30,4 +30,10 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/payment/', views.payment, name='payment'),
     path('checkout/confirmation/', views.order_confirmation, name='order_confirmation'),
+
+    # Order Tracking and Authentication URLs
+    path('first-login/<str:token>/', views.first_time_login, name='first_time_login'),
+    path('account/dashboard/', views.order_tracking_dashboard, name='order_tracking_dashboard'),
+    path('account/order/<int:order_id>/', views.order_detail_tracking, name='order_detail_tracking'),
+    path('account/profile/', views.account_profile, name='account_profile'),
 ]

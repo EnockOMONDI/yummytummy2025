@@ -32,6 +32,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Custom apps (must be before Django auth to override templates)
+    'yummytummy_store.apps.YummytummyStoreConfig',
+
     # Django default apps
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,9 +48,6 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap4',
     'pyuploadcare.dj',
-
-    # Custom apps
-    'yummytummy_store.apps.YummytummyStoreConfig',
 ]
 
 # Crispy Forms
@@ -128,6 +128,12 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+
+# Authentication Settings
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/account/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
 
 
 # Static files (CSS, JavaScript, Images)

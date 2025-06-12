@@ -1,0 +1,361 @@
+{% extends 'yummytummy_store/base.html' %}
+{% load static %}
+
+{% block title %}My Profile - YummyTummy{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color), #7a4f00);
+        color: var(--secondary-color);
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0 auto 20px;
+        border: 4px solid var(--secondary-color);
+    }
+    
+    .profile-name {
+        font-size: 2rem;
+        margin: 0 0 10px 0;
+    }
+    
+    .profile-email {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+    
+    .section-card {
+        background: var(--secondary-color);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--light-gray);
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--dark-gray);
+    }
+    
+    .info-value {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .account-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .recent-order {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--light-gray);
+    }
+    
+    .recent-order:last-child {
+        border-bottom: none;
+    }
+    
+    .order-info {
+        flex-grow: 1;
+    }
+    
+    .order-number {
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+    
+    .order-date {
+        color: var(--dark-gray);
+        font-size: 0.9rem;
+    }
+    
+    .order-amount {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--yellow);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background-color: var(--light-gray);
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+        transform: translateY(-2px);
+    }
+    
+    .no-orders {
+        text-align: center;
+        padding: 30px;
+        color: var(--dark-gray);
+    }
+    
+    .no-orders i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: var(--light-gray);
+    }
+    
+    .security-note {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    .security-note h4 {
+        color: #856404;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .security-note p {
+        color: #856404;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-container {
+            padding: 15px;
+        }
+        
+        .content-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            justify-content: center;
+        }
+        
+        .recent-order {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        </div>
+        <h1 class="profile-name">{{ user.first_name }} {{ user.last_name }}</h1>
+        <div class="profile-email">{{ user.email }}</div>
+        
+        {% if auto_account %}
+        <div class="account-badge">
+            <i class="fas fa-magic"></i>
+            Auto-created Account
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Account Information -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-user"></i>
+                Account Information
+            </h2>
+            
+            <div class="info-item">
+                <span class="info-label">Full Name</span>
+                <span class="info-value">{{ user.first_name }} {{ user.last_name }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Email Address</span>
+                <span class="info-value">{{ user.email }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Username</span>
+                <span class="info-value">{{ user.username }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Member Since</span>
+                <span class="info-value">{{ user.date_joined|date:"F Y" }}</span>
+            </div>
+            
+            {% if auto_account %}
+            <div class="info-item">
+                <span class="info-label">Account Created</span>
+                <span class="info-value">During Order #{{ auto_account.created_during_order.get_order_number }}</span>
+            </div>
+            {% endif %}
+
+            <div class="action-buttons">
+                <a href="{% url 'password_change' %}" class="btn btn-primary">
+                    <i class="fas fa-key"></i>
+                    Change Password
+                </a>
+                <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-box"></i>
+                    View Orders
+                </a>
+            </div>
+
+            {% if auto_account and not auto_account.first_login_completed %}
+            <div class="security-note">
+                <h4>
+                    <i class="fas fa-shield-alt"></i>
+                    Security Recommendation
+                </h4>
+                <p>
+                    Your account was created automatically during checkout. 
+                    For security, we recommend changing your password to something memorable.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-clock"></i>
+                Recent Orders
+            </h2>
+            
+            {% if recent_orders %}
+                {% for order in recent_orders %}
+                <div class="recent-order">
+                    <div class="order-info">
+                        <div class="order-number">Order #{{ order.get_order_number }}</div>
+                        <div class="order-date">{{ order.created|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="order-amount">{{ order.get_formatted_total }}</div>
+                </div>
+                {% endfor %}
+                
+                <div class="action-buttons">
+                    <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-list"></i>
+                        View All Orders
+                    </a>
+                </div>
+            {% else %}
+                <div class="no-orders">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h3>No orders yet</h3>
+                    <p>Start shopping to see your order history!</p>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="{% url 'yummytummy_store:product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                        Start Shopping
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
