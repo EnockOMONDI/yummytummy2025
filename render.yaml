@@ -1,9 +1,3 @@
-databases:
-  - name: yummytummy-db
-    databaseName: yummytummy_db
-    user: yummytummy_user
-    plan: free
-
 services:
   - type: web
     name: yummytummy-store
@@ -14,9 +8,7 @@ services:
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: yummytummy-db
-          property: connectionString
+        value: "postgresql://neondb_owner:npg_Spxz4nomvTJ8@ep-billowing-pond-a9faz0tc-pooler.gwc.azure.neon.tech/neondb?sslmode=require"
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
