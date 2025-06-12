@@ -87,6 +87,26 @@ ul {
     height: 50px;
 }
 
+/* Flag icon styling */
+.flag-icon {
+    height: 16px;
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+    vertical-align: middle;
+}
+
+.flag-icon:hover {
+    transform: scale(1.05);
+}
+
+/* Specific styling for navbar flag */
+.secondary-menu .flag-icon {
+    height: 14px;
+    margin: 0 2px;
+}
+
 .cart-icon {
     position: relative;
 }
@@ -1164,6 +1184,13 @@ ul {
     font-size: 0.9rem;
 }
 
+/* Kenyan flag in footer */
+.kenyan-flag .flag-icon {
+    height: 12px;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
 /* Responsive Styles */
 @media (max-width: 1200px) {
     .slide {
@@ -1302,6 +1329,11 @@ ul {
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
+
+    /* Hide flag on mobile since it's not in mobile nav */
+    .secondary-menu .flag-icon {
+        display: none;
     }
 
     /* Background image styles are now inline */
