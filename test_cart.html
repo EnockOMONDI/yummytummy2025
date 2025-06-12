@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cart Test</title>
+</head>
+<body>
+    <h1>Cart Test</h1>
+    
+    <!-- Test form for product 1 -->
+    <form action="http://127.0.0.1:8001/cart/add/1/" method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="test">
+        <input type="hidden" name="quantity" value="1">
+        <input type="hidden" name="update" value="False">
+        <input type="hidden" name="selected_variant" value="base">
+        <button type="submit">Add Product 1 to Cart (No JS)</button>
+    </form>
+    
+    <br><br>
+    
+    <!-- Test form for product 2 -->
+    <form action="http://127.0.0.1:8001/cart/add/2/" method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="test">
+        <input type="hidden" name="quantity" value="1">
+        <input type="hidden" name="update" value="False">
+        <input type="hidden" name="selected_variant" value="base">
+        <button type="submit">Add Product 2 to Cart (No JS)</button>
+    </form>
+    
+    <br><br>
+    <a href="http://127.0.0.1:8001/cart/">View Cart</a>
+</body>
+</html>
