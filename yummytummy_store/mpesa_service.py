@@ -23,7 +23,6 @@ class MPesaService:
     
     def __init__(self):
         self.business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
-        self.phone_number = settings.MPESA_PHONE_NUMBER
         self.passkey = settings.MPESA_PASSKEY
         self.consumer_key = settings.MPESA_CONSUMER_KEY
         self.consumer_secret = settings.MPESA_CONSUMER_SECRET

@@ -656,9 +656,13 @@ def payment(request):
             # Process M-Pesa payment if applicable
             if payment_method == 'mpesa':
                 try:
-                    # Generate callback URL for M-Pesa (use a public URL for testing)
-                    # For development, we'll use a placeholder URL since localhost won't work with M-Pesa
-                    callback_url = 'https://webhook.site/unique-id'  # Replace with actual public URL in production
+                    # Generate callback URL for M-Pesa
+                    if settings.DEBUG:
+                        # For development, use a placeholder URL since localhost won't work with M-Pesa
+                        callback_url = 'https://webhook.site/unique-id'
+                    else:
+                        # For production, use the actual callback URL
+                        callback_url = request.build_absolute_uri(reverse('yummytummy_store:mpesa_callback'))
 
                     # Initialize M-Pesa service
                     mpesa_service = MPesaService()

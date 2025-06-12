@@ -26,6 +26,7 @@ defusedxml==0.7.1  # Secure XML processing
 
 # Utilities
 six==1.16.0  # Python 2 and 3 compatibility utilities
+requests==2.31.0  # HTTP library for M-Pesa API integration
 
 # Production Dependencies
 dj-database-url==2.1.0  # Database URL parsing
