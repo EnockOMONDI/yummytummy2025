@@ -224,6 +224,53 @@ class OrderTrackingEmailService:
             print(f"Failed to send order confirmation email: {e}")
             return False
 
+    @staticmethod
+    def send_payment_confirmation_email(order, request=None):
+        """Send email after payment is confirmed (for auto-created accounts)"""
+        try:
+            # Get auto account details
+            auto_account = AutoCreatedAccount.objects.get(created_during_order=order)
+
+            # Format order items
+            order_items = OrderTrackingEmailService.format_order_items_for_email(order)
+
+            # Generate login URL
+            login_url = OrderTrackingEmailService.get_first_login_url(auto_account, request)
+
+            # Prepare email context
+            context = {
+                'order': order,
+                'user': order.user,
+                'login_url': login_url,
+                'order_items': order_items,
+                'order_number': order.get_order_number(),
+                'customer_name': order.get_customer_name(),
+                'site_name': 'YummyTummy',
+                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
+                'token_expires_days': 7,
+            }
+
+            # Render email content
+            html_message = render_to_string('yummytummy_store/emails/payment_confirmation_with_account.html', context)
+            plain_message = strip_tags(html_message)
+
+            # Send email
+            send_mail(
+                subject=f'YummyTummy Order #{order.get_order_number()} - Payment Confirmed & Account Ready',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            return True
+
+        except Exception as e:
+            # Log error (in production, use proper logging)
+            print(f"Failed to send payment confirmation email: {e}")
+            return False
+
 
 class OrderTrackingService:
     """Service for managing order tracking status updates"""
@@ -261,12 +308,12 @@ class OrderTrackingService:
             return 0
         
         status_progress = {
-            'order_received': 10,
-            'payment_confirmed': 20,
-            'processing': 40,
-            'packaging': 60,
-            'shipped': 80,
-            'out_for_delivery': 90,
+            'order_received': 15,
+            'payment_confirmed': 30,
+            'processing': 50,
+            'packaging': 70,
+            'shipped': 85,
+            'out_for_delivery': 95,
             'delivered': 100,
             'cancelled': 0,
             'refunded': 0,

@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -581,7 +582,7 @@ def payment(request):
                 landmark=checkout_data.get('landmark', ''),
                 order_notes=checkout_data['order_notes'],
                 payment_method=payment_method,
-                payment_status='processing',
+                payment_status='pending',
                 subtotal_amount=subtotal_amount,
                 discount_amount=discount_amount,
                 total_amount=total_amount,
@@ -688,6 +689,14 @@ def payment(request):
                         # M-Pesa initiation failed
                         order.payment_status = 'failed'
                         order.save()
+
+                        # Create failed payment tracking status
+                        OrderTrackingStatus.objects.create(
+                            order=order,
+                            status='cancelled',
+                            message=f'M-Pesa payment initiation failed: {mpesa_response.get("error", "Unknown error")}'
+                        )
+
                         messages.error(request,
                             f"M-Pesa payment failed: {mpesa_response.get('error', 'Unknown error')}")
 
@@ -695,30 +704,33 @@ def payment(request):
                     # Handle M-Pesa errors gracefully
                     order.payment_status = 'failed'
                     order.save()
+
+                    # Create failed payment tracking status
+                    OrderTrackingStatus.objects.create(
+                        order=order,
+                        status='cancelled',
+                        message=f'M-Pesa payment error: {str(e)}'
+                    )
+
                     messages.error(request,
                         "There was an error processing your M-Pesa payment. Please try again or contact support.")
 
             # Create initial order tracking status
             OrderTrackingService.create_initial_tracking_status(order)
 
-            # Send appropriate confirmation email
-            try:
-                if temp_password and auto_account:
-                    # Send email with account creation details
-                    email_sent = OrderTrackingEmailService.send_order_confirmation_with_account(
-                        order, user_account, temp_password, auto_account, request
-                    )
-                else:
-                    # Send regular order confirmation email
-                    email_sent = OrderTrackingEmailService.send_regular_order_confirmation(
-                        order, request
-                    )
-
-                if not email_sent:
-                    messages.warning(request, "Order created successfully, but there was an issue sending the confirmation email.")
-
-            except Exception as e:
-                messages.warning(request, f"Order created successfully, but email could not be sent: {str(e)}")
+            # Store email data in session for later sending (after payment confirmation)
+            if temp_password and auto_account:
+                request.session['pending_account_email'] = {
+                    'order_id': order.id,
+                    'user_id': user_account.id,
+                    'temp_password': temp_password,
+                    'auto_account_id': auto_account.id if auto_account else None
+                }
+            else:
+                request.session['pending_order_email'] = {
+                    'order_id': order.id
+                }
+            request.session.modified = True
 
             # Store order ID in session for confirmation page
             request.session['order_id'] = order.id
@@ -957,12 +969,30 @@ def mpesa_callback(request):
                         message=f'M-Pesa payment confirmed. Receipt: {receipt_number}'
                     )
 
+                    # Send confirmation email now that payment is successful
+                    try:
+                        if order.auto_created_account:
+                            # Send payment confirmation with account details
+                            OrderTrackingEmailService.send_payment_confirmation_email(order, None)
+                        else:
+                            # Send regular order confirmation
+                            OrderTrackingEmailService.send_regular_order_confirmation(order, None)
+                    except Exception as e:
+                        logger.error(f"Failed to send confirmation email for order {order.id}: {str(e)}")
+
                     logger.info(f"M-Pesa payment successful for order {order.id}: {receipt_number}")
 
                 else:
                     # Payment failed
                     order.payment_status = 'failed'
                     order.save()
+
+                    # Create failed payment tracking status
+                    OrderTrackingStatus.objects.create(
+                        order=order,
+                        status='cancelled',
+                        message=f'M-Pesa payment failed: {result_desc}'
+                    )
 
                     logger.warning(f"M-Pesa payment failed for order {order.id}: {result_desc}")
 
@@ -974,6 +1004,34 @@ def mpesa_callback(request):
 
     # Return success response to M-Pesa
     return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
+
+
+def how_it_works(request):
+    """
+    Interactive 'How It Works' page for administrators and app owners.
+    Provides a comprehensive guide to the YummyTummy e-commerce system.
+    """
+    # Get some sample data for demonstration
+    sample_products = Product.objects.filter(is_available=True)[:3]
+    recent_orders = Order.objects.all().order_by('-created')[:5]
+
+    # Calculate some basic statistics
+    total_orders = Order.objects.count()
+    completed_orders = Order.objects.filter(payment_status='completed').count()
+    total_products = Product.objects.filter(is_available=True).count()
+
+    context = {
+        'sample_products': sample_products,
+        'recent_orders': recent_orders,
+        'stats': {
+            'total_orders': total_orders,
+            'completed_orders': completed_orders,
+            'total_products': total_products,
+            'conversion_rate': round((completed_orders / total_orders * 100) if total_orders > 0 else 0, 1)
+        }
+    }
+
+    return render(request, 'yummytummy_store/admin/how_it_works.html', context)
 
 
 def test_mpesa_auth(request):

@@ -1,0 +1,1161 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How YummyTummy Works - Administrator Guide</title>
+    <link rel="stylesheet" href="{% static 'yummytummy_store/css/normalize.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* YummyTummy Brand Colors */
+        :root {
+            --primary-color: #593500;
+            --secondary-color: #ffffff;
+            --accent-color: #f5f2ed;
+            --highlight-color: #ffc107;
+            --text-color: #333333;
+            --light-gray: #f7f7f7;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #666666;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--light-gray);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary-color), #7a4a00);
+            color: var(--secondary-color);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .admin-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            background: var(--secondary-color);
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            color: var(--dark-gray);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab:hover {
+            background: var(--accent-color);
+            color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--highlight-color);
+            background: var(--accent-color);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            padding: 3rem 0;
+            min-height: 80vh;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .info-card {
+            background: var(--secondary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid var(--highlight-color);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .card-description {
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--secondary-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--dark-gray);
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        /* Flow Chart */
+        .flow-chart {
+            background: var(--secondary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            background: #f0ede6;
+            transform: translateX(10px);
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content p {
+            color: var(--dark-gray);
+            margin: 0;
+        }
+
+        .step-arrow {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        /* Interactive Elements */
+        .demo-button {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .demo-button:hover {
+            background: #7a4a00;
+            transform: translateY(-2px);
+        }
+
+        .demo-section {
+            background: var(--secondary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .admin-header h1 {
+                font-size: 2rem;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .highlight {
+            background: var(--highlight-color);
+            color: var(--primary-color);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Back to Admin Link */
+        .back-to-admin {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-to-admin:hover {
+            background: #7a4a00;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Admin Link -->
+    <a href="/admin/" class="back-to-admin">
+        <i class="fas fa-arrow-left"></i> Back to Admin
+    </a>
+
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="container">
+            <h1><i class="fas fa-cogs"></i> How YummyTummy Works</h1>
+            <p>Complete Administrator Guide to the E-commerce System</p>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" data-section="overview">
+            <i class="fas fa-home"></i> Overview
+        </button>
+        <button class="nav-tab" data-section="user-flows">
+            <i class="fas fa-route"></i> User Flows
+        </button>
+        <button class="nav-tab" data-section="technical">
+            <i class="fas fa-code"></i> Technical
+        </button>
+        <button class="nav-tab" data-section="payment">
+            <i class="fas fa-credit-card"></i> Payment
+        </button>
+        <button class="nav-tab" data-section="orders">
+            <i class="fas fa-box"></i> Orders
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- Overview Section -->
+        <section id="overview" class="content-section active">
+            <h2 class="section-title">System Overview</h2>
+            <p class="section-subtitle">Understanding the YummyTummy E-commerce Platform</p>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">{{ stats.total_products }}</span>
+                    <div class="stat-label">Active Products</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ stats.total_orders }}</span>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ stats.completed_orders }}</span>
+                    <div class="stat-label">Completed Orders</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{{ stats.conversion_rate }}%</span>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            </div>
+
+            <!-- Key Features -->
+            <div class="card-grid">
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <h3 class="card-title">Session-Based Cart</h3>
+                    <p class="card-description">
+                        Shopping cart data is stored in user sessions, allowing guests to shop without creating accounts.
+                        Cart persists across page visits and automatically converts to orders during checkout.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3 class="card-title">Auto Account Creation</h3>
+                    <p class="card-description">
+                        Guest customers automatically get user accounts created during checkout. They receive email
+                        credentials and can track orders without manual registration.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+                    <h3 class="card-title">M-Pesa Integration</h3>
+                    <p class="card-description">
+                        Seamless mobile money payments through Safaricom M-Pesa STK Push. Real-time payment
+                        confirmation and automatic order status updates.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                    <h3 class="card-title">Product Variants</h3>
+                    <p class="card-description">
+                        Products support multiple variants (sizes, weights) with different pricing. Customers
+                        can select variants through expandable product cards.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-truck"></i></div>
+                    <h3 class="card-title">Order Tracking</h3>
+                    <p class="card-description">
+                        Complete order lifecycle management from placement to delivery. Customers receive
+                        email updates and can track progress through their dashboard.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-tags"></i></div>
+                    <h3 class="card-title">Coupon System</h3>
+                    <p class="card-description">
+                        Flexible discount system with percentage and fixed amount coupons. Usage tracking
+                        and expiration date management included.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> Technology Stack</h3>
+                <div class="card-grid">
+                    <div style="text-align: center;">
+                        <h4>Backend</h4>
+                        <p><strong>Django 4.2</strong> - Web framework</p>
+                        <p><strong>Neon PostgreSQL</strong> - Database</p>
+                        <p><strong>Python 3.12</strong> - Programming language</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>Frontend</h4>
+                        <p><strong>HTML5/CSS3</strong> - Structure & styling</p>
+                        <p><strong>JavaScript ES6+</strong> - Interactivity</p>
+                        <p><strong>Responsive Design</strong> - Mobile support</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>Services</h4>
+                        <p><strong>M-Pesa API</strong> - Payment processing</p>
+                        <p><strong>Uploadcare</strong> - Image management</p>
+                        <p><strong>Render.com</strong> - Hosting platform</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Flows Section -->
+        <section id="user-flows" class="content-section">
+            <h2 class="section-title">Customer Journey & Business Process</h2>
+            <p class="section-subtitle">How customers interact with your YummyTummy store from discovery to delivery</p>
+
+            <!-- Complete User Journey -->
+            <div class="flow-chart">
+                <h3 class="card-title"><i class="fas fa-route"></i> Complete Customer Journey</h3>
+
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Product Discovery</h4>
+                        <p><strong>Customer Action:</strong> Visits homepage and browses products<br>
+                        <strong>What Happens:</strong> Featured products are displayed with expandable size options<br>
+                        <strong>Business Value:</strong> Customers can easily explore product variants and pricing</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Shopping Cart</h4>
+                        <p><strong>Customer Action:</strong> Selects product sizes and adds items to cart<br>
+                        <strong>What Happens:</strong> Cart stores selections and calculates totals automatically<br>
+                        <strong>Business Value:</strong> Seamless shopping experience with real-time price updates</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Checkout Information</h4>
+                        <p><strong>Customer Action:</strong> Provides delivery address and contact details<br>
+                        <strong>What Happens:</strong> System validates information and prepares order<br>
+                        <strong>Business Value:</strong> Accurate delivery information ensures successful fulfillment</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Order Creation</h4>
+                        <p><strong>Customer Action:</strong> Confirms order details and selects M-Pesa payment<br>
+                        <strong>What Happens:</strong> Order is created with "Pending Payment" status<br>
+                        <strong>Business Value:</strong> Order tracking begins immediately for better customer service</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>M-Pesa Payment</h4>
+                        <p><strong>Customer Action:</strong> Receives STK push notification and enters M-Pesa PIN<br>
+                        <strong>What Happens:</strong> Payment is processed securely through Safaricom<br>
+                        <strong>Business Value:</strong> Convenient mobile payment increases conversion rates</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <h4>Payment Confirmation & Account Creation</h4>
+                        <p><strong>Customer Action:</strong> Payment is completed successfully<br>
+                        <strong>What Happens:</strong> Order status updates to "Confirmed", account is created, welcome email sent<br>
+                        <strong>Business Value:</strong> Customers can track orders and make future purchases easily</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">7</div>
+                    <div class="step-content">
+                        <h4>Order Fulfillment</h4>
+                        <p><strong>Customer Action:</strong> Receives order confirmation and tracking information<br>
+                        <strong>What Happens:</strong> Order moves through processing, packaging, and shipping stages<br>
+                        <strong>Business Value:</strong> Transparent process builds customer trust and satisfaction</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Demo -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-play-circle"></i> Business Process Simulator</h3>
+                <p>Click the buttons below to see how different customer actions work in your store:</p>
+
+                <button class="demo-button" onclick="simulateCartAdd()">
+                    <i class="fas fa-cart-plus"></i> Customer Adds Product
+                </button>
+                <button class="demo-button" onclick="simulateCheckout()">
+                    <i class="fas fa-credit-card"></i> Customer Checks Out
+                </button>
+                <button class="demo-button" onclick="simulatePayment()">
+                    <i class="fas fa-mobile-alt"></i> M-Pesa Payment Process
+                </button>
+
+                <div id="demo-output" style="margin-top: 1rem; padding: 1rem; background: var(--accent-color); border-radius: 6px; display: none;">
+                    <h4>Business Process Overview:</h4>
+                    <div id="demo-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Architecture Section -->
+        <section id="technical" class="content-section">
+            <h2 class="section-title">System Components & Data Management</h2>
+            <p class="section-subtitle">How your YummyTummy store manages products, orders, and customer information</p>
+
+            <!-- Data Management -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-database"></i> How Your Store Data is Organized</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-box"></i></div>
+                        <h4 class="card-title">Product Information</h4>
+                        <p><strong>What's Stored:</strong></p>
+                        <ul>
+                            <li>Product names and descriptions</li>
+                            <li>Base prices and availability status</li>
+                            <li>High-quality images (managed by Uploadcare)</li>
+                            <li>Product categories for organization</li>
+                        </ul>
+                        <p><strong>Business Benefit:</strong> Easy product management with professional image hosting</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+                        <h4 class="card-title">Product Variants</h4>
+                        <p><strong>What's Stored:</strong></p>
+                        <ul>
+                            <li>Different sizes (250g, 500g, 1kg)</li>
+                            <li>Price adjustments for each size</li>
+                            <li>Availability status per variant</li>
+                            <li>Display names for customer selection</li>
+                        </ul>
+                        <p><strong>Business Benefit:</strong> Flexible pricing for different product sizes</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                        <h4 class="card-title">Order Management</h4>
+                        <p><strong>What's Stored:</strong></p>
+                        <ul>
+                            <li>Customer contact and delivery information</li>
+                            <li>Payment status and M-Pesa transaction details</li>
+                            <li>Order totals and item details</li>
+                            <li>Tracking status and progress updates</li>
+                        </ul>
+                        <p><strong>Business Benefit:</strong> Complete order lifecycle tracking and customer service</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shopping Cart System -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-shopping-cart"></i> Shopping Cart System</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Guest Shopping Experience</h4>
+                            <p><strong>What Happens:</strong> Customers can shop without creating an account first</p>
+                            <p><strong>How It Works:</strong> Cart information is temporarily stored in the browser session</p>
+                            <p><strong>Business Benefit:</strong> Reduces barriers to purchase and improves conversion rates</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Product Selection & Pricing</h4>
+                            <p><strong>What Happens:</strong> System tracks each product variant and quantity selected</p>
+                            <p><strong>How It Works:</strong> Each cart item includes product details, size, and calculated price</p>
+                            <p><strong>Business Benefit:</strong> Accurate pricing and inventory tracking for all product variants</p>
+                        </div>
+                    </div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Real-Time Cart Updates</h4>
+                            <p><strong>What Happens:</strong> Cart totals and quantities update instantly as customers shop</p>
+                            <p><strong>How It Works:</strong> System recalculates totals and applies discounts automatically</p>
+                            <p><strong>Business Benefit:</strong> Transparent pricing builds customer trust and reduces cart abandonment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Experience Features -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-mouse-pointer"></i> Interactive Shopping Features</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Smart Cart Management</h4>
+                        <p><strong>Customer Experience:</strong></p>
+                        <ul>
+                            <li>One-click product additions to cart</li>
+                            <li>Visual feedback when items are added</li>
+                            <li>Instant cart count updates in navigation</li>
+                            <li>Smooth animations for better user experience</li>
+                        </ul>
+                        <p><strong>Business Impact:</strong> Intuitive shopping process increases customer satisfaction</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Product Variant Selection</h4>
+                        <p><strong>Customer Experience:</strong></p>
+                        <ul>
+                            <li>Expandable product cards show size options</li>
+                            <li>Clear pricing for each variant</li>
+                            <li>Easy quantity selection</li>
+                            <li>Mobile-friendly touch interactions</li>
+                        </ul>
+                        <p><strong>Business Impact:</strong> Clear variant display reduces customer confusion and support requests</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Integration Section -->
+        <section id="payment" class="content-section">
+            <h2 class="section-title">M-Pesa Payment System</h2>
+            <p class="section-subtitle">How your store processes secure mobile money payments from Kenyan customers</p>
+
+            <!-- M-Pesa Payment Process -->
+            <div class="flow-chart">
+                <h3 class="card-title"><i class="fas fa-mobile-alt"></i> How M-Pesa Payments Work</h3>
+
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Payment Request</h4>
+                        <p><strong>What Happens:</strong> Customer selects M-Pesa and enters their phone number<br>
+                        <strong>Behind the Scenes:</strong> Your store connects securely to Safaricom's payment system<br>
+                        <strong>Business Benefit:</strong> Automated payment processing reduces manual work</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>STK Push Notification</h4>
+                        <p><strong>What Happens:</strong> Customer receives a payment prompt on their phone<br>
+                        <strong>Behind the Scenes:</strong> Safaricom sends a secure payment request with order details<br>
+                        <strong>Business Benefit:</strong> Familiar payment experience increases customer trust</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Customer Authorization</h4>
+                        <p><strong>What Happens:</strong> Customer enters their M-Pesa PIN to authorize payment<br>
+                        <strong>Behind the Scenes:</strong> Safaricom processes the payment securely<br>
+                        <strong>Business Benefit:</strong> Secure payment method reduces fraud risk</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Payment Confirmation & Account Creation</h4>
+                        <p><strong>What Happens:</strong> Order status updates to "Confirmed", customer account created, welcome email sent<br>
+                        <strong>Behind the Scenes:</strong> System receives payment confirmation and triggers automated processes<br>
+                        <strong>Business Benefit:</strong> Immediate order processing and customer onboarding</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Error Handling</h4>
+                        <p><strong>What Happens:</strong> If payment fails, order is marked as cancelled with clear reason<br>
+                        <strong>Behind the Scenes:</strong> System tracks all payment attempts and failures for support<br>
+                        <strong>Business Benefit:</strong> Clear error tracking helps resolve customer issues quickly</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Setup Information -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-cog"></i> M-Pesa Setup & Security</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Business Account Requirements</h4>
+                        <p><strong>What You Need:</strong></p>
+                        <ul>
+                            <li>Safaricom M-Pesa business account</li>
+                            <li>API credentials from Safaricom</li>
+                            <li>Business short code for transactions</li>
+                            <li>Secure passkey for authentication</li>
+                        </ul>
+                        <p><strong>Security:</strong> All credentials are stored securely and encrypted</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Testing & Production</h4>
+                        <p><strong>Development Phase:</strong></p>
+                        <ul>
+                            <li>Sandbox environment for safe testing</li>
+                            <li>Test transactions don't involve real money</li>
+                            <li>Full payment flow simulation</li>
+                        </ul>
+                        <p><strong>Live Operations:</strong></p>
+                        <ul>
+                            <li>Production environment for real transactions</li>
+                            <li>Real-time payment processing</li>
+                            <li>Automatic transaction reconciliation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Order Management Section -->
+        <section id="orders" class="content-section">
+            <h2 class="section-title">Order Management & Customer Experience</h2>
+            <p class="section-subtitle">How orders progress from payment to delivery and how customers stay informed</p>
+
+            <!-- Order Status Flow -->
+            <div class="flow-chart">
+                <h3 class="card-title"><i class="fas fa-truck"></i> Order Lifecycle & Customer Communication</h3>
+
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Order Received (Pending Payment)</h4>
+                        <p><strong>Customer Experience:</strong> Order is created but awaiting payment confirmation<br>
+                        <strong>Admin Action:</strong> Order appears in admin panel with "Pending" status<br>
+                        <strong>Progress:</strong> 15% complete</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Payment Confirmed</h4>
+                        <p><strong>Customer Experience:</strong> Receives welcome email with account details and order confirmation<br>
+                        <strong>Admin Action:</strong> Order status automatically updates to "Confirmed"<br>
+                        <strong>Progress:</strong> 30% complete</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Order Processing</h4>
+                        <p><strong>Customer Experience:</strong> Can track order progress in their account dashboard<br>
+                        <strong>Admin Action:</strong> Update status to "Processing" when preparing order<br>
+                        <strong>Progress:</strong> 50% complete</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Packaging & Shipping</h4>
+                        <p><strong>Customer Experience:</strong> Receives shipping notification with tracking information<br>
+                        <strong>Admin Action:</strong> Update to "Shipped" with delivery details<br>
+                        <strong>Progress:</strong> 85% complete</p>
+                    </div>
+                </div>
+
+                <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Delivered</h4>
+                        <p><strong>Customer Experience:</strong> Order marked as complete, can leave reviews<br>
+                        <strong>Admin Action:</strong> Confirm delivery and close order<br>
+                        <strong>Progress:</strong> 100% complete</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Account System -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-user-plus"></i> Automatic Customer Account Creation</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Seamless Account Creation</h4>
+                        <p><strong>Customer Experience:</strong></p>
+                        <ul>
+                            <li>No need to create account before shopping</li>
+                            <li>Account automatically created after successful payment</li>
+                            <li>Receives email with login credentials</li>
+                            <li>Can immediately track order and make future purchases</li>
+                        </ul>
+                        <p><strong>Business Benefit:</strong> Reduces checkout friction while building customer database</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Secure Access & Privacy</h4>
+                        <p><strong>Security Features:</strong></p>
+                        <ul>
+                            <li>Secure temporary passwords generated automatically</li>
+                            <li>One-time login links with expiration dates</li>
+                            <li>Customers can change passwords after first login</li>
+                            <li>GDPR-compliant data handling</li>
+                        </ul>
+                        <p><strong>Customer Control:</strong> Full access to order history and account management</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Display -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-list"></i> Recent Orders</h3>
+
+                {% if recent_orders %}
+                <div class="card-grid">
+                    {% for order in recent_orders %}
+                    <div class="info-card">
+                        <h4 class="card-title">Order #{{ order.get_order_number }}</h4>
+                        <p><strong>Customer:</strong> {{ order.get_customer_name }}</p>
+                        <p><strong>Total:</strong> KSh {{ order.total_amount|floatformat:"2"|intcomma }}</p>
+                        <p><strong>Status:</strong>
+                            <span class="highlight">{{ order.payment_status|title }}</span>
+                        </p>
+                        <p><strong>Date:</strong> {{ order.created|date:"M d, Y H:i" }}</p>
+                        {% if order.mpesa_receipt_number %}
+                        <p><strong>M-Pesa Receipt:</strong> {{ order.mpesa_receipt_number }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="text-align: center; color: var(--dark-gray); font-style: italic;">
+                    No orders found. Orders will appear here once customers start placing them.
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Customer Communication -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-envelope"></i> Automated Customer Communication</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Payment Confirmation Email</h4>
+                        <p><strong>When It's Sent:</strong> Immediately after successful M-Pesa payment</p>
+                        <p><strong>What Customers Receive:</strong></p>
+                        <ul>
+                            <li>Order confirmation with receipt details</li>
+                            <li>Account login credentials</li>
+                            <li>Order tracking link</li>
+                            <li>Delivery information and timeline</li>
+                            <li>Contact information for support</li>
+                        </ul>
+                        <p><strong>Business Value:</strong> Professional communication builds trust and reduces support inquiries</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Order Status Updates</h4>
+                        <p><strong>When They're Sent:</strong> Automatically when you update order status in admin</p>
+                        <p><strong>What Customers Receive:</strong></p>
+                        <ul>
+                            <li>Clear status updates (Processing, Shipped, Delivered)</li>
+                            <li>Estimated delivery timelines</li>
+                            <li>Tracking information when available</li>
+                            <li>Direct links to order details</li>
+                        </ul>
+                        <p><strong>Business Value:</strong> Proactive communication reduces "where is my order" inquiries</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- JavaScript for Interactive Functionality -->
+    <script>
+        // Tab Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetSection = this.getAttribute('data-section');
+
+                    // Remove active class from all tabs and sections
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    contentSections.forEach(s => s.classList.remove('active'));
+
+                    // Add active class to clicked tab and corresponding section
+                    this.classList.add('active');
+                    document.getElementById(targetSection).classList.add('active');
+
+                    // Add fade-in animation
+                    document.getElementById(targetSection).classList.add('fade-in');
+
+                    // Scroll to top of content
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        });
+
+        // Business Process Simulators
+        function simulateCartAdd() {
+            const output = document.getElementById('demo-output');
+            const content = document.getElementById('demo-content');
+
+            content.innerHTML = `
+                <h5><i class="fas fa-cart-plus"></i> Customer Adds Product to Cart</h5>
+                <p><strong>Customer Action:</strong> Clicks "Add to Cart" for Peanut Butter - 500g</p>
+                <p><strong>What Happens:</strong></p>
+                <ul>
+                    <li>Product variant and quantity are validated</li>
+                    <li>Item is added to customer's shopping cart</li>
+                    <li>Cart total is updated automatically</li>
+                    <li>Cart count in navigation increases</li>
+                    <li>Customer sees success confirmation</li>
+                </ul>
+                <p><strong>Business Impact:</strong></p>
+                <ul>
+                    <li>Smooth shopping experience encourages more purchases</li>
+                    <li>Real-time cart updates reduce customer confusion</li>
+                    <li>Accurate pricing prevents checkout issues</li>
+                </ul>
+                <div style="background: #e8f5e8; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                    <strong>Result:</strong> Customer successfully adds "Peanut Butter - 500g" for KSh 850.00 to their cart
+                </div>
+            `;
+
+            output.style.display = 'block';
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function simulateCheckout() {
+            const output = document.getElementById('demo-output');
+            const content = document.getElementById('demo-content');
+
+            content.innerHTML = `
+                <h5><i class="fas fa-credit-card"></i> Customer Checkout Process</h5>
+                <p><strong>Customer Action:</strong> Provides delivery information and proceeds to payment</p>
+                <p><strong>Information Collected:</strong></p>
+                <ul>
+                    <li>Full name and contact details</li>
+                    <li>Delivery address and area</li>
+                    <li>Phone number for delivery coordination</li>
+                    <li>Special delivery instructions</li>
+                </ul>
+                <p><strong>What Happens:</strong></p>
+                <ul>
+                    <li>System validates all required information</li>
+                    <li>Delivery address is verified for service area</li>
+                    <li>Order total is calculated with any applicable discounts</li>
+                    <li>Customer is directed to secure payment options</li>
+                </ul>
+                <p><strong>Business Benefits:</strong></p>
+                <ul>
+                    <li>Accurate delivery information reduces failed deliveries</li>
+                    <li>Contact details enable customer service communication</li>
+                    <li>Special instructions improve delivery experience</li>
+                </ul>
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                    <strong>Next Step:</strong> Customer proceeds to M-Pesa payment for order total of KSh 850.00
+                </div>
+            `;
+
+            output.style.display = 'block';
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function simulatePayment() {
+            const output = document.getElementById('demo-output');
+            const content = document.getElementById('demo-content');
+
+            content.innerHTML = `
+                <h5><i class="fas fa-mobile-alt"></i> M-Pesa Payment Process</h5>
+                <p><strong>Customer Action:</strong> Selects M-Pesa payment and enters phone number (0712345678)</p>
+                <p><strong>Payment Flow:</strong></p>
+                <ol>
+                    <li><strong>Order Creation:</strong> Order #123 created with "Pending Payment" status</li>
+                    <li><strong>STK Push:</strong> Customer receives payment prompt on their phone</li>
+                    <li><strong>Authorization:</strong> Customer enters M-Pesa PIN to authorize KSh 850.00</li>
+                    <li><strong>Processing:</strong> Safaricom processes payment securely</li>
+                    <li><strong>Confirmation:</strong> Payment confirmed with receipt NLJ7RT61SV</li>
+                </ol>
+                <p><strong>Automatic Actions After Payment:</strong></p>
+                <ul>
+                    <li>Order status updated to "Confirmed"</li>
+                    <li>Customer account created automatically</li>
+                    <li>Welcome email sent with login credentials</li>
+                    <li>Order tracking begins</li>
+                    <li>Admin notification for order fulfillment</li>
+                </ul>
+                <p><strong>Business Benefits:</strong></p>
+                <ul>
+                    <li>Secure payment processing builds customer trust</li>
+                    <li>Automatic account creation improves customer retention</li>
+                    <li>Immediate order processing speeds up fulfillment</li>
+                    <li>Email notifications reduce customer service inquiries</li>
+                </ul>
+                <div style="background: #e8f5e8; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
+                    <strong>Success!</strong> Customer payment completed, account created, and order ready for processing
+                </div>
+            `;
+
+            output.style.display = 'block';
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add hover effects to cards
+        document.querySelectorAll('.info-card, .stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+</body>
+</html>

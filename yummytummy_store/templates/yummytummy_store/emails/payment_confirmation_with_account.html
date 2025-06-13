@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmed - YummyTummy Order #{{ order_number }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f2ed;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #ffc107;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #593500;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .success-icon {
+            color: #28a745;
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .order-number {
+            background-color: #593500;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f5f2ed;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        .section h3 {
+            color: #593500;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .account-details {
+            background-color: #e8f5e8;
+            border-left-color: #28a745;
+        }
+        .login-button {
+            display: inline-block;
+            background-color: #593500;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .login-button:hover {
+            background-color: #7a4a00;
+        }
+        .order-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .order-items th,
+        .order-items td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .order-items th {
+            background-color: #593500;
+            color: white;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #f5f2ed;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🥜 YummyTummy</div>
+            <div class="success-icon">✅</div>
+            <h1>Payment Confirmed!</h1>
+            <div class="order-number">Order #{{ order_number }}</div>
+        </div>
+
+        <!-- Payment Confirmation -->
+        <div class="section">
+            <h3>🎉 Great News!</h3>
+            <p>Your M-Pesa payment has been successfully processed and your order is confirmed!</p>
+            <p><strong>Customer:</strong> {{ customer_name }}</p>
+            <p><strong>Order Total:</strong> KSh {{ order.total_amount|floatformat:"2" }}</p>
+            <p><strong>Payment Method:</strong> M-Pesa</p>
+            {% if order.mpesa_receipt_number %}
+            <p><strong>M-Pesa Receipt:</strong> {{ order.mpesa_receipt_number }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Account Information -->
+        <div class="section account-details">
+            <h3>🔐 Your YummyTummy Account</h3>
+            <p>We've created a YummyTummy account for you to track your orders and manage future purchases:</p>
+            
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Account Status:</strong> Active and Ready</p>
+            
+            <a href="{{ login_url }}" class="login-button">
+                🚀 Access Your Account & Track Order
+            </a>
+            
+            <p><small>This secure login link will expire in {{ token_expires_days }} days. After your first login, you can set a new password.</small></p>
+        </div>
+
+        <!-- Order Details -->
+        <div class="section">
+            <h3>📦 Order Details</h3>
+            <table class="order-items">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ item.display_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>KSh {{ item.price|floatformat:"2" }}</td>
+                        <td>KSh {{ item.total|floatformat:"2" }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="3"><strong>Total Amount</strong></td>
+                        <td><strong>KSh {{ order.total_amount|floatformat:"2" }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Delivery Information -->
+        <div class="section">
+            <h3>🚚 Delivery Information</h3>
+            <p><strong>Delivery Address:</strong><br>
+            {{ order.address }}<br>
+            {% if order.area %}{{ order.area }}<br>{% endif %}
+            Phone: {{ order.phone }}</p>
+            
+            {% if order.order_notes %}
+            <p><strong>Special Instructions:</strong><br>
+            {{ order.order_notes }}</p>
+            {% endif %}
+            
+            <p><strong>Estimated Delivery:</strong> 2-3 business days</p>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="section warning">
+            <h3>📋 What Happens Next?</h3>
+            <ol>
+                <li><strong>Order Processing:</strong> We'll prepare your order for shipment</li>
+                <li><strong>Packaging:</strong> Your products will be carefully packaged</li>
+                <li><strong>Shipping:</strong> You'll receive tracking information via email</li>
+                <li><strong>Delivery:</strong> Enjoy your YummyTummy products!</li>
+            </ol>
+            <p>You can track your order progress anytime using the account link above.</p>
+        </div>
+
+        <!-- Support Information -->
+        <div class="section">
+            <h3>💬 Need Help?</h3>
+            <p>If you have any questions about your order or account:</p>
+            <ul>
+                <li>📧 Email us: <a href="mailto:{{ support_email }}">{{ support_email }}</a></li>
+                <li>📞 Call us: 660 805 522</li>
+                <li>🌐 Visit: <a href="https://yummytummy.com">yummytummy.com</a></li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for choosing YummyTummy!</p>
+            <p>This email was sent to {{ user.email }} regarding Order #{{ order_number }}</p>
+            <p>&copy; {% now "Y" %} YummyTummy. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
