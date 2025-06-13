@@ -151,10 +151,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Kenya timezone (East Africa Time - UTC+3)
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
+# Keep timezone support enabled for proper timezone handling
 USE_TZ = True
 
 

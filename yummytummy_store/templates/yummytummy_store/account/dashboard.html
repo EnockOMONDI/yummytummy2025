@@ -1,5 +1,6 @@
 {% extends 'yummytummy_store/base.html' %}
 {% load static %}
+{% load tz %}
 
 {% block title %}My Account - Order Tracking{% endblock %}
 
@@ -307,7 +308,7 @@
                 <div class="order-header">
                     <div>
                         <div class="order-number">Order #{{ order_data.order.get_order_number }}</div>
-                        <div class="order-date">{{ order_data.order.created|date:"F d, Y" }}</div>
+                        <div class="order-date">{% timezone "Africa/Nairobi" %}{{ order_data.order.created|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}</div>
                     </div>
                     <div class="order-status status-{{ order_data.latest_status.status|default:'processing' }}">
                         {% if order_data.latest_status %}
@@ -331,7 +332,7 @@
                         </div>
                         {% if order_data.latest_status %}
                         <div class="order-items">
-                            Last update: {{ order_data.latest_status.created_at|date:"M d, Y" }}
+                            Last update: {% timezone "Africa/Nairobi" %}{{ order_data.latest_status.created_at|date:"M d, Y \a\t H:i" }} EAT{% endtimezone %}
                         </div>
                         {% endif %}
                     </div>

@@ -1,0 +1,236 @@
+{% load tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update - YummyTummy Order #{{ order_number }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f2ed;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #ffc107;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #593500;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .order-number {
+            background-color: #593500;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #f5f2ed;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        .section h3 {
+            color: #593500;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .status-update {
+            background-color: #e8f5e8;
+            border-left-color: #28a745;
+        }
+        .status-processing {
+            background-color: #cce7ff;
+            border-left-color: #007bff;
+        }
+        .status-shipped {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .status-delivered {
+            background-color: #d4edda;
+            border-left-color: #28a745;
+        }
+        .order-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .order-items th,
+        .order-items td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .order-items th {
+            background-color: #593500;
+            color: white;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .track-button {
+            display: inline-block;
+            background-color: #593500;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .track-button:hover {
+            background-color: #7a4a00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🥜 YummyTummy</div>
+            <div class="status-icon">
+                {% if tracking_status.status == 'processing' %}📦
+                {% elif tracking_status.status == 'packaging' %}📋
+                {% elif tracking_status.status == 'shipped' %}🚚
+                {% elif tracking_status.status == 'out_for_delivery' %}🏃‍♂️
+                {% elif tracking_status.status == 'delivered' %}✅
+                {% else %}📋{% endif %}
+            </div>
+            <h1>Order Status Update</h1>
+            <div class="order-number">Order #{{ order_number }}</div>
+        </div>
+
+        <!-- Status Update -->
+        <div class="section status-update status-{{ tracking_status.status }}">
+            <h3>📢 Status Update</h3>
+            <p><strong>New Status:</strong> {{ tracking_status.get_status_display }}</p>
+            <p><strong>Update:</strong> {{ tracking_status.message }}</p>
+            <p><strong>Updated:</strong> {% timezone "Africa/Nairobi" %}{{ tracking_status.created_at|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}</p>
+        </div>
+
+        <!-- Order Information -->
+        <div class="section">
+            <h3>📦 Order Information</h3>
+            <p><strong>Customer:</strong> {{ customer_name }}</p>
+            <p><strong>Order Total:</strong> KSh {{ order.total_amount|floatformat:"2" }}</p>
+            <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+            <p><strong>Order Date:</strong> {% timezone "Africa/Nairobi" %}{{ order.created|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}</p>
+        </div>
+
+        <!-- Delivery Information -->
+        <div class="section">
+            <h3>🚚 Delivery Information</h3>
+            <p><strong>Delivery Address:</strong><br>
+            {{ order.address }}<br>
+            {% if order.area %}{{ order.area }}<br>{% endif %}
+            {% if order.estate %}{{ order.estate }}<br>{% endif %}
+            Phone: {{ order.phone }}</p>
+            
+            {% if order.order_notes %}
+            <p><strong>Special Instructions:</strong><br>
+            {{ order.order_notes }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Order Items -->
+        <div class="section">
+            <h3>🛍️ Order Items</h3>
+            <table class="order-items">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ item.display_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>KSh {{ item.total|floatformat:"2" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="section">
+            <h3>📋 What's Next?</h3>
+            {% if tracking_status.status == 'processing' %}
+            <p>Your order is being prepared for shipment. We'll notify you once it's packaged and ready to ship.</p>
+            <p><strong>Estimated next update:</strong> Within 24 hours</p>
+            {% elif tracking_status.status == 'packaging' %}
+            <p>Your order is being carefully packaged. It will be shipped soon!</p>
+            <p><strong>Estimated shipping:</strong> Within 24 hours</p>
+            {% elif tracking_status.status == 'shipped' %}
+            <p>Your order is on its way! You should receive it within 2-3 business days.</p>
+            <p><strong>Estimated delivery:</strong> 2-3 business days</p>
+            {% elif tracking_status.status == 'out_for_delivery' %}
+            <p>Your order is out for delivery and should arrive today!</p>
+            <p><strong>Estimated delivery:</strong> Today</p>
+            {% elif tracking_status.status == 'delivered' %}
+            <p>Your order has been successfully delivered! We hope you enjoy your YummyTummy products.</p>
+            <p>Please consider leaving us a review to help other customers.</p>
+            {% else %}
+            <p>We'll keep you updated as your order progresses through our fulfillment process.</p>
+            {% endif %}
+        </div>
+
+        <!-- Track Order Button -->
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="https://yummytummy.com/account/dashboard/" class="track-button">
+                📱 Track Your Order
+            </a>
+        </div>
+
+        <!-- Support Information -->
+        <div class="section">
+            <h3>💬 Need Help?</h3>
+            <p>If you have any questions about your order:</p>
+            <ul>
+                <li>📧 Email us: <a href="mailto:{{ support_email }}">{{ support_email }}</a></li>
+                <li>📞 Call us: 660 805 522</li>
+                <li>🌐 Visit: <a href="https://yummytummy.com">yummytummy.com</a></li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for choosing YummyTummy!</p>
+            <p>This email was sent to {{ order.email }} regarding Order #{{ order_number }}</p>
+            <p>&copy; {% now "Y" %} YummyTummy. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

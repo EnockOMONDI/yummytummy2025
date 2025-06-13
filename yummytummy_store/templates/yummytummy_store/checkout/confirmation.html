@@ -1,6 +1,7 @@
 {% extends "yummytummy_store/base.html" %}
 {% load static %}
 {% load humanize %}
+{% load tz %}
 
 {% block title %}Order Confirmation | YummyTummy Shop{% endblock %}
 
@@ -493,7 +494,7 @@
                                 <strong>Payment Successful!</strong><br>
                                 M-Pesa Receipt: {{ order.mpesa_receipt_number }}<br>
                                 {% if order.mpesa_transaction_date %}
-                                Transaction Date: {{ order.mpesa_transaction_date|date:"M d, Y H:i" }}
+                                Transaction Date: {% timezone "Africa/Nairobi" %}{{ order.mpesa_transaction_date|date:"M d, Y H:i" }} EAT{% endtimezone %}
                                 {% endif %}
                             </div>
                         </div>

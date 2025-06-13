@@ -43,4 +43,5 @@ urlpatterns = [
 
     # Admin Documentation URLs
     path('how-it-works/', views.how_it_works, name='how_it_works'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 ]

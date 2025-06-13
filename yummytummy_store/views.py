@@ -5,13 +5,15 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Q
+from django.db.models import Q, Sum, Count, Avg
+from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from datetime import datetime, timedelta
 from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus
 from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm
 from .mpesa_service import MPesaService
@@ -954,9 +956,16 @@ def mpesa_callback(request):
 
                     if transaction_date:
                         from datetime import datetime
+                        from django.utils import timezone as django_timezone
+                        import pytz
                         try:
                             # Parse M-Pesa date format (YYYYMMDDHHMMSS)
-                            order.mpesa_transaction_date = datetime.strptime(str(transaction_date), '%Y%m%d%H%M%S')
+                            # M-Pesa timestamps are in Kenya time (EAT)
+                            naive_datetime = datetime.strptime(str(transaction_date), '%Y%m%d%H%M%S')
+
+                            # Make timezone-aware in Kenya timezone
+                            kenya_tz = pytz.timezone('Africa/Nairobi')
+                            order.mpesa_transaction_date = kenya_tz.localize(naive_datetime)
                         except ValueError:
                             pass
 
@@ -1032,6 +1041,199 @@ def how_it_works(request):
     }
 
     return render(request, 'yummytummy_store/admin/how_it_works.html', context)
+
+
+@staff_member_required
+def admin_dashboard(request):
+    """
+    Comprehensive admin dashboard with business insights and key metrics.
+    Provides real-time data for store management and decision making.
+    """
+    # Get current date and time ranges for analytics
+    now = timezone.now()
+    today = now.date()
+    week_start = today - timedelta(days=today.weekday())
+    month_start = today.replace(day=1)
+
+    # === SALES OVERVIEW ===
+    # Total revenue calculations
+    total_revenue = Order.objects.filter(payment_status='completed').aggregate(
+        total=Sum('total_amount')
+    )['total'] or 0
+
+    revenue_today = Order.objects.filter(
+        payment_status='completed',
+        created__date=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    revenue_this_week = Order.objects.filter(
+        payment_status='completed',
+        created__date__gte=week_start
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    revenue_this_month = Order.objects.filter(
+        payment_status='completed',
+        created__date__gte=month_start
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # === ORDER MANAGEMENT ===
+    # Order counts by status
+    total_orders = Order.objects.count()
+    completed_orders = Order.objects.filter(payment_status='completed').count()
+    pending_orders = Order.objects.filter(payment_status='pending').count()
+    processing_orders = Order.objects.filter(payment_status='processing').count()
+    failed_orders = Order.objects.filter(payment_status='failed').count()
+
+    # Orders requiring attention (pending or failed)
+    orders_needing_attention = Order.objects.filter(
+        payment_status__in=['pending', 'failed']
+    ).count()
+
+    # Recent orders (last 10)
+    recent_orders = Order.objects.select_related('user').order_by('-created')[:10]
+
+    # Orders today
+    orders_today = Order.objects.filter(created__date=today).count()
+    orders_this_week = Order.objects.filter(created__date__gte=week_start).count()
+    orders_this_month = Order.objects.filter(created__date__gte=month_start).count()
+
+    # === PRODUCT PERFORMANCE ===
+    # Total active products
+    total_products = Product.objects.filter(is_available=True).count()
+    featured_products = Product.objects.filter(is_featured=True, is_available=True).count()
+
+    # Best-selling products (by order item count)
+    best_selling_products = OrderItem.objects.values(
+        'product__name', 'product__id'
+    ).annotate(
+        total_sold=Sum('quantity'),
+        total_revenue=Sum('price')
+    ).order_by('-total_sold')[:5]
+
+    # === CUSTOMER INSIGHTS ===
+    # Customer statistics
+    total_customers = User.objects.count()
+    new_customers_today = User.objects.filter(date_joined__date=today).count()
+    new_customers_this_week = User.objects.filter(date_joined__date__gte=week_start).count()
+    new_customers_this_month = User.objects.filter(date_joined__date__gte=month_start).count()
+
+    # Repeat customers (customers with more than one order)
+    repeat_customers = User.objects.annotate(
+        order_count=Count('orders')
+    ).filter(order_count__gt=1).count()
+
+    repeat_customer_rate = (repeat_customers / total_customers * 100) if total_customers > 0 else 0
+
+    # === PAYMENT ANALYTICS ===
+    # M-Pesa transaction success rate
+    total_mpesa_attempts = Order.objects.filter(payment_method='mpesa').count()
+    successful_mpesa = Order.objects.filter(
+        payment_method='mpesa',
+        payment_status='completed'
+    ).count()
+
+    mpesa_success_rate = (successful_mpesa / total_mpesa_attempts * 100) if total_mpesa_attempts > 0 else 0
+
+    # Failed payments requiring follow-up
+    failed_payments = Order.objects.filter(
+        payment_status='failed',
+        created__date__gte=today - timedelta(days=7)  # Last 7 days
+    ).order_by('-created')[:5]
+
+    # === BUSINESS METRICS ===
+    # Average order value
+    avg_order_value = Order.objects.filter(payment_status='completed').aggregate(
+        avg=Avg('total_amount')
+    )['avg'] or 0
+
+    # Conversion rate (completed orders / total orders)
+    conversion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
+
+    # === RECENT ACTIVITY ===
+    # Recent order tracking updates
+    recent_tracking_updates = OrderTrackingStatus.objects.select_related(
+        'order'
+    ).order_by('-created_at')[:5]
+
+    # === ALERTS & NOTIFICATIONS ===
+    alerts = []
+
+    # Low stock alerts (if you have inventory tracking)
+    # alerts.append({'type': 'warning', 'message': 'Some products are running low on stock'})
+
+    # Failed payments alert
+    if failed_orders > 0:
+        alerts.append({
+            'type': 'danger',
+            'message': f'{failed_orders} failed payments need attention'
+        })
+
+    # Pending orders alert
+    if pending_orders > 5:
+        alerts.append({
+            'type': 'warning',
+            'message': f'{pending_orders} orders are pending payment'
+        })
+
+    # New customers celebration
+    if new_customers_today > 0:
+        alerts.append({
+            'type': 'success',
+            'message': f'{new_customers_today} new customers joined today!'
+        })
+
+    context = {
+        # Sales data
+        'total_revenue': total_revenue,
+        'revenue_today': revenue_today,
+        'revenue_this_week': revenue_this_week,
+        'revenue_this_month': revenue_this_month,
+
+        # Order data
+        'total_orders': total_orders,
+        'completed_orders': completed_orders,
+        'pending_orders': pending_orders,
+        'processing_orders': processing_orders,
+        'failed_orders': failed_orders,
+        'orders_needing_attention': orders_needing_attention,
+        'recent_orders': recent_orders,
+        'orders_today': orders_today,
+        'orders_this_week': orders_this_week,
+        'orders_this_month': orders_this_month,
+
+        # Product data
+        'total_products': total_products,
+        'featured_products': featured_products,
+        'best_selling_products': best_selling_products,
+
+        # Customer data
+        'total_customers': total_customers,
+        'new_customers_today': new_customers_today,
+        'new_customers_this_week': new_customers_this_week,
+        'new_customers_this_month': new_customers_this_month,
+        'repeat_customers': repeat_customers,
+        'repeat_customer_rate': round(repeat_customer_rate, 1),
+
+        # Payment data
+        'mpesa_success_rate': round(mpesa_success_rate, 1),
+        'failed_payments': failed_payments,
+
+        # Business metrics
+        'avg_order_value': avg_order_value,
+        'conversion_rate': round(conversion_rate, 1),
+
+        # Recent activity
+        'recent_tracking_updates': recent_tracking_updates,
+
+        # Alerts
+        'alerts': alerts,
+
+        # Date context
+        'today': today,
+        'current_time': now,
+    }
+
+    return render(request, 'yummytummy_store/admin/dashboard.html', context)
 
 
 def test_mpesa_auth(request):

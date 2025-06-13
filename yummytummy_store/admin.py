@@ -4,7 +4,7 @@ from pyuploadcare.dj.forms import FileWidget
 from pyuploadcare.dj.models import ImageField
 from .models import (
     Category, Product, ProductVariant, Ingredient, ProductIngredient,
-    Order, OrderItem, Coupon, CouponUsage
+    Order, OrderItem, Coupon, CouponUsage, OrderTrackingStatus
 )
 
 class ProductVariantInline(admin.TabularInline):
@@ -122,6 +122,41 @@ class OrderCouponUsageInline(admin.TabularInline):
     max_num = 0  # Don't allow adding new usages via admin
 
 
+class OrderTrackingStatusInline(admin.TabularInline):
+    model = OrderTrackingStatus
+    extra = 1
+    readonly_fields = ['created_at', 'created_by']
+    fields = ['status', 'message', 'created_by', 'created_at']
+    ordering = ['-created_at']
+
+    def save_model(self, request, obj, form, change):
+        # Set the created_by field to current user if not set
+        if not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+        # Send email notification for inline status updates
+        try:
+            from .services import OrderTrackingEmailService
+            OrderTrackingEmailService.send_status_update_email(obj.order, obj)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send email notification from inline: {str(e)}")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('created_by')
+
+    def save_model(self, request, obj, form, change):
+        # Set the created_by field to current user if not set
+        if not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('created_by')
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'get_order_number', 'first_name', 'last_name', 'email',
@@ -129,7 +164,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ['payment_status', 'payment_method', 'created', 'updated']
     search_fields = ['first_name', 'last_name', 'email', 'transaction_id', 'mpesa_receipt_number']
     date_hierarchy = 'created'
-    inlines = [OrderItemInline, OrderCouponUsageInline]
+    inlines = [OrderItemInline, OrderCouponUsageInline, OrderTrackingStatusInline]
     readonly_fields = ['get_order_number', 'subtotal_amount', 'discount_amount', 'formatted_subtotal', 'formatted_discount', 'formatted_total',
                       'mpesa_checkout_request_id', 'mpesa_merchant_request_id', 'mpesa_receipt_number', 'mpesa_transaction_date']
     fieldsets = (
@@ -168,9 +203,11 @@ class OrderAdmin(admin.ModelAdmin):
     formatted_discount.short_description = 'Discount (KES)'
 
     def formatted_total(self, obj):
-        # Pre-format the value first, then pass it to format_html
-        formatted_value = 'KSh {:,.2f}'.format(obj.total_amount)
-        return format_html('<span><strong>{}</strong></span>', formatted_value)
+        # Handle None values safely
+        if obj.total_amount is not None:
+            formatted_value = 'KSh {:,.2f}'.format(obj.total_amount)
+            return format_html('<span><strong>{}</strong></span>', formatted_value)
+        return format_html('<span><em>Not calculated</em></span>')
     formatted_total.short_description = 'Total (KES)'
 
 
@@ -283,6 +320,10 @@ class CouponUsageAdmin(admin.ModelAdmin):
     search_fields = ['coupon__code', 'order__email', 'user__email']
     readonly_fields = ['coupon', 'order', 'user', 'discount_amount', 'formatted_discount', 'used_at']
 
+    def user_email(self, obj):
+        return obj.user.email if obj.user else 'Guest'
+    user_email.short_description = 'User Email'
+
     def formatted_discount(self, obj):
         # Pre-format the value first, then pass it to format_html
         formatted_value = 'KSh {:,.2f}'.format(obj.discount_amount)
@@ -297,14 +338,171 @@ class CouponUsageAdmin(admin.ModelAdmin):
         return obj.order.get_order_number()
     order_number.short_description = 'Order Number'
 
-    def user_email(self, obj):
-        if obj.user:
-            return obj.user.email
-        return obj.order.email
-    user_email.short_description = 'User Email'
+
+@admin.register(OrderTrackingStatus)
+class OrderTrackingStatusAdmin(admin.ModelAdmin):
+    list_display = ['order_number', 'status', 'message_preview', 'created_at', 'created_by']
+    list_filter = ['status', 'created_at']
+    search_fields = ['order__id', 'order__first_name', 'order__last_name', 'order__email']
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']
+
+    fieldsets = (
+        ('Order Information', {
+            'fields': ('order',)
+        }),
+        ('Status Update', {
+            'fields': ('status', 'message', 'created_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('order', 'created_by')
+
+    def order_number(self, obj):
+        return obj.order.get_order_number()
+    order_number.short_description = 'Order #'
+
+    def message_preview(self, obj):
+        return obj.message[:50] + '...' if len(obj.message) > 50 else obj.message
+    message_preview.short_description = 'Message'
+
+    def save_model(self, request, obj, form, change):
+        # Set the created_by field to current user if not set
+        if not obj.created_by:
+            obj.created_by = request.user
+
+        # Save the object first
+        super().save_model(request, obj, form, change)
+
+        # Send email notification to customer for both new and updated status
+        try:
+            from .services import OrderTrackingEmailService
+            OrderTrackingEmailService.send_status_update_email(obj.order, obj)
+
+            if change:
+                self.message_user(request, "Status updated and customer notification email sent.", level='success')
+            else:
+                self.message_user(request, "Status created and customer notification email sent.", level='success')
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to send email notification: {str(e)}")
+
+            if change:
+                self.message_user(request, f"Status updated but email notification failed: {str(e)}", level='warning')
+            else:
+                self.message_user(request, f"Status created but email notification failed: {str(e)}", level='warning')
+
+    actions = ['mark_as_processing', 'mark_as_packaging', 'mark_as_shipped', 'mark_as_delivered']
+
+    @admin.action(description='Create Processing status for selected orders')
+    def mark_as_processing(self, request, queryset):
+        count = 0
+        email_count = 0
+        for tracking_status in queryset:
+            new_status = OrderTrackingStatus.objects.create(
+                order=tracking_status.order,
+                status='processing',
+                message='Your order is being processed and prepared for shipment.',
+                created_by=request.user
+            )
+            count += 1
+
+            # Send email notification
+            try:
+                from .services import OrderTrackingEmailService
+                OrderTrackingEmailService.send_status_update_email(new_status.order, new_status)
+                email_count += 1
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send email for order {new_status.order.id}: {str(e)}")
+
+        self.message_user(request, f"Created Processing status for {count} orders. Sent {email_count} email notifications.")
+
+    @admin.action(description='Create Packaging status for selected orders')
+    def mark_as_packaging(self, request, queryset):
+        count = 0
+        email_count = 0
+        for tracking_status in queryset:
+            new_status = OrderTrackingStatus.objects.create(
+                order=tracking_status.order,
+                status='packaging',
+                message='Your order is being packaged for shipment.',
+                created_by=request.user
+            )
+            count += 1
+
+            # Send email notification
+            try:
+                from .services import OrderTrackingEmailService
+                OrderTrackingEmailService.send_status_update_email(new_status.order, new_status)
+                email_count += 1
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send email for order {new_status.order.id}: {str(e)}")
+
+        self.message_user(request, f"Created Packaging status for {count} orders. Sent {email_count} email notifications.")
+
+    @admin.action(description='Create Shipped status for selected orders')
+    def mark_as_shipped(self, request, queryset):
+        count = 0
+        email_count = 0
+        for tracking_status in queryset:
+            new_status = OrderTrackingStatus.objects.create(
+                order=tracking_status.order,
+                status='shipped',
+                message='Your order has been shipped and is on its way to you.',
+                created_by=request.user
+            )
+            count += 1
+
+            # Send email notification
+            try:
+                from .services import OrderTrackingEmailService
+                OrderTrackingEmailService.send_status_update_email(new_status.order, new_status)
+                email_count += 1
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send email for order {new_status.order.id}: {str(e)}")
+
+        self.message_user(request, f"Created Shipped status for {count} orders. Sent {email_count} email notifications.")
+
+    @admin.action(description='Create Delivered status for selected orders')
+    def mark_as_delivered(self, request, queryset):
+        count = 0
+        email_count = 0
+        for tracking_status in queryset:
+            new_status = OrderTrackingStatus.objects.create(
+                order=tracking_status.order,
+                status='delivered',
+                message='Your order has been successfully delivered. Thank you for choosing YummyTummy!',
+                created_by=request.user
+            )
+            count += 1
+
+            # Send email notification
+            try:
+                from .services import OrderTrackingEmailService
+                OrderTrackingEmailService.send_status_update_email(new_status.order, new_status)
+                email_count += 1
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send email for order {new_status.order.id}: {str(e)}")
+
+        self.message_user(request, f"Created Delivered status for {count} orders. Sent {email_count} email notifications.")
 
     def has_add_permission(self, request):
-        return False  # Prevent adding coupon usages directly
+        return True  # Allow adding tracking status entries
 
 
 # Admin site customization with YummyTummy branding

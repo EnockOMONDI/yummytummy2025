@@ -271,6 +271,45 @@ class OrderTrackingEmailService:
             print(f"Failed to send payment confirmation email: {e}")
             return False
 
+    @staticmethod
+    def send_status_update_email(order, tracking_status, request=None):
+        """Send email notification when order status is updated"""
+        try:
+            # Format order items
+            order_items = OrderTrackingEmailService.format_order_items_for_email(order)
+
+            # Prepare email context
+            context = {
+                'order': order,
+                'tracking_status': tracking_status,
+                'order_items': order_items,
+                'order_number': order.get_order_number(),
+                'customer_name': order.get_customer_name(),
+                'site_name': 'YummyTummy',
+                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
+            }
+
+            # Render email content
+            html_message = render_to_string('yummytummy_store/emails/order_status_update.html', context)
+            plain_message = strip_tags(html_message)
+
+            # Send email
+            send_mail(
+                subject=f'YummyTummy Order #{order.get_order_number()} - Status Update: {tracking_status.get_status_display()}',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            return True
+
+        except Exception as e:
+            # Log error (in production, use proper logging)
+            print(f"Failed to send status update email: {e}")
+            return False
+
 
 class OrderTrackingService:
     """Service for managing order tracking status updates"""

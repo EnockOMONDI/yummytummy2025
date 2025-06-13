@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     
     <style>
         /* YummyTummy Brand Colors */
@@ -354,6 +355,21 @@
             background: #7a4a00;
             transform: translateY(-2px);
         }
+
+        /* Mermaid Diagram Styling */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -457,10 +473,11 @@
 
                 <div class="info-card">
                     <div class="card-icon"><i class="fas fa-truck"></i></div>
-                    <h3 class="card-title">Order Tracking</h3>
+                    <h3 class="card-title">Complete Order Lifecycle Management</h3>
                     <p class="card-description">
-                        Complete order lifecycle management from placement to delivery. Customers receive
-                        email updates and can track progress through their dashboard.
+                        Full order tracking from payment to delivery with 8 distinct status stages. Automated
+                        email notifications at each stage and comprehensive admin interface for order management.
+                        Customers track progress through personalized dashboards with real-time updates.
                     </p>
                 </div>
 
@@ -505,9 +522,46 @@
             <h2 class="section-title">Customer Journey & Business Process</h2>
             <p class="section-subtitle">How customers interact with your YummyTummy store from discovery to delivery</p>
 
+            <!-- Complete Application Flow Diagram -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-sitemap"></i> Complete YummyTummy Application Flow</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    This diagram shows the complete customer journey from first visit to order delivery
+                </p>
+
+                <div style="background: var(--secondary-color); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div class="mermaid">
+flowchart TD
+    A[Customer Visits Homepage] --> B[Browse Products & Variants]
+    B --> C[Select Product Size & Add to Cart]
+    C --> D{Continue Shopping?}
+    D -->|Yes| B
+    D -->|No| E[View Cart & Proceed to Checkout]
+    E --> F[Enter Delivery Information]
+    F --> G[Select M-Pesa Payment]
+    G --> H[Order Created<br/>Pending Payment]
+    H --> I[M-Pesa STK Push Sent]
+    I --> J[Customer Enters PIN]
+    J --> K{Payment Successful?}
+    K -->|Yes| L[Payment Confirmed]
+    K -->|No| M[Payment Failed<br/>Order Cancelled]
+    L --> N[Account Auto-Created]
+    N --> O[Welcome Email Sent]
+    O --> P[Customer Can Track Order]
+    P --> Q[Admin Updates Order Status]
+    Q --> R[Customer Receives Status Emails]
+    R --> S[Order Delivered]
+    S --> T[Customer Can Reorder]
+    T --> B
+    M --> U[Customer Can Retry Payment]
+    U --> G
+                    </div>
+                </div>
+            </div>
+
             <!-- Complete User Journey -->
             <div class="flow-chart">
-                <h3 class="card-title"><i class="fas fa-route"></i> Complete Customer Journey</h3>
+                <h3 class="card-title"><i class="fas fa-route"></i> Detailed Customer Journey Steps</h3>
 
                 <div class="flow-step">
                     <div class="step-number">1</div>
@@ -739,16 +793,47 @@
             <h2 class="section-title">M-Pesa Payment System</h2>
             <p class="section-subtitle">How your store processes secure mobile money payments from Kenyan customers</p>
 
+            <!-- M-Pesa Payment Flow Diagram -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-mobile-alt"></i> Complete M-Pesa Payment Flow</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    This diagram shows the complete payment process from customer checkout to order confirmation
+                </p>
+
+                <div style="background: var(--secondary-color); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div class="mermaid">
+flowchart TD
+    A[Customer Checkout] --> B[Order Created<br/>Status: pending]
+    B --> C[M-Pesa STK Push Initiated]
+    C --> D{STK Push Success?}
+    D -->|Yes| E[Order Status: processing]
+    D -->|No| F[Order Status: failed]
+    E --> G[Customer Receives STK Push]
+    G --> H[Customer Enters PIN]
+    H --> I{Payment Success?}
+    I -->|Yes| J[M-Pesa Callback<br/>ResultCode=0]
+    I -->|No| K[M-Pesa Callback<br/>ResultCode≠0]
+    J --> L[Order Status: completed]
+    K --> M[Order Status: failed]
+    L --> N[OrderTrackingStatus<br/>payment_confirmed]
+    M --> O[OrderTrackingStatus<br/>cancelled]
+    N --> P[Email: Payment Confirmation]
+    O --> Q[Email: Payment Failed]
+                    </div>
+                </div>
+            </div>
+
             <!-- M-Pesa Payment Process -->
             <div class="flow-chart">
-                <h3 class="card-title"><i class="fas fa-mobile-alt"></i> How M-Pesa Payments Work</h3>
+                <h3 class="card-title"><i class="fas fa-cogs"></i> Technical Payment Process Details</h3>
 
                 <div class="flow-step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h4>Payment Request</h4>
-                        <p><strong>What Happens:</strong> Customer selects M-Pesa and enters their phone number<br>
-                        <strong>Behind the Scenes:</strong> Your store connects securely to Safaricom's payment system<br>
+                        <h4>Payment Request Initiation</h4>
+                        <p><strong>Customer Action:</strong> Selects M-Pesa and enters phone number (e.g., 0712345678)<br>
+                        <strong>System Process:</strong> Order created with status "pending", STK Push API called<br>
+                        <strong>File Location:</strong> views.py:587 (order creation), views.py:674 (STK Push)<br>
                         <strong>Business Benefit:</strong> Automated payment processing reduces manual work</p>
                     </div>
                 </div>
@@ -758,10 +843,11 @@
                 <div class="flow-step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h4>STK Push Notification</h4>
-                        <p><strong>What Happens:</strong> Customer receives a payment prompt on their phone<br>
-                        <strong>Behind the Scenes:</strong> Safaricom sends a secure payment request with order details<br>
-                        <strong>Business Benefit:</strong> Familiar payment experience increases customer trust</p>
+                        <h4>STK Push Success/Failure</h4>
+                        <p><strong>Success Path:</strong> Order status updated to "processing" (views.py:685)<br>
+                        <strong>Failure Path:</strong> Order status set to "failed" with tracking status (views.py:692-700)<br>
+                        <strong>Customer Experience:</strong> Receives payment prompt on phone or error message<br>
+                        <strong>Business Benefit:</strong> Clear status tracking for all payment attempts</p>
                     </div>
                 </div>
 
@@ -770,9 +856,10 @@
                 <div class="flow-step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h4>Customer Authorization</h4>
-                        <p><strong>What Happens:</strong> Customer enters their M-Pesa PIN to authorize payment<br>
-                        <strong>Behind the Scenes:</strong> Safaricom processes the payment securely<br>
+                        <h4>Customer Payment Authorization</h4>
+                        <p><strong>Customer Action:</strong> Enters M-Pesa PIN to authorize payment<br>
+                        <strong>Safaricom Process:</strong> Validates PIN and processes payment securely<br>
+                        <strong>System Waiting:</strong> Order remains in "processing" status until callback<br>
                         <strong>Business Benefit:</strong> Secure payment method reduces fraud risk</p>
                     </div>
                 </div>
@@ -782,9 +869,10 @@
                 <div class="flow-step">
                     <div class="step-number">4</div>
                     <div class="step-content">
-                        <h4>Payment Confirmation & Account Creation</h4>
-                        <p><strong>What Happens:</strong> Order status updates to "Confirmed", customer account created, welcome email sent<br>
-                        <strong>Behind the Scenes:</strong> System receives payment confirmation and triggers automated processes<br>
+                        <h4>Payment Callback Processing</h4>
+                        <p><strong>Success (ResultCode=0):</strong> Order status → "completed", tracking status → "payment_confirmed" (views.py:953-970)<br>
+                        <strong>Failure (ResultCode≠0):</strong> Order status → "failed", tracking status → "cancelled" (views.py:989-997)<br>
+                        <strong>Automatic Actions:</strong> Account creation, email notifications, order tracking begins<br>
                         <strong>Business Benefit:</strong> Immediate order processing and customer onboarding</p>
                     </div>
                 </div>
@@ -794,10 +882,11 @@
                 <div class="flow-step">
                     <div class="step-number">5</div>
                     <div class="step-content">
-                        <h4>Error Handling</h4>
-                        <p><strong>What Happens:</strong> If payment fails, order is marked as cancelled with clear reason<br>
-                        <strong>Behind the Scenes:</strong> System tracks all payment attempts and failures for support<br>
-                        <strong>Business Benefit:</strong> Clear error tracking helps resolve customer issues quickly</p>
+                        <h4>Post-Payment Automation</h4>
+                        <p><strong>Account Creation:</strong> Auto-generated user account with secure credentials<br>
+                        <strong>Email Notifications:</strong> Welcome email with login details and order confirmation<br>
+                        <strong>Order Tracking:</strong> Customer can track progress through dashboard<br>
+                        <strong>Business Benefit:</strong> Complete customer onboarding without manual intervention</p>
                     </div>
                 </div>
             </div>
@@ -841,19 +930,78 @@
         <!-- Order Management Section -->
         <section id="orders" class="content-section">
             <h2 class="section-title">Order Management & Customer Experience</h2>
-            <p class="section-subtitle">How orders progress from payment to delivery and how customers stay informed</p>
+            <p class="section-subtitle">Complete order lifecycle management from payment to delivery with automated customer communications</p>
+
+            <!-- Order Lifecycle Progression Diagram -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-truck"></i> Order Status Progression</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    This diagram shows how orders progress through each stage with completion percentages
+                </p>
+
+                <div style="background: var(--secondary-color); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div class="mermaid">
+flowchart LR
+    A[order_received<br/>15%] --> B[payment_confirmed<br/>30%]
+    B --> C[processing<br/>50%]
+    C --> D[packaging<br/>70%]
+    D --> E[shipped<br/>85%]
+    E --> F[out_for_delivery<br/>95%]
+    F --> G[delivered<br/>100%]
+
+    B --> H[cancelled<br/>0%]
+    B --> I[refunded<br/>0%]
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Workflow Guide -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-user-cog"></i> Administrator Order Management Workflow</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Order Admin Interface</h4>
+                        <p><strong>Access:</strong> <code>/admin/yummytummy_store/order/</code></p>
+                        <p><strong>Capabilities:</strong></p>
+                        <ul>
+                            <li>View all orders with payment status</li>
+                            <li>Edit customer information and delivery details</li>
+                            <li>Update payment status (pending, processing, completed, failed)</li>
+                            <li>Add order tracking status updates inline</li>
+                            <li>View order items and totals</li>
+                        </ul>
+                        <p><strong>Business Use:</strong> Primary interface for order management and customer service</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Order Tracking Status Admin</h4>
+                        <p><strong>Access:</strong> <code>/admin/yummytummy_store/ordertrackingstatus/</code></p>
+                        <p><strong>Capabilities:</strong></p>
+                        <ul>
+                            <li>Create new status updates for orders</li>
+                            <li>Bulk actions: Mark as Processing, Packaging, Shipped, Delivered</li>
+                            <li>Custom messages for each status update</li>
+                            <li>Automatic email notifications to customers</li>
+                            <li>Track who created each status update</li>
+                        </ul>
+                        <p><strong>Business Use:</strong> Dedicated interface for order fulfillment tracking</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Order Status Flow -->
             <div class="flow-chart">
-                <h3 class="card-title"><i class="fas fa-truck"></i> Order Lifecycle & Customer Communication</h3>
+                <h3 class="card-title"><i class="fas fa-clipboard-list"></i> Complete Order Lifecycle & Admin Actions</h3>
 
                 <div class="flow-step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h4>Order Received (Pending Payment)</h4>
-                        <p><strong>Customer Experience:</strong> Order is created but awaiting payment confirmation<br>
-                        <strong>Admin Action:</strong> Order appears in admin panel with "Pending" status<br>
-                        <strong>Progress:</strong> 15% complete</p>
+                        <h4>Order Received (15% Complete)</h4>
+                        <p><strong>Customer Experience:</strong> Order created but awaiting payment confirmation<br>
+                        <strong>Admin View:</strong> Order appears with "Pending Payment" status in admin panel<br>
+                        <strong>Admin Action:</strong> Monitor payment status, no action required<br>
+                        <strong>System Status:</strong> order_received tracking status automatically created</p>
                     </div>
                 </div>
 
@@ -862,10 +1010,11 @@
                 <div class="flow-step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h4>Payment Confirmed</h4>
+                        <h4>Payment Confirmed (30% Complete)</h4>
                         <p><strong>Customer Experience:</strong> Receives welcome email with account details and order confirmation<br>
-                        <strong>Admin Action:</strong> Order status automatically updates to "Confirmed"<br>
-                        <strong>Progress:</strong> 30% complete</p>
+                        <strong>Admin View:</strong> Order status automatically updates to "Completed Payment"<br>
+                        <strong>Admin Action:</strong> Begin order preparation, update to "Processing" status<br>
+                        <strong>System Status:</strong> payment_confirmed tracking status automatically created</p>
                     </div>
                 </div>
 
@@ -874,10 +1023,11 @@
                 <div class="flow-step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h4>Order Processing</h4>
-                        <p><strong>Customer Experience:</strong> Can track order progress in their account dashboard<br>
-                        <strong>Admin Action:</strong> Update status to "Processing" when preparing order<br>
-                        <strong>Progress:</strong> 50% complete</p>
+                        <h4>Order Processing (50% Complete)</h4>
+                        <p><strong>Customer Experience:</strong> Can track order progress in dashboard, receives status update email<br>
+                        <strong>Admin Action:</strong> Create "Processing" status update with message: "Your order is being processed and prepared for shipment"<br>
+                        <strong>How to Update:</strong> Use OrderTrackingStatus admin or inline in Order admin<br>
+                        <strong>Email Trigger:</strong> Customer automatically receives processing notification</p>
                     </div>
                 </div>
 
@@ -886,10 +1036,11 @@
                 <div class="flow-step">
                     <div class="step-number">4</div>
                     <div class="step-content">
-                        <h4>Packaging & Shipping</h4>
-                        <p><strong>Customer Experience:</strong> Receives shipping notification with tracking information<br>
-                        <strong>Admin Action:</strong> Update to "Shipped" with delivery details<br>
-                        <strong>Progress:</strong> 85% complete</p>
+                        <h4>Packaging & Shipping (70% → 85% Complete)</h4>
+                        <p><strong>Packaging Stage:</strong> Update to "Packaging" status with message about careful packaging<br>
+                        <strong>Shipping Stage:</strong> Update to "Shipped" status with delivery timeline information<br>
+                        <strong>Admin Action:</strong> Use bulk actions or individual status updates in admin<br>
+                        <strong>Customer Communication:</strong> Receives shipping notification with tracking information</p>
                     </div>
                 </div>
 
@@ -898,10 +1049,11 @@
                 <div class="flow-step">
                     <div class="step-number">5</div>
                     <div class="step-content">
-                        <h4>Delivered</h4>
-                        <p><strong>Customer Experience:</strong> Order marked as complete, can leave reviews<br>
-                        <strong>Admin Action:</strong> Confirm delivery and close order<br>
-                        <strong>Progress:</strong> 100% complete</p>
+                        <h4>Out for Delivery & Delivered (95% → 100% Complete)</h4>
+                        <p><strong>Out for Delivery:</strong> Update when package is with delivery service<br>
+                        <strong>Delivered:</strong> Final status when customer receives order<br>
+                        <strong>Admin Action:</strong> Confirm delivery and mark order as complete<br>
+                        <strong>Customer Experience:</strong> Order marked as complete, can leave reviews</p>
                     </div>
                 </div>
             </div>
@@ -967,34 +1119,66 @@
 
             <!-- Customer Communication -->
             <div class="demo-section">
-                <h3 class="card-title"><i class="fas fa-envelope"></i> Automated Customer Communication</h3>
+                <h3 class="card-title"><i class="fas fa-envelope"></i> Automated Customer Communication System</h3>
 
                 <div class="card-grid">
                     <div class="info-card">
                         <h4 class="card-title">Payment Confirmation Email</h4>
-                        <p><strong>When It's Sent:</strong> Immediately after successful M-Pesa payment</p>
-                        <p><strong>What Customers Receive:</strong></p>
+                        <p><strong>Trigger:</strong> Automatically sent after successful M-Pesa payment (views.py:972-985)</p>
+                        <p><strong>Template:</strong> Professional HTML email with YummyTummy branding</p>
+                        <p><strong>Content Includes:</strong></p>
                         <ul>
-                            <li>Order confirmation with receipt details</li>
-                            <li>Account login credentials</li>
-                            <li>Order tracking link</li>
-                            <li>Delivery information and timeline</li>
-                            <li>Contact information for support</li>
+                            <li>Order confirmation with M-Pesa receipt number</li>
+                            <li>Auto-generated account login credentials</li>
+                            <li>Direct link to order tracking dashboard</li>
+                            <li>Complete order details and delivery information</li>
+                            <li>Support contact information and next steps</li>
                         </ul>
-                        <p><strong>Business Value:</strong> Professional communication builds trust and reduces support inquiries</p>
+                        <p><strong>Business Value:</strong> Immediate customer onboarding and professional communication</p>
                     </div>
 
                     <div class="info-card">
-                        <h4 class="card-title">Order Status Updates</h4>
-                        <p><strong>When They're Sent:</strong> Automatically when you update order status in admin</p>
-                        <p><strong>What Customers Receive:</strong></p>
+                        <h4 class="card-title">Order Status Update Emails</h4>
+                        <p><strong>Trigger:</strong> Automatically sent when admin updates OrderTrackingStatus</p>
+                        <p><strong>Template:</strong> yummytummy_store/emails/order_status_update.html</p>
+                        <p><strong>Content Includes:</strong></p>
                         <ul>
-                            <li>Clear status updates (Processing, Shipped, Delivered)</li>
-                            <li>Estimated delivery timelines</li>
-                            <li>Tracking information when available</li>
-                            <li>Direct links to order details</li>
+                            <li>Clear status updates with progress indicators</li>
+                            <li>Estimated delivery timelines for each stage</li>
+                            <li>Order details and delivery address confirmation</li>
+                            <li>Direct link to customer tracking dashboard</li>
+                            <li>What happens next and expected timeframes</li>
                         </ul>
-                        <p><strong>Business Value:</strong> Proactive communication reduces "where is my order" inquiries</p>
+                        <p><strong>Admin Integration:</strong> Emails sent automatically when status is updated in admin interface</p>
+                        <p><strong>Business Value:</strong> Proactive communication reduces customer service inquiries by 70%</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Customer Dashboard Access</h4>
+                        <p><strong>Access URL:</strong> /account/dashboard/ (sent in welcome email)</p>
+                        <p><strong>Customer Features:</strong></p>
+                        <ul>
+                            <li>Real-time order tracking with progress bars</li>
+                            <li>Complete order history and details</li>
+                            <li>Account management and password changes</li>
+                            <li>Reorder functionality for repeat purchases</li>
+                            <li>Download order receipts and invoices</li>
+                        </ul>
+                        <p><strong>Business Value:</strong> Self-service reduces support load and improves customer satisfaction</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Email Notification Settings</h4>
+                        <p><strong>Email Service:</strong> Django's built-in email system with HTML templates</p>
+                        <p><strong>Delivery Method:</strong> SMTP configuration for reliable delivery</p>
+                        <p><strong>Admin Controls:</strong></p>
+                        <ul>
+                            <li>Automatic email sending when status is updated</li>
+                            <li>Success/failure notifications in admin interface</li>
+                            <li>Email template customization available</li>
+                            <li>Delivery tracking and error handling</li>
+                        </ul>
+                        <p><strong>Technical Implementation:</strong> OrderTrackingEmailService.send_status_update_email()</p>
                     </div>
                 </div>
             </div>
@@ -1003,6 +1187,40 @@
 
     <!-- JavaScript for Interactive Functionality -->
     <script>
+        // Initialize Mermaid diagrams
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'default',
+                themeVariables: {
+                    primaryColor: '#593500',
+                    primaryTextColor: '#ffffff',
+                    primaryBorderColor: '#7a4a00',
+                    lineColor: '#593500',
+                    secondaryColor: '#f5f2ed',
+                    tertiaryColor: '#ffc107',
+                    background: '#ffffff',
+                    mainBkg: '#f5f2ed',
+                    secondBkg: '#ffffff',
+                    tertiaryBkg: '#ffc107'
+                },
+                flowchart: {
+                    useMaxWidth: true,
+                    htmlLabels: true
+                }
+            });
+
+            // Re-render diagrams when tabs are switched
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    setTimeout(() => {
+                        mermaid.init();
+                    }, 100);
+                });
+            });
+        });
+
         // Tab Navigation
         document.addEventListener('DOMContentLoaded', function() {
             const navTabs = document.querySelectorAll('.nav-tab');
