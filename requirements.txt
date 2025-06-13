@@ -5,7 +5,7 @@ sqlparse==0.4.4  # Required by Django
 
 # Image Processing
 Pillow==11.2.1
-pyuploadcare==3.0.0  # Uploadcare image management
+pyuploadcare==4.1.0  # Uploadcare image management (updated for pytz compatibility)
 
 # Form Handling
 django-crispy-forms==2.3  # For enhanced form rendering (compatible with crispy-bootstrap4 2024.10)
@@ -27,7 +27,7 @@ defusedxml==0.7.1  # Secure XML processing
 # Utilities
 six==1.16.0  # Python 2 and 3 compatibility utilities
 requests==2.31.0  # HTTP library for M-Pesa API integration
-pytz==2023.3  # Timezone support for Kenya (EAT) timezone handling
+pytz==2022.7.1  # Timezone support for Kenya (EAT) - Compatible with pyuploadcare 4.1.0
 
 # Production Dependencies
 dj-database-url==2.1.0  # Database URL parsing

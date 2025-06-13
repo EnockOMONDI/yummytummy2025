@@ -153,10 +153,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const isProductDetail = this.closest('.product-detail') !== null;
             const isProductPreview = this.closest('.product-preview') !== null;
             const isHighlightedProduct = this.closest('.highlighted-product') !== null;
+            const isProductShowcase = this.closest('.product-showcase') !== null;
+            const isExpandableCard = this.closest('.expandable-card') !== null;
 
-            // Only prevent default for product preview (list page) but NOT for highlighted product
-            // Allow normal form submission for product detail page and highlighted product
-            if (!isProductDetail && !isHighlightedProduct) {
+            // Only prevent default for product preview (list page)
+            // Allow normal form submission for product detail, highlighted product, and product showcase
+            const shouldPreventDefault = !isProductDetail && !isHighlightedProduct && !isProductShowcase && !isExpandableCard;
+
+            if (shouldPreventDefault) {
                 e.preventDefault();
             }
 
@@ -178,18 +182,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productContainer = this.closest('.highlighted-product');
                 productImage = productContainer.querySelector('img');
                 quantity = productContainer.querySelector('.quantity-selector input');
+            } else if (isProductShowcase || isExpandableCard) {
+                // Product showcase section on homepage
+                const productContainer = this.closest('.expandable-card') || this.closest('.product-card');
+                productImage = productContainer.querySelector('.product-image img');
+                quantity = productContainer.querySelector('.quantity-selector input') ||
+                          this.closest('form').querySelector('input[name="quantity"]');
             } else {
-                // Neither product detail, preview, nor highlighted product found
-                if (isProductDetail || isHighlightedProduct) {
-                    // If on product detail page or highlighted product, allow form submission
+                // Allow form submission for recognized containers
+                if (isProductDetail || isHighlightedProduct || isProductShowcase || isExpandableCard) {
                     return true;
                 } else {
                     return;
                 }
             }
 
+            // For product showcase and expandable cards, submit form immediately without animation delay
+            if (isProductShowcase || isExpandableCard) {
+                if (!shouldPreventDefault) {
+                    // Allow the form to submit naturally
+                    return true;
+                }
+            }
+
             if (productImage && cartCount) {
-                // Create flying image
+                // Create flying image animation for other pages
                 const flyingImage = productImage.cloneNode();
                 flyingImage.style.position = 'fixed';
                 flyingImage.style.zIndex = '1000';
@@ -244,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.body.removeChild(message);
                     }, 3000);
 
-                    // If on product detail page or highlighted product, submit the form
+                    // Submit the form for recognized containers (except showcase which submits immediately)
                     if (isProductDetail || isHighlightedProduct) {
                         const form = this.closest('form');
                         if (form) {
@@ -253,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }, 1000);
             } else if (isProductDetail || isHighlightedProduct) {
-                // If on product detail page or highlighted product but couldn't find image, still submit the form
+                // If couldn't find image but in recognized container, still submit the form
                 const form = this.closest('form');
                 if (form) {
                     form.submit();
