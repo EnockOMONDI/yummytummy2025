@@ -1,0 +1,191 @@
+{% extends 'yummytummy_store/offline/base.html' %}
+{% load tz %}
+
+{% block title %}Order Created Successfully - YummyTummy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center bg-success text-white">
+                <h4><i class="fas fa-check-circle"></i> Order Created Successfully!</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-clipboard-check fa-4x text-success mb-3"></i>
+                    <h5>Order #{{ order.get_order_number }}</h5>
+                    <p class="text-muted">
+                        {% timezone "Africa/Nairobi" %}
+                        Created on {{ order.created|date:"F d, Y \a\t H:i" }} EAT
+                        {% endtimezone %}
+                    </p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-user"></i> Customer Information</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1">
+                                    <strong>Name:</strong> {{ order.first_name }} {{ order.last_name }}
+                                </p>
+                                {% if order.business_name %}
+                                <p class="mb-1">
+                                    <strong>Business:</strong> {{ order.business_name }}
+                                </p>
+                                {% endif %}
+                                <p class="mb-1">
+                                    <strong>Email:</strong> {{ order.email }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Phone:</strong> {{ order.phone }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-truck"></i> Delivery Information</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1">
+                                    <strong>Address:</strong> {{ order.address }}
+                                </p>
+                                <p class="mb-1">
+                                    <strong>City:</strong> {{ order.city }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>County:</strong> {{ order.county }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-shopping-cart"></i> Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Size</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>
+                                    {% if item.variant %}
+                                        {{ item.variant.size }}
+                                    {% else %}
+                                        Standard
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>KSh {{ item.price }}</td>
+                                <td>KSh {{ item.get_cost }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="4">Total Amount:</th>
+                                <th>KSh {{ order.total_amount }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> What Happens Next?</h6>
+                    <ul class="mb-0">
+                        <li><strong>Email Notifications:</strong> The customer and business have been automatically notified</li>
+                        <li><strong>Order Status:</strong> The order status is set to "Offline Order Created"</li>
+                        <li><strong>Admin Processing:</strong> Admin users can update the order status as it progresses</li>
+                        <li><strong>Customer Tracking:</strong> The customer will receive email updates as the order progresses</li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{% url 'yummytummy_store:create_offline_order' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Create Another Order
+                    </a>
+                    <a href="{% url 'yummytummy_store:offline_orders_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View My Orders
+                    </a>
+                    <a href="{% url 'yummytummy_store:offline_orders_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-envelope"></i> Email Notifications Sent</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="notification-item">
+                            <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                            <h6>Customer Notification</h6>
+                            <p class="small">
+                                Order confirmation email sent to:<br>
+                                <strong>{{ order.email }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="notification-item">
+                            <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                            <h6>Business Notification</h6>
+                            <p class="small">
+                                New order notification sent to:<br>
+                                <strong>livegreatagrilife@gmail.com</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .bg-success {
+        background-color: var(--primary-color) !important;
+    }
+</style>
+{% endblock %}

@@ -400,6 +400,9 @@
         <button class="nav-tab" data-section="payment">
             <i class="fas fa-credit-card"></i> Payment
         </button>
+        <button class="nav-tab" data-section="offline-orders">
+            <i class="fas fa-store"></i> Offline Orders
+        </button>
         <button class="nav-tab" data-section="orders">
             <i class="fas fa-box"></i> Orders
         </button>
@@ -478,6 +481,15 @@
                         Full order tracking from payment to delivery with 8 distinct status stages. Automated
                         email notifications at each stage and comprehensive admin interface for order management.
                         Customers track progress through personalized dashboards with real-time updates.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-icon"><i class="fas fa-store"></i></div>
+                    <h3 class="card-title">Offline Order Management</h3>
+                    <p class="card-description">
+                        Sales team can create orders for customers who prefer offline ordering. Complete workflow
+                        from order creation to payment confirmation with automatic email notifications and admin management.
                     </p>
                 </div>
 
@@ -790,8 +802,8 @@ flowchart TD
 
         <!-- Payment Integration Section -->
         <section id="payment" class="content-section">
-            <h2 class="section-title">M-Pesa Payment System</h2>
-            <p class="section-subtitle">How your store processes secure mobile money payments from Kenyan customers</p>
+            <h2 class="section-title">Payment Systems</h2>
+            <p class="section-subtitle">Complete payment processing for both online M-Pesa and offline order workflows</p>
 
             <!-- M-Pesa Payment Flow Diagram -->
             <div class="demo-section">
@@ -925,12 +937,428 @@ flowchart TD
                     </div>
                 </div>
             </div>
+
+            <!-- Offline Payment Workflow -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-store"></i> Offline Order Payment Workflow</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    Complete workflow for sales team order creation and offline payment processing
+                </p>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Sales Team Login</h4>
+                            <p>✅ Sales team member accesses offline order system at <code>/offline-orders/login/</code><br>
+                            ✅ Role-based authentication ensures only authorized sales staff can create orders<br>
+                            ✅ Secure login redirects to dedicated offline order dashboard</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Customer Information Collection</h4>
+                            <p>✅ Sales team collects customer details (individual or business customer)<br>
+                            ✅ Complete delivery address and contact information gathered<br>
+                            ✅ Business customers require additional business name and details</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Product Selection & Order Creation</h4>
+                            <p>✅ Sales team selects products and variants for customer<br>
+                            ✅ Dynamic pricing calculation with real-time totals<br>
+                            ✅ Order created with <code>payment_method='offline'</code> and <code>payment_status='pending'</code></p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Automatic Notifications</h4>
+                            <p>✅ Business notification email sent to <code>livegreatagrilife@gmail.com</code><br>
+                            ✅ Customer confirmation email with order details and tracking information<br>
+                            ✅ Initial tracking status <code>'offline_order_created'</code> automatically set</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Payment Arrangement</h4>
+                            <p>✅ Business contacts customer to arrange payment method (cash, bank transfer, etc.)<br>
+                            ✅ Customer makes payment through agreed method<br>
+                            ✅ Payment confirmation received by business</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>Admin Payment Confirmation</h4>
+                            <p>✅ Admin updates order payment status to <code>'completed'</code> in Django admin<br>
+                            ✅ New tracking status <code>'payment_confirmed'</code> created with payment details<br>
+                            ✅ Customer receives payment confirmation email automatically</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">7</div>
+                        <div class="step-content">
+                            <h4>Order Processing & Fulfillment</h4>
+                            <p>✅ Order enters standard fulfillment workflow (processing → packaging → shipping)<br>
+                            ✅ Customer receives status update emails at each stage<br>
+                            ✅ Same tracking experience as online M-Pesa orders</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">8</div>
+                        <div class="step-content">
+                            <h4>Delivery & Completion</h4>
+                            <p>✅ Order delivered to customer with same service quality as online orders<br>
+                            ✅ Final tracking status updated to <code>'delivered'</code><br>
+                            ✅ Customer can access order history and reorder through dashboard</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method Comparison -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-balance-scale"></i> Payment Method Comparison</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h4 class="card-title">M-Pesa Online Payment</h4>
+                        <p><strong>Best For:</strong> Tech-savvy customers with smartphones</p>
+                        <p><strong>Process:</strong></p>
+                        <ul>
+                            <li>Instant payment processing</li>
+                            <li>Automatic order confirmation</li>
+                            <li>Real-time payment verification</li>
+                            <li>Immediate account creation</li>
+                        </ul>
+                        <p><strong>Business Benefits:</strong></p>
+                        <ul>
+                            <li>Faster order processing</li>
+                            <li>Reduced manual work</li>
+                            <li>Lower payment collection risk</li>
+                            <li>Automated customer onboarding</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-store"></i></div>
+                        <h4 class="card-title">Offline Order Payment</h4>
+                        <p><strong>Best For:</strong> Customers preferring personal service or alternative payment methods</p>
+                        <p><strong>Process:</strong></p>
+                        <ul>
+                            <li>Sales team assisted ordering</li>
+                            <li>Flexible payment arrangements</li>
+                            <li>Personal customer service</li>
+                            <li>Manual payment confirmation</li>
+                        </ul>
+                        <p><strong>Business Benefits:</strong></p>
+                        <ul>
+                            <li>Captures customers who avoid online shopping</li>
+                            <li>Builds personal relationships</li>
+                            <li>Accommodates various payment methods</li>
+                            <li>Higher order values through consultation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Offline Orders Section -->
+        <section id="offline-orders" class="content-section">
+            <h2 class="section-title">Offline Order Management System</h2>
+            <p class="section-subtitle">Complete sales team workflow for creating and managing offline orders with professional customer service</p>
+
+            <!-- System Overview -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-users"></i> System Overview</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    The offline order management system enables sales team members to create orders for customers who prefer personal service or alternative payment methods
+                </p>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+                        <h4 class="card-title">Sales Team Access</h4>
+                        <p><strong>Who Can Use:</strong> Authorized sales team members only</p>
+                        <p><strong>Access URL:</strong> <code>/offline-orders/</code></p>
+                        <p><strong>Capabilities:</strong></p>
+                        <ul>
+                            <li>Create new orders for customers</li>
+                            <li>Select products and variants</li>
+                            <li>Collect customer information</li>
+                            <li>View their created orders</li>
+                        </ul>
+                        <p><strong>Restrictions:</strong> Cannot edit or delete existing orders (admin-only)</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-crown"></i></div>
+                        <h4 class="card-title">Admin Management</h4>
+                        <p><strong>Who Can Use:</strong> Super users and administrators</p>
+                        <p><strong>Full Access:</strong> All offline order functions plus:</p>
+                        <ul>
+                            <li>Update payment status for offline orders</li>
+                            <li>Edit order details and customer information</li>
+                            <li>View all offline orders from all sales team members</li>
+                            <li>Manage order status progression</li>
+                            <li>Access comprehensive order analytics</li>
+                        </ul>
+                        <p><strong>Integration:</strong> Seamless access from main admin dashboard</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-users"></i></div>
+                        <h4 class="card-title">Customer Types Supported</h4>
+                        <p><strong>Individual Customers:</strong></p>
+                        <ul>
+                            <li>Personal orders for individual consumers</li>
+                            <li>Standard delivery and contact information</li>
+                            <li>Personal email notifications</li>
+                        </ul>
+                        <p><strong>Business Customers:</strong></p>
+                        <ul>
+                            <li>Business name and company details</li>
+                            <li>Business delivery addresses</li>
+                            <li>Professional communication templates</li>
+                            <li>Bulk order capabilities</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-sync-alt"></i></div>
+                        <h4 class="card-title">System Integration</h4>
+                        <p><strong>Unified Order Management:</strong></p>
+                        <ul>
+                            <li>Offline orders use same tracking system as online orders</li>
+                            <li>Same email notification system</li>
+                            <li>Integrated with existing admin dashboard</li>
+                            <li>Compatible with all existing order statuses</li>
+                        </ul>
+                        <p><strong>Customer Experience:</strong> Identical service quality regardless of order method</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Team Workflow -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-clipboard-list"></i> Sales Team Step-by-Step Workflow</h3>
+
+                <div class="flow-chart">
+                    <div class="flow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Access Offline Order System</h4>
+                            <p><strong>How to Access:</strong> Navigate to <code>/offline-orders/login/</code><br>
+                            <strong>Login:</strong> Use your sales team credentials<br>
+                            <strong>Dashboard:</strong> Access dedicated offline order dashboard<br>
+                            <strong>What You See:</strong> Quick actions, system information, and how-to guide</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Start New Order Creation</h4>
+                            <p><strong>Action:</strong> Click "Create New Order" button<br>
+                            <strong>Form Access:</strong> Opens comprehensive order creation form<br>
+                            <strong>Customer Type:</strong> Choose between Individual or Business customer<br>
+                            <strong>Required Information:</strong> All fields marked with red asterisk (*) must be completed</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Collect Customer Information</h4>
+                            <p><strong>Personal Details:</strong> First name, last name, email, phone number<br>
+                            <strong>Business Details:</strong> Business name (if business customer)<br>
+                            <strong>Delivery Information:</strong> Complete address, city, county<br>
+                            <strong>Validation:</strong> Phone numbers must be in Kenya format (07XXXXXXXX or 254XXXXXXXXX)</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Select Products</h4>
+                            <p><strong>Product Selection:</strong> Click "Add Product" to open product catalog<br>
+                            <strong>Variant Selection:</strong> Choose size/variant if available (250g, 500g, 1kg)<br>
+                            <strong>Quantity:</strong> Set desired quantity for each product<br>
+                            <strong>Real-time Totals:</strong> Order summary updates automatically as products are added</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Review & Submit Order</h4>
+                            <p><strong>Order Summary:</strong> Review all products, quantities, and total amount<br>
+                            <strong>Customer Details:</strong> Verify all customer information is correct<br>
+                            <strong>Submit:</strong> Click "Create Order" to process the order<br>
+                            <strong>Confirmation:</strong> Redirected to success page with order number</p>
+                        </div>
+                    </div>
+
+                    <div class="step-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                    <div class="flow-step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>Automatic System Actions</h4>
+                            <p><strong>Order Creation:</strong> Order saved with unique order number (e.g., MSL-000123)<br>
+                            <strong>Email Notifications:</strong> Business and customer emails sent automatically<br>
+                            <strong>Tracking Status:</strong> Initial status "Offline Order Created" set<br>
+                            <strong>Admin Notification:</strong> Order appears in admin dashboard for processing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Workflow -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-user-cog"></i> Administrator Workflow</h3>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <h4 class="card-title">Order Review & Processing</h4>
+                        <p><strong>Access:</strong> Django admin or custom admin dashboard</p>
+                        <p><strong>Review Process:</strong></p>
+                        <ul>
+                            <li>Verify customer information and order details</li>
+                            <li>Check product availability and pricing</li>
+                            <li>Confirm delivery address and contact details</li>
+                            <li>Review any special instructions or notes</li>
+                        </ul>
+                        <p><strong>Next Steps:</strong> Contact customer to arrange payment method</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Payment Arrangement</h4>
+                        <p><strong>Customer Contact:</strong> Call or email customer using provided contact information</p>
+                        <p><strong>Payment Options:</strong></p>
+                        <ul>
+                            <li>Cash on delivery</li>
+                            <li>Bank transfer</li>
+                            <li>Mobile money (M-Pesa, Airtel Money)</li>
+                            <li>Cheque payment</li>
+                        </ul>
+                        <p><strong>Confirmation:</strong> Verify payment receipt before updating order status</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Payment Status Update</h4>
+                        <p><strong>Admin Action:</strong> Update order payment status to "Completed" in Django admin</p>
+                        <p><strong>Tracking Status:</strong> Create new "Payment Confirmed" tracking status</p>
+                        <p><strong>Customer Notification:</strong> System automatically sends payment confirmation email</p>
+                        <p><strong>Order Processing:</strong> Order enters standard fulfillment workflow</p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4 class="card-title">Order Fulfillment</h4>
+                        <p><strong>Standard Process:</strong> Same fulfillment workflow as online orders</p>
+                        <p><strong>Status Updates:</strong></p>
+                        <ul>
+                            <li>Processing → Packaging → Shipped → Out for Delivery → Delivered</li>
+                            <li>Customer receives email notification at each stage</li>
+                            <li>Same tracking experience as online M-Pesa orders</li>
+                        </ul>
+                        <p><strong>Quality Assurance:</strong> Identical service standards for all order types</p>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Order Management Section -->
         <section id="orders" class="content-section">
-            <h2 class="section-title">Order Management & Customer Experience</h2>
-            <p class="section-subtitle">Complete order lifecycle management from payment to delivery with automated customer communications</p>
+            <h2 class="section-title">Unified Order Management & Customer Experience</h2>
+            <p class="section-subtitle">Complete order lifecycle management for both online M-Pesa and offline orders with unified tracking and automated customer communications</p>
+
+            <!-- Dual Order System Overview -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> Dual Order System Integration</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    Both online M-Pesa and offline orders use the same tracking system, providing consistent customer experience regardless of order method
+                </p>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h4 class="card-title">Online M-Pesa Orders</h4>
+                        <p><strong>Order Creation:</strong> Customer creates order through website</p>
+                        <p><strong>Payment:</strong> Instant M-Pesa payment processing</p>
+                        <p><strong>Initial Status:</strong> <code>order_received</code> → <code>payment_confirmed</code></p>
+                        <p><strong>Customer Access:</strong> Automatic account creation with dashboard access</p>
+                        <p><strong>Tracking:</strong> Real-time status updates through customer dashboard</p>
+                        <p><strong>Admin View:</strong> Orders appear in standard admin interface</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-store"></i></div>
+                        <h4 class="card-title">Offline Orders</h4>
+                        <p><strong>Order Creation:</strong> Sales team creates order for customer</p>
+                        <p><strong>Payment:</strong> Arranged separately (cash, transfer, etc.)</p>
+                        <p><strong>Initial Status:</strong> <code>offline_order_created</code> → <code>payment_confirmed</code></p>
+                        <p><strong>Customer Access:</strong> Email notifications with tracking information</p>
+                        <p><strong>Tracking:</strong> Same status progression as online orders</p>
+                        <p><strong>Admin View:</strong> Orders appear in both standard and offline order interfaces</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-sync-alt"></i></div>
+                        <h4 class="card-title">Unified Customer Experience</h4>
+                        <p><strong>Email Notifications:</strong> Same professional email templates for both order types</p>
+                        <p><strong>Status Updates:</strong> Identical tracking progression and messaging</p>
+                        <p><strong>Customer Service:</strong> Same quality standards and response times</p>
+                        <p><strong>Order History:</strong> All orders (online/offline) accessible through customer dashboard</p>
+                        <p><strong>Reordering:</strong> Customers can reorder products from any previous order type</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                        <h4 class="card-title">Business Analytics</h4>
+                        <p><strong>Revenue Tracking:</strong> Combined reporting for all order types</p>
+                        <p><strong>Customer Insights:</strong> Unified customer database and purchase history</p>
+                        <p><strong>Performance Metrics:</strong> Order fulfillment times and customer satisfaction</p>
+                        <p><strong>Sales Analysis:</strong> Compare online vs offline order performance</p>
+                        <p><strong>Growth Opportunities:</strong> Identify customers for cross-selling between channels</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Order Lifecycle Progression Diagram -->
             <div class="demo-section">
@@ -1179,6 +1607,140 @@ flowchart LR
                             <li>Delivery tracking and error handling</li>
                         </ul>
                         <p><strong>Technical Implementation:</strong> OrderTrackingEmailService.send_status_update_email()</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & Permissions -->
+            <div class="demo-section">
+                <h3 class="card-title"><i class="fas fa-shield-alt"></i> Security & Permissions</h3>
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--dark-gray);">
+                    Comprehensive security framework protecting customer data and ensuring proper access control across all system functions
+                </p>
+
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-users-cog"></i></div>
+                        <h4 class="card-title">Access Control</h4>
+                        <p><strong>Sales Team Members:</strong></p>
+                        <ul>
+                            <li>Can create new offline orders only</li>
+                            <li>Cannot edit or delete existing orders</li>
+                            <li>Can view their own created orders</li>
+                            <li>Access restricted to offline order interface</li>
+                        </ul>
+                        <p><strong>Admin Users:</strong></p>
+                        <ul>
+                            <li>Full access to all order management functions</li>
+                            <li>Can update payment status and order details</li>
+                            <li>Access to both online and offline order systems</li>
+                            <li>Complete customer and order analytics</li>
+                        </ul>
+                        <p><strong>Customers:</strong></p>
+                        <ul>
+                            <li>Can view only their own orders</li>
+                            <li>Access to order tracking dashboard</li>
+                            <li>Can update personal account information</li>
+                            <li>Cannot access other customers' data</li>
+                        </ul>
+                        <p><strong>Unauthorized Users:</strong></p>
+                        <ul>
+                            <li>Automatically redirected to login pages</li>
+                            <li>No access to sensitive order information</li>
+                            <li>Protected against unauthorized data access</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-lock"></i></div>
+                        <h4 class="card-title">Payment Security</h4>
+                        <p><strong>M-Pesa Integration Security:</strong></p>
+                        <ul>
+                            <li>Secure API communication with Safaricom</li>
+                            <li>Encrypted credential storage</li>
+                            <li>SSL/TLS encryption for all transactions</li>
+                            <li>Secure callback URL validation</li>
+                        </ul>
+                        <p><strong>Callback Validation:</strong></p>
+                        <ul>
+                            <li>Verification of M-Pesa callback authenticity</li>
+                            <li>Transaction amount and order matching</li>
+                            <li>Duplicate transaction prevention</li>
+                            <li>Secure receipt number storage</li>
+                        </ul>
+                        <p><strong>Data Integrity:</strong></p>
+                        <ul>
+                            <li>Payment amounts validated against order totals</li>
+                            <li>Transaction timestamps in Kenya timezone</li>
+                            <li>Complete audit trail for all payments</li>
+                            <li>Secure customer financial data handling</li>
+                        </ul>
+                        <p><strong>Transaction Tracking:</strong></p>
+                        <ul>
+                            <li>Complete payment lifecycle monitoring</li>
+                            <li>Failed payment handling and retry mechanisms</li>
+                            <li>Real-time payment status updates</li>
+                            <li>Comprehensive transaction logging</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+                        <h4 class="card-title">Customer Data Protection</h4>
+                        <p><strong>Personal Information Security:</strong></p>
+                        <ul>
+                            <li>Secure storage of customer contact details</li>
+                            <li>Encrypted password storage for customer accounts</li>
+                            <li>GDPR-compliant data handling practices</li>
+                            <li>Customer consent for email communications</li>
+                        </ul>
+                        <p><strong>Order Information Protection:</strong></p>
+                        <ul>
+                            <li>Order details accessible only to authorized users</li>
+                            <li>Secure delivery address storage</li>
+                            <li>Protected order history and tracking data</li>
+                            <li>Secure customer-admin communication channels</li>
+                        </ul>
+                        <p><strong>Account Security:</strong></p>
+                        <ul>
+                            <li>Secure temporary password generation</li>
+                            <li>One-time login links with expiration</li>
+                            <li>Customer-controlled password changes</li>
+                            <li>Session management and timeout protection</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-cogs"></i></div>
+                        <h4 class="card-title">System Security Features</h4>
+                        <p><strong>Authentication & Authorization:</strong></p>
+                        <ul>
+                            <li>Django's built-in authentication system</li>
+                            <li>Role-based permission management</li>
+                            <li>Secure session handling</li>
+                            <li>Multi-level access control</li>
+                        </ul>
+                        <p><strong>Data Validation:</strong></p>
+                        <ul>
+                            <li>Server-side form validation for all inputs</li>
+                            <li>Kenya phone number format validation</li>
+                            <li>Email address verification</li>
+                            <li>Order amount and product validation</li>
+                        </ul>
+                        <p><strong>Error Handling:</strong></p>
+                        <ul>
+                            <li>Graceful handling of payment failures</li>
+                            <li>Secure error messages without sensitive data exposure</li>
+                            <li>Comprehensive logging for troubleshooting</li>
+                            <li>Automatic retry mechanisms for failed operations</li>
+                        </ul>
+                        <p><strong>Monitoring & Auditing:</strong></p>
+                        <ul>
+                            <li>Complete audit trail for all order operations</li>
+                            <li>User action logging and tracking</li>
+                            <li>Payment transaction monitoring</li>
+                            <li>Security event detection and alerting</li>
+                        </ul>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,460 @@
+{% extends 'yummytummy_store/offline/base.html' %}
+{% load tz %}
+
+{% block title %}Create Offline Order - YummyTummy{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="fas fa-plus-circle"></i> Create New Offline Order</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Create a new offline order for individual or business customers. 
+                    All fields marked with <span class="text-danger">*</span> are required.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="offline-order-form" method="post">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Customer Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-user"></i> Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Type Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Customer Type <span class="text-danger">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="customer_type" id="individual" value="individual" checked>
+                            <label class="form-check-label" for="individual">
+                                <i class="fas fa-user"></i> Individual Customer
+                            </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="customer_type" id="business" value="business">
+                            <label class="form-check-label" for="business">
+                                <i class="fas fa-building"></i> Business Customer
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Business Name Field (Hidden by default) -->
+                    <div class="mb-3" id="business-name-field" style="display: none;">
+                        <label for="business_name" class="form-label">Business Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="business_name" name="business_name" placeholder="Enter business name">
+                    </div>
+                    
+                    <!-- Personal Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="07XXXXXXXX or 254XXXXXXXXX" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-truck"></i> Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="delivery_address" class="form-label">Delivery Address <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="delivery_address" name="delivery_address" placeholder="Street address, building, apartment" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="delivery_city" class="form-label">City <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="delivery_city" name="delivery_city" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="delivery_county" class="form-label">County <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="delivery_county" name="delivery_county" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product Selection -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-shopping-cart"></i> Product Selection</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" id="add-product-btn">
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                    </div>
+                    
+                    <div id="selected-products">
+                        <!-- Selected products will be added here dynamically -->
+                    </div>
+                    
+                    <div id="no-products-message" class="text-center text-muted py-4">
+                        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                        <p>No products selected yet. Click "Add Product" to start building the order.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Summary Sidebar -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5><i class="fas fa-receipt"></i> Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div id="order-summary">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calculator fa-2x mb-3"></i>
+                            <p>Add products to see order summary</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-order-btn" disabled>
+                            <i class="fas fa-check-circle"></i> Create Order
+                        </button>
+                        <a href="{% url 'yummytummy_store:offline_orders_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden field for order items -->
+    <input type="hidden" id="order-items-data" name="order_items" value="[]">
+</form>
+
+<!-- Product Selection Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    {% for product in products %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card product-card" data-product-id="{{ product.id }}">
+                            <div class="card-body">
+                                {% if product.image %}
+                                    <img src="{{ product.image.cdn_url }}" class="card-img-top mb-2" style="height: 150px; object-fit: cover;">
+                                {% endif %}
+                                <h6 class="card-title">{{ product.name }}</h6>
+                                <p class="card-text small text-muted">{{ product.description|truncatewords:10 }}</p>
+                                <p class="card-text">
+                                    <strong>Base Price: KSh {{ product.price }}</strong>
+                                </p>
+                                <button type="button" class="btn btn-outline-primary btn-sm select-product-btn" 
+                                        data-product-id="{{ product.id }}" 
+                                        data-product-name="{{ product.name }}" 
+                                        data-product-price="{{ product.price }}">
+                                    Select Product
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let orderItems = [];
+    let orderTotal = 0;
+
+    // Customer type toggle
+    $('input[name="customer_type"]').change(function() {
+        if ($(this).val() === 'business') {
+            $('#business-name-field').show();
+            $('#business_name').prop('required', true);
+        } else {
+            $('#business-name-field').hide();
+            $('#business_name').prop('required', false);
+        }
+    });
+
+    // Add product button
+    $('#add-product-btn').click(function() {
+        $('#productModal').modal('show');
+    });
+
+    // Select product
+    $('.select-product-btn').click(function() {
+        const productId = $(this).data('product-id');
+        const productName = $(this).data('product-name');
+        const productPrice = parseFloat($(this).data('product-price'));
+
+        // Get variants for this product
+        $.get(`/api/products/${productId}/variants/`)
+            .done(function(data) {
+                if (data.success && data.variants.length > 0) {
+                    showVariantSelection(productId, productName, productPrice, data.variants);
+                } else {
+                    // No variants, add product directly
+                    addProductToOrder(productId, productName, null, null, productPrice, 1);
+                }
+            })
+            .fail(function() {
+                // Fallback: add product without variants
+                addProductToOrder(productId, productName, null, null, productPrice, 1);
+            });
+
+        $('#productModal').modal('hide');
+    });
+
+    function showVariantSelection(productId, productName, basePrice, variants) {
+        let variantHtml = `
+            <div class="modal fade" id="variantModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Select Size for ${productName}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Size:</label>
+        `;
+
+        // Add base product option
+        variantHtml += `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="variant_selection"
+                                           value="" data-price="${basePrice}" checked>
+                                    <label class="form-check-label">
+                                        Standard Size - KSh ${basePrice}
+                                    </label>
+                                </div>
+        `;
+
+        // Add variant options
+        variants.forEach(function(variant) {
+            variantHtml += `
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="variant_selection"
+                                           value="${variant.id}" data-price="${variant.price}">
+                                    <label class="form-check-label">
+                                        ${variant.size} - KSh ${variant.price}
+                                    </label>
+                                </div>
+            `;
+        });
+
+        variantHtml += `
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity:</label>
+                                <input type="number" class="form-control" id="variant-quantity" min="1" value="1">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="add-variant-btn">Add to Order</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing variant modal if any
+        $('#variantModal').remove();
+
+        // Add new variant modal
+        $('body').append(variantHtml);
+        $('#variantModal').modal('show');
+
+        // Handle add variant button
+        $('#add-variant-btn').click(function() {
+            const selectedVariant = $('input[name="variant_selection"]:checked');
+            const variantId = selectedVariant.val() || null;
+            const variantPrice = parseFloat(selectedVariant.data('price'));
+            const quantity = parseInt($('#variant-quantity').val());
+            const variantSize = selectedVariant.next('label').text().split(' - ')[0];
+
+            addProductToOrder(productId, productName, variantId, variantSize, variantPrice, quantity);
+            $('#variantModal').modal('hide');
+        });
+    }
+
+    function addProductToOrder(productId, productName, variantId, variantSize, price, quantity) {
+        const item = {
+            product_id: productId,
+            product_name: productName,
+            variant_id: variantId,
+            variant_size: variantSize,
+            price: price,
+            quantity: quantity,
+            total: price * quantity
+        };
+
+        orderItems.push(item);
+        updateOrderDisplay();
+        updateOrderSummary();
+    }
+
+    function updateOrderDisplay() {
+        const container = $('#selected-products');
+        container.empty();
+
+        if (orderItems.length === 0) {
+            $('#no-products-message').show();
+            return;
+        }
+
+        $('#no-products-message').hide();
+
+        orderItems.forEach(function(item, index) {
+            const itemHtml = `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">${item.product_name}</h6>
+                                ${item.variant_size ? `<small class="text-muted">Size: ${item.variant_size}</small>` : ''}
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control form-control-sm quantity-input"
+                                       value="${item.quantity}" min="1" data-index="${index}">
+                            </div>
+                            <div class="col-md-2">
+                                <strong>KSh ${item.total.toFixed(2)}</strong>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-item-btn" data-index="${index}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(itemHtml);
+        });
+
+        // Update order items data
+        $('#order-items-data').val(JSON.stringify(orderItems));
+        $('#submit-order-btn').prop('disabled', orderItems.length === 0);
+    }
+
+    function updateOrderSummary() {
+        orderTotal = orderItems.reduce((sum, item) => sum + item.total, 0);
+
+        let summaryHtml = `
+            <div class="order-summary-content">
+                <h6>Order Items (${orderItems.length})</h6>
+        `;
+
+        orderItems.forEach(function(item) {
+            summaryHtml += `
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small">${item.quantity}x ${item.product_name}</span>
+                    <span class="small">KSh ${item.total.toFixed(2)}</span>
+                </div>
+            `;
+        });
+
+        summaryHtml += `
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong>KSh ${orderTotal.toFixed(2)}</strong>
+                </div>
+            </div>
+        `;
+
+        $('#order-summary').html(summaryHtml);
+    }
+
+    // Handle quantity changes
+    $(document).on('change', '.quantity-input', function() {
+        const index = $(this).data('index');
+        const newQuantity = parseInt($(this).val());
+
+        if (newQuantity > 0) {
+            orderItems[index].quantity = newQuantity;
+            orderItems[index].total = orderItems[index].price * newQuantity;
+            updateOrderDisplay();
+            updateOrderSummary();
+        }
+    });
+
+    // Handle item removal
+    $(document).on('click', '.remove-item-btn', function() {
+        const index = $(this).data('index');
+        orderItems.splice(index, 1);
+        updateOrderDisplay();
+        updateOrderSummary();
+    });
+
+    // Form validation
+    $('#offline-order-form').submit(function(e) {
+        if (orderItems.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one product to the order.');
+            return false;
+        }
+
+        // Update order items data before submission
+        $('#order-items-data').val(JSON.stringify(orderItems));
+
+        // Show loading state
+        $('#submit-order-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating Order...');
+    });
+});
+</script>
+{% endblock %}

@@ -1,1 +1,7 @@
-lets say there is a sales team, 2 people, and both recieve offline orders, when doing sales    I want to create a page where a sales  team member can log in with previlages of only adding orders with the initial status of ofline order created  then super user admin update orders,  we can put this under offline orders section, the offline orders status when created should be offline order created and send an email to a default email.  to livegreatagrilife@gmail.com  
+--update user profile page to have features like affiliate, donate to kibra children, 
+-CSR page and link livegreat foundation activities
+- add an inventory system
+-ADD OTHER PAYMENT METHODS 
+- finish with recipes page gallery
+-policy etc 
+- 

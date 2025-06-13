@@ -191,6 +191,31 @@ class Order(models.Model):
 
     order_notes = models.TextField(blank=True)
 
+    # Offline order fields
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_orders',
+        help_text='Sales person who created this offline order'
+    )
+    customer_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('individual', 'Individual Customer'),
+            ('business', 'Business Customer'),
+        ],
+        default='individual',
+        help_text='Type of customer for this order'
+    )
+    business_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text='Business name for business customers'
+    )
+
     # Pricing
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Total amount in Kenyan Shillings (KES)")
     coupon = models.ForeignKey('Coupon', related_name='orders', on_delete=models.SET_NULL, null=True, blank=True)
@@ -470,6 +495,7 @@ class OrderTrackingStatus(models.Model):
     STATUS_CHOICES = [
         ('order_received', 'Order Received'),
         ('payment_confirmed', 'Payment Confirmed'),
+        ('offline_order_created', 'Offline Order Created'),
         ('processing', 'Processing'),
         ('packaging', 'Packaging'),
         ('shipped', 'Shipped'),
@@ -480,7 +506,7 @@ class OrderTrackingStatus(models.Model):
     ]
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='tracking_statuses')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES)
     message = models.TextField(blank=True, help_text="Additional details about this status update")
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,

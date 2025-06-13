@@ -1,0 +1,218 @@
+{% extends 'yummytummy_store/offline/base.html' %}
+{% load tz %}
+
+{% block title %}Offline Orders Dashboard - YummyTummy{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="fas fa-tachometer-alt"></i> Offline Orders Dashboard</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Welcome, {{ user.get_full_name|default:user.username }}!</h5>
+                        <p class="text-muted">
+                            {% if is_sales_team %}
+                                You are logged in as a Sales Team member. You can create new offline orders for customers.
+                            {% elif is_superuser %}
+                                You are logged in as a Super User. You have full access to all order management functions.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <p class="mb-0">
+                            <i class="fas fa-clock"></i> 
+                            {% timezone "Africa/Nairobi" %}{{ current_time|date:"F d, Y" }}<br>{{ current_time|date:"H:i" }} EAT{% endtimezone %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'yummytummy_store:create_offline_order' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle"></i> Create New Order
+                    </a>
+                    <a href="{% url 'yummytummy_store:offline_orders_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View My Orders
+                    </a>
+                    {% if is_superuser %}
+                        <a href="{% url 'yummytummy_store:admin_dashboard' %}" class="btn btn-warning">
+                            <i class="fas fa-cog"></i> Admin Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Information -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> System Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-user-tag fa-2x text-primary mb-2"></i>
+                            <h6>User Role</h6>
+                            <p class="small">
+                                {% if is_superuser %}
+                                    Super User
+                                {% elif is_sales_team %}
+                                    Sales Team
+                                {% else %}
+                                    Standard User
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                            <h6>Permissions</h6>
+                            <p class="small">
+                                {% if is_superuser %}
+                                    Full Access
+                                {% elif is_sales_team %}
+                                    Create Orders
+                                {% else %}
+                                    Limited Access
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-question-circle"></i> How to Use This System</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <h6>Create Order</h6>
+                            <p class="small">
+                                Click "Create New Order" to start a new offline order. 
+                                Choose between individual or business customer.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <h6>Add Products</h6>
+                            <p class="small">
+                                Select products and quantities. The system will automatically 
+                                calculate totals and handle variants.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <h6>Confirm & Send</h6>
+                            <p class="small">
+                                Review order details and submit. Automatic emails will be sent 
+                                to customer and business notification address.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-exclamation-triangle"></i> Important Notes</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> For Sales Team Members:</h6>
+                    <ul class="mb-0">
+                        <li>You can only create new orders - you cannot edit or delete existing orders</li>
+                        <li>All orders are automatically assigned to your user account</li>
+                        <li>Email notifications are sent automatically to customers and business</li>
+                        <li>Order status updates must be done by admin users</li>
+                    </ul>
+                </div>
+                
+                {% if is_superuser %}
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-crown"></i> For Super Users:</h6>
+                    <ul class="mb-0">
+                        <li>You have full access to all order management functions</li>
+                        <li>You can update order statuses from the admin dashboard</li>
+                        <li>You can view and manage all offline orders from all sales team members</li>
+                        <li>Use the admin dashboard for advanced order management</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .step-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

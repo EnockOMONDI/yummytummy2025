@@ -1,0 +1,55 @@
+{% load tz %}
+NEW OFFLINE ORDER CREATED - ORDER #{{ order.get_order_number }}
+================================================================
+
+⚠️ ACTION REQUIRED: A new offline order has been created by the sales team and requires processing.
+
+ORDER DETAILS
+-------------
+Order Number: {{ order.get_order_number }}
+Created By: {{ sales_person.get_full_name|default:sales_person.username }} ({{ sales_person.email }})
+Order Date: {% timezone "Africa/Nairobi" %}{{ order.created|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}
+Customer Type: {% if order.customer_type == 'business' %}Business Customer{% else %}Individual Customer{% endif %}
+Payment Method: Offline Order (Payment to be arranged)
+Order Status: Offline Order Created
+
+CUSTOMER INFORMATION
+--------------------
+Name: {{ order.first_name }} {{ order.last_name }}
+{% if order.business_name %}Business: {{ order.business_name }}
+{% endif %}Email: {{ order.email }}
+Phone: {{ order.phone }}
+
+DELIVERY INFORMATION
+--------------------
+Address: {{ order.address }}
+City: {{ order.city }}
+County: {{ order.county }}
+
+ORDER ITEMS
+-----------
+{% for item in order_items %}{{ item.product.name }} - {% if item.variant %}{{ item.variant.size }}{% else %}Standard{% endif %} - Qty: {{ item.quantity }} - Price: KSh {{ item.price }} - Total: KSh {{ item.get_cost }}
+{% endfor %}
+TOTAL AMOUNT: KSh {{ order.total_amount }}
+
+{% if order.order_notes %}ORDER NOTES
+-----------
+{{ order.order_notes }}
+
+{% endif %}CUSTOMER NOTIFICATION
+--------------------
+✅ Order confirmation email has been automatically sent to the customer at {{ order.email }}
+The customer will receive status updates as the order progresses through the fulfillment process.
+
+NEXT STEPS
+----------
+1. Review Order: Verify all order details and customer information
+2. Arrange Payment: Contact customer to arrange payment method
+3. Update Status: Use the admin dashboard to update order status as it progresses
+4. Process Order: Begin order fulfillment once payment is confirmed
+
+================================================================
+YummyTummy Business - Offline Order Management System
+Time: {% timezone "Africa/Nairobi" %}{{ current_time|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}
+
+This is an automated notification from the YummyTummy offline order system.

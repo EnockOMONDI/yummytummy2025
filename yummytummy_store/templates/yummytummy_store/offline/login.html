@@ -1,0 +1,131 @@
+{% extends 'yummytummy_store/offline/base.html' %}
+
+{% block title %}Sales Team Login - YummyTummy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4><i class="fas fa-user-tie"></i> Sales Team Login</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Sales team members only. Contact admin for access.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Demo Credentials (Remove in production) -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title text-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Demo Credentials
+                </h6>
+                <p class="card-text small">
+                    <strong>Username:</strong> sales_demo<br>
+                    <strong>Password:</strong> sales123
+                </p>
+                <small class="text-muted">
+                    <em>Remove this section in production</em>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">
+                    <i class="fas fa-clipboard-list"></i> Offline Order Management System
+                </h5>
+                <p class="card-text">
+                    Create and manage offline orders for YummyTummy customers. 
+                    This system allows sales team members to:
+                </p>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="feature-item">
+                            <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+                            <h6>Create Orders</h6>
+                            <p class="small">Add new orders for individual and business customers</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-item">
+                            <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                            <h6>Email Notifications</h6>
+                            <p class="small">Automatic email confirmations to customers and business</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-item">
+                            <i class="fas fa-tracking fa-2x text-primary mb-2"></i>
+                            <h6>Order Tracking</h6>
+                            <p class="small">Track order status from creation to delivery</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-item {
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .feature-item i {
+        color: var(--primary-color);
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

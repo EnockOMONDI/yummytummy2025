@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import offline_views
 
 app_name = 'yummytummy_store'
 
@@ -44,4 +45,16 @@ urlpatterns = [
     # Admin Documentation URLs
     path('how-it-works/', views.how_it_works, name='how_it_works'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+    # Offline Order Management
+    path('offline-orders/', offline_views.offline_orders_dashboard, name='offline_orders_dashboard'),
+    path('offline-orders/login/', offline_views.sales_login, name='sales_login'),
+    path('offline-orders/create/', offline_views.create_offline_order, name='create_offline_order'),
+    path('offline-orders/success/<int:order_id>/', offline_views.offline_order_success, name='offline_order_success'),
+    path('offline-orders/list/', offline_views.offline_orders_list, name='offline_orders_list'),
+    path('api/products/<int:product_id>/variants/', offline_views.get_product_variants, name='get_product_variants'),
+
+    # M-Pesa endpoints
+    path('mpesa-callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('test-mpesa-auth/', views.test_mpesa_auth, name='test_mpesa_auth'),
 ]

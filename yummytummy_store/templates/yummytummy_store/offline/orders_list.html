@@ -1,0 +1,311 @@
+{% extends 'yummytummy_store/offline/base.html' %}
+{% load tz %}
+
+{% block title %}My Orders - YummyTummy{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="fas fa-list"></i> My Offline Orders</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    {% if user.is_superuser %}
+                        Viewing all offline orders created by sales team members.
+                    {% else %}
+                        Viewing orders you have created through the offline order system.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if orders %}
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-receipt"></i> Orders ({{ orders.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ order.get_order_number }}</strong>
+                                    </td>
+                                    <td>
+                                        {{ order.first_name }} {{ order.last_name }}
+                                        {% if order.business_name %}
+                                            <br><small class="text-muted">{{ order.business_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.customer_type == 'business' %}
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-building"></i> Business
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-user"></i> Individual
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>KSh {{ order.total_amount }}</strong>
+                                    </td>
+                                    <td>
+                                        {% with latest_status=order.tracking_statuses.last %}
+                                            {% if latest_status %}
+                                                <span class="badge bg-info">
+                                                    {{ latest_status.get_status_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">No Status</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% timezone "Africa/Nairobi" %}
+                                        {{ order.created|date:"M d, Y H:i" }} EAT
+                                        {% endtimezone %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#orderModal{{ order.id }}">
+                                                <i class="fas fa-eye"></i> View
+                                            </button>
+                                            {% if user.is_superuser %}
+                                                <a href="/admin/yummytummy_store/order/{{ order.id }}/change/" 
+                                                   class="btn btn-outline-warning btn-sm">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                    <h5>No Orders Found</h5>
+                    <p class="text-muted">
+                        {% if user.is_superuser %}
+                            No offline orders have been created yet.
+                        {% else %}
+                            You haven't created any offline orders yet.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'yummytummy_store:create_offline_order' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Create Your First Order
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Order Detail Modals -->
+{% for order in orders %}
+<div class="modal fade" id="orderModal{{ order.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details - {{ order.get_order_number }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-user"></i> Customer Information</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Name:</strong> {{ order.first_name }} {{ order.last_name }}</p>
+                                {% if order.business_name %}
+                                <p class="mb-1"><strong>Business:</strong> {{ order.business_name }}</p>
+                                {% endif %}
+                                <p class="mb-1"><strong>Email:</strong> {{ order.email }}</p>
+                                <p class="mb-0"><strong>Phone:</strong> {{ order.phone }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-truck"></i> Delivery Information</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Address:</strong> {{ order.address }}</p>
+                                <p class="mb-1"><strong>City:</strong> {{ order.city }}</p>
+                                <p class="mb-0"><strong>County:</strong> {{ order.county }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-shopping-cart"></i> Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Size</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>
+                                    {% if item.variant %}
+                                        {{ item.variant.size }}
+                                    {% else %}
+                                        Standard
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>KSh {{ item.price }}</td>
+                                <td>KSh {{ item.get_cost }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th colspan="4">Total Amount:</th>
+                                <th>KSh {{ order.total_amount }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <hr>
+                
+                <h6><i class="fas fa-clock"></i> Order Timeline</h6>
+                <div class="timeline">
+                    {% for status in order.tracking_statuses.all %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">{{ status.get_status_display }}</h6>
+                            <p class="timeline-text">{{ status.message }}</p>
+                            <small class="text-muted">
+                                {% timezone "Africa/Nairobi" %}
+                                {{ status.created_at|date:"F d, Y H:i" }} EAT
+                                {% endtimezone %}
+                                {% if status.created_by %}
+                                    by {{ status.created_by.get_full_name|default:status.created_by.username }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if user.is_superuser %}
+                    <a href="/admin/yummytummy_store/order/{{ order.id }}/change/" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit in Admin
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{% url 'yummytummy_store:create_offline_order' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Create New Order
+            </a>
+            <a href="{% url 'yummytummy_store:offline_orders_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -2rem;
+        top: 0.25rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        border: 3px solid var(--secondary-color);
+    }
+    
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 1rem;
+        width: 2px;
+        height: calc(100% + 0.5rem);
+        background-color: var(--accent-color);
+    }
+    
+    .timeline-title {
+        margin-bottom: 0.25rem;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .timeline-text {
+        margin-bottom: 0.25rem;
+        color: var(--dark-gray);
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+    }
+    
+    .table th, .table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}

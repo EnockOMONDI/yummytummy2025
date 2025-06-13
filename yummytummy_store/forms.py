@@ -123,3 +123,87 @@ class CouponApplyForm(forms.Form):
             raise forms.ValidationError('Invalid coupon code.')
 
         return code
+
+
+# Offline Order Forms
+class OfflineCustomerForm(forms.Form):
+    CUSTOMER_TYPE_CHOICES = [
+        ('individual', 'Individual Customer'),
+        ('business', 'Business Customer'),
+    ]
+
+    customer_type = forms.ChoiceField(
+        choices=CUSTOMER_TYPE_CHOICES,
+        initial='individual',
+        widget=forms.RadioSelect(attrs={'class': 'customer-type-radio'})
+    )
+
+    # Individual/Business common fields
+    first_name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'})
+    )
+    last_name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'})
+    )
+    phone = forms.CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r'^(07\d{8}|254\d{9}|\+254\d{9})$',
+                message='Enter a valid phone number (format: 07XXXXXXXX, 254XXXXXXXXX, or +254XXXXXXXXX)'
+            )
+        ],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'})
+    )
+
+    # Business-specific field
+    business_name = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Business Name',
+            'id': 'business-name-field'
+        })
+    )
+
+    # Delivery information
+    delivery_address = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Delivery Address'})
+    )
+    delivery_city = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'})
+    )
+    delivery_county = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'County'})
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        customer_type = cleaned_data.get('customer_type')
+        business_name = cleaned_data.get('business_name')
+
+        if customer_type == 'business' and not business_name:
+            self.add_error('business_name', 'Business name is required for business customers')
+
+        return cleaned_data
+
+
+class OfflineOrderForm(forms.Form):
+    """Form for creating offline orders"""
+    order_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Additional order notes (optional)'
+        })
+    )
