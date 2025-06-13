@@ -897,6 +897,60 @@ def account_profile(request):
     return render(request, 'yummytummy_store/account/profile.html', context)
 
 
+def guest_order_tracking(request):
+    """Guest order tracking - allows tracking orders without login"""
+    order = None
+    error_message = None
+
+    if request.method == 'POST':
+        order_number = request.POST.get('order_number', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if order_number and email:
+            try:
+                # Extract order ID from order number (format: MSL-000123)
+                if order_number.startswith('MSL-'):
+                    order_id = int(order_number.split('-')[1])
+                    order = Order.objects.get(id=order_id, email__iexact=email)
+
+                    # Get tracking information
+                    tracking_history = OrderTrackingService.get_order_tracking_history(order)
+                    progress_percentage = OrderTrackingService.get_order_progress_percentage(order)
+
+                    # Get order items
+                    order_items = []
+                    for item in order.items.all():
+                        item_data = {
+                            'product': item.product,
+                            'variant': item.variant,
+                            'quantity': item.quantity,
+                            'price': item.price,
+                            'total': item.get_cost(),
+                            'display_name': f"{item.product.name} - {item.variant.name}" if item.variant else item.product.name,
+                        }
+                        order_items.append(item_data)
+
+                    context = {
+                        'order': order,
+                        'order_items': order_items,
+                        'tracking_history': tracking_history,
+                        'progress_percentage': progress_percentage,
+                        'is_guest_tracking': True,
+                    }
+                    return render(request, 'yummytummy_store/account/guest_order_tracking.html', context)
+                else:
+                    error_message = "Invalid order number format. Order numbers start with 'MSL-'"
+            except (ValueError, Order.DoesNotExist):
+                error_message = "Order not found. Please check your order number and email address."
+        else:
+            error_message = "Please enter both order number and email address."
+
+    context = {
+        'error_message': error_message,
+    }
+    return render(request, 'yummytummy_store/account/guest_order_tracking.html', context)
+
+
 # M-Pesa Integration Views
 
 @csrf_exempt

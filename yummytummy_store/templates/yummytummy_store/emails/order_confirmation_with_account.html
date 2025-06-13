@@ -214,39 +214,42 @@
             <div class="tagline">Pure Honey, Pure Goodness</div>
         </div>
 
-        <!-- Account Created Notice -->
+        <!-- Order Tracking Information -->
         <div class="account-created">
-            <h2>🎉 Account Created Successfully!</h2>
-            <p>We've automatically created an account for you to track your orders and enjoy a personalized shopping experience.</p>
+            <h2>📦 Track Your Order</h2>
+            <p>You can easily track your order status and view your order history using the link below. We've set up convenient access for you to monitor your delivery progress.</p>
         </div>
 
-        <!-- Account Credentials -->
+        <!-- Access Information -->
         <div class="credentials-box">
-            <h3>Your Account Details</h3>
+            <h3>Order Tracking Access</h3>
             <div class="credential-item">
-                <span class="credential-label">Email/Username:</span>
+                <span class="credential-label">Your Email:</span>
                 <span class="credential-value">{{ user.email }}</span>
             </div>
             <div class="credential-item">
-                <span class="credential-label">Temporary Password:</span>
+                <span class="credential-label">Access Code:</span>
                 <span class="credential-value">{{ temp_password }}</span>
             </div>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                <em>Use these details to view your order status and history. You can change your access code after your first login.</em>
+            </p>
         </div>
 
-        <!-- Login Button -->
+        <!-- Track Order Button -->
         <div style="text-align: center;">
             <a href="{{ login_url }}" class="login-button">
-                🔐 Login to Your Account
+                📦 Track Your Order
             </a>
         </div>
 
         <div class="important-note">
-            <h4>Important Security Information:</h4>
+            <h4>Order Tracking Information:</h4>
             <ul>
-                <li>This login link is valid for {{ token_expires_days }} days</li>
-                <li>Please change your password after your first login</li>
-                <li>Keep your login credentials secure and don't share them</li>
-                <li>If you have any issues, contact us at {{ support_email }}</li>
+                <li>Use the link above to track your order progress in real-time</li>
+                <li>Your secure access link is valid for {{ token_expires_days }} days</li>
+                <li>You can view your complete order history and update your preferences</li>
+                <li>If you need assistance, contact us at {{ support_email }}</li>
             </ul>
         </div>
 

@@ -138,7 +138,7 @@ class OrderTrackingEmailService:
         }
         
         # Render email templates
-        subject = f'YummyTummy Order #{order.get_order_number()} - Account Created'
+        subject = f'YummyTummy Order #{order.get_order_number()} - Order Confirmation & Tracking'
         html_message = render_to_string('yummytummy_store/emails/order_confirmation_with_account.html', context)
         plain_message = strip_tags(html_message)
         
