@@ -34,6 +34,7 @@ urlpatterns = [
 
     # Order Tracking and Authentication URLs
     path('track-order/', views.guest_order_tracking, name='guest_order_tracking'),
+    path('payment/retry/<int:order_id>/', views.payment_retry, name='payment_retry'),
     path('first-login/<str:token>/', views.first_time_login, name='first_time_login'),
     path('account/dashboard/', views.order_tracking_dashboard, name='order_tracking_dashboard'),
     path('account/order/<int:order_id>/', views.order_detail_tracking, name='order_detail_tracking'),

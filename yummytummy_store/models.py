@@ -173,6 +173,10 @@ class Order(models.Model):
     account_creation_email_sent = models.BooleanField(default=False,
                                                     help_text="Whether the account creation email was sent")
 
+    # Cart Preservation for Payment Retry
+    preserved_cart_data = models.TextField(blank=True, null=True,
+                                         help_text="JSON data of cart contents for payment retry")
+
     # Timestamps
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

@@ -1,0 +1,53 @@
+PAYMENT UNSUCCESSFUL - YummyTummy
+
+Dear {{ customer_name }},
+
+M-PESA PAYMENT NOT COMPLETED
+We were unable to process your M-Pesa payment for your YummyTummy order. Don't worry - your order is still reserved and you can easily try again.
+
+ORDER INFORMATION
+Order Number: {{ order_number }}
+Customer: {{ customer_name }}
+Total Amount: {{ order.get_formatted_total }}
+M-Pesa Phone: {{ order.mpesa_phone }}
+
+{% if failure_reason %}
+WHAT HAPPENED?
+{{ failure_reason }}
+{% endif %}
+
+HOW TO COMPLETE YOUR PAYMENT
+1. Visit the retry payment link below to restart the M-Pesa payment process
+2. Check your phone for the M-Pesa payment prompt (STK Push)
+3. Enter your M-Pesa PIN when prompted
+4. Confirm the payment to complete your order
+
+Your cart contents have been preserved, so you won't need to select your products again.
+
+RETRY PAYMENT: {{ retry_payment_url }}
+TRACK YOUR ORDER: {{ track_order_url }}
+
+NEED HELP?
+Common reasons for payment failure:
+- Insufficient M-Pesa balance
+- Payment cancelled by user
+- Network connectivity issues
+- M-Pesa service temporarily unavailable
+
+Contact our support team:
+Email: {{ support_email }}
+WhatsApp: +254 700 000 000
+Support Hours: Monday - Friday, 8:00 AM - 6:00 PM EAT
+
+{% if order_items %}
+YOUR ORDER ITEMS
+{% for item in order_items %}
+{{ item.display_name }} - {{ item.quantity }}x {{ item.formatted_price }}
+{% endfor %}
+{% endif %}
+
+Thank you for choosing YummyTummy!
+We're here to help make your peanut butter experience amazing.
+
+---
+YummyTummy - Premium Kenyan Peanut Butter

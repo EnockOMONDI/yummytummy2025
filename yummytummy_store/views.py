@@ -699,6 +699,16 @@ def payment(request):
                             message=f'M-Pesa payment initiation failed: {mpesa_response.get("error", "Unknown error")}'
                         )
 
+                        # Send failed payment notification email
+                        try:
+                            OrderTrackingEmailService.send_payment_failed_notification(
+                                order=order,
+                                failure_reason=f"Payment initiation failed: {mpesa_response.get('error', 'Unknown error')}",
+                                request=request
+                            )
+                        except Exception as e:
+                            print(f"Failed to send payment failure notification for order {order.id}: {str(e)}")
+
                         messages.error(request,
                             f"M-Pesa payment failed: {mpesa_response.get('error', 'Unknown error')}")
 
@@ -713,6 +723,16 @@ def payment(request):
                         status='cancelled',
                         message=f'M-Pesa payment error: {str(e)}'
                     )
+
+                    # Send failed payment notification email
+                    try:
+                        OrderTrackingEmailService.send_payment_failed_notification(
+                            order=order,
+                            failure_reason=f"Payment processing error: {str(e)}",
+                            request=request
+                        )
+                    except Exception as email_error:
+                        print(f"Failed to send payment failure notification for order {order.id}: {str(email_error)}")
 
                     messages.error(request,
                         "There was an error processing your M-Pesa payment. Please try again or contact support.")
@@ -736,6 +756,10 @@ def payment(request):
 
             # Store order ID in session for confirmation page
             request.session['order_id'] = order.id
+
+            # Preserve cart data for potential payment retry before clearing
+            from .services import CartPreservationService
+            CartPreservationService.preserve_cart_for_order(order)
 
             # Clear cart, checkout data, and coupon
             request.session['cart'] = {}
@@ -951,6 +975,53 @@ def guest_order_tracking(request):
     return render(request, 'yummytummy_store/account/guest_order_tracking.html', context)
 
 
+def payment_retry(request, order_id):
+    """Allow customers to retry payment for failed orders"""
+    try:
+        order = get_object_or_404(Order, id=order_id, payment_status='failed')
+
+        # Restore cart contents from order
+        from .services import CartPreservationService
+        cart_restored = CartPreservationService.restore_cart_from_order(request, order)
+
+        if cart_restored:
+            # Restore checkout data from order
+            request.session['checkout_data'] = {
+                'first_name': order.first_name,
+                'last_name': order.last_name,
+                'email': order.email,
+                'phone': order.phone,
+                'address': order.address,
+                'area': order.area,
+                'estate': order.estate,
+                'building': order.building,
+                'landmark': order.landmark,
+                'order_notes': order.order_notes,
+                'subtotal_amount': float(order.subtotal_amount),
+                'discount_amount': float(order.discount_amount),
+                'total_amount': float(order.total_amount),
+                'coupon_id': order.coupon.id if order.coupon else None,
+            }
+            request.session.modified = True
+
+            messages.success(request,
+                f"Your cart has been restored for order {order.get_order_number()}. Please try your payment again.")
+
+            # Redirect to payment page
+            return redirect('yummytummy_store:payment')
+        else:
+            messages.error(request,
+                "Unable to restore your cart. Please add items to your cart and try again.")
+            return redirect('yummytummy_store:product_list')
+
+    except Order.DoesNotExist:
+        messages.error(request, "Order not found or payment retry not available.")
+        return redirect('yummytummy_store:guest_order_tracking')
+    except Exception as e:
+        messages.error(request, "An error occurred while preparing your payment retry. Please contact support.")
+        return redirect('yummytummy_store:guest_order_tracking')
+
+
 # M-Pesa Integration Views
 
 @csrf_exempt
@@ -1056,6 +1127,17 @@ def mpesa_callback(request):
                         status='cancelled',
                         message=f'M-Pesa payment failed: {result_desc}'
                     )
+
+                    # Send failed payment notification email
+                    try:
+                        OrderTrackingEmailService.send_payment_failed_notification(
+                            order=order,
+                            failure_reason=result_desc,
+                            request=None  # No request context in callback
+                        )
+                        logger.info(f"Failed payment notification sent for order {order.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to send payment failure notification for order {order.id}: {str(e)}")
 
                     logger.warning(f"M-Pesa payment failed for order {order.id}: {result_desc}")
 

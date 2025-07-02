@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Unsuccessful - YummyTummy</title>
+    <style>
+        /* YummyTummy Brand Colors */
+        :root {
+            --primary-color: #593500;
+            --secondary-color: #ffffff;
+            --accent-color: #f5f2ed;
+            --highlight-color: #ffc107;
+            --dark-gray: #333333;
+            --light-gray: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-gray);
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .email-header {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .email-body {
+            padding: 30px;
+        }
+
+        .payment-failed-notice {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .payment-failed-notice h2 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+        }
+
+        .payment-failed-notice p {
+            color: #856404;
+            margin: 0;
+        }
+
+        .order-details {
+            background-color: var(--accent-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .order-details h3 {
+            color: var(--primary-color);
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .detail-value {
+            color: var(--dark-gray);
+        }
+
+        .failure-reason {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+
+        .failure-reason h4 {
+            color: #721c24;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .failure-reason p {
+            color: #721c24;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .retry-instructions {
+            background-color: var(--highlight-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .retry-instructions h3 {
+            color: var(--primary-color);
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+
+        .retry-instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .retry-instructions li {
+            margin-bottom: 8px;
+            color: var(--dark-gray);
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .retry-button {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-block;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #4a2a00;
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .track-button {
+            background-color: var(--highlight-color);
+            color: var(--primary-color);
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 16px;
+            display: inline-block;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .track-button:hover {
+            background-color: #e0a800;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .support-info {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .support-info h4 {
+            color: var(--primary-color);
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .support-info p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+        .support-info p:last-child {
+            margin-bottom: 0;
+        }
+
+        .email-footer {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .email-footer p {
+            margin: 0;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+
+            .email-header,
+            .email-body {
+                padding: 20px;
+            }
+
+            .email-header h1 {
+                font-size: 20px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .retry-button,
+            .track-button {
+                display: block;
+                margin: 10px 0;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Email Header -->
+        <div class="email-header">
+            <h1>🚫 Payment Unsuccessful</h1>
+        </div>
+
+        <!-- Email Body -->
+        <div class="email-body">
+            <!-- Payment Failed Notice -->
+            <div class="payment-failed-notice">
+                <h2>⚠️ M-Pesa Payment Not Completed</h2>
+                <p>We were unable to process your M-Pesa payment for your YummyTummy order. Don't worry - your order is still reserved and you can easily try again.</p>
+            </div>
+
+            <!-- Order Details -->
+            <div class="order-details">
+                <h3>📦 Order Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Order Number:</span>
+                    <span class="detail-value">{{ order_number }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Customer:</span>
+                    <span class="detail-value">{{ customer_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">{{ order.get_formatted_total }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">M-Pesa Phone:</span>
+                    <span class="detail-value">{{ order.mpesa_phone }}</span>
+                </div>
+            </div>
+
+            <!-- Failure Reason -->
+            {% if failure_reason %}
+            <div class="failure-reason">
+                <h4>🔍 What Happened?</h4>
+                <p>{{ failure_reason }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Retry Instructions -->
+            <div class="retry-instructions">
+                <h3>🔄 How to Complete Your Payment</h3>
+                <ol>
+                    <li><strong>Click "Try Payment Again"</strong> below to restart the M-Pesa payment process</li>
+                    <li><strong>Check your phone</strong> for the M-Pesa payment prompt (STK Push)</li>
+                    <li><strong>Enter your M-Pesa PIN</strong> when prompted</li>
+                    <li><strong>Confirm the payment</strong> to complete your order</li>
+                </ol>
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                    <em>Your cart contents have been preserved, so you won't need to select your products again.</em>
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ retry_payment_url }}" class="retry-button">
+                    🔄 Try Payment Again
+                </a>
+                <a href="{{ track_order_url }}" class="track-button">
+                    📦 Track Your Order
+                </a>
+            </div>
+
+            <!-- Support Information -->
+            <div class="support-info">
+                <h4>💬 Need Help?</h4>
+                <p><strong>Common reasons for payment failure:</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Insufficient M-Pesa balance</li>
+                    <li>Payment cancelled by user</li>
+                    <li>Network connectivity issues</li>
+                    <li>M-Pesa service temporarily unavailable</li>
+                </ul>
+                <p><strong>Contact our support team:</strong></p>
+                <p>📧 Email: {{ support_email }}</p>
+                <p>📱 WhatsApp: +254 700 000 000</p>
+                <p>🕒 Support Hours: Monday - Friday, 8:00 AM - 6:00 PM EAT</p>
+            </div>
+
+            <!-- Order Items Summary -->
+            {% if order_items %}
+            <div class="order-details">
+                <h3>🛒 Your Order Items</h3>
+                {% for item in order_items %}
+                <div class="detail-row">
+                    <span class="detail-label">{{ item.display_name }}</span>
+                    <span class="detail-value">{{ item.quantity }}x {{ item.formatted_price }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Email Footer -->
+        <div class="email-footer">
+            <p>Thank you for choosing YummyTummy! 🥜</p>
+            <p>We're here to help make your peanut butter experience amazing.</p>
+        </div>
+    </div>
+</body>
+</html>

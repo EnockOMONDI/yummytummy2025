@@ -3,6 +3,7 @@ Email and order tracking services for YummyTummy store.
 Handles automatic account creation and order tracking emails.
 """
 
+import json
 import secrets
 import string
 from django.core.mail import send_mail
@@ -308,6 +309,156 @@ class OrderTrackingEmailService:
         except Exception as e:
             # Log error (in production, use proper logging)
             print(f"Failed to send status update email: {e}")
+            return False
+
+    @staticmethod
+    def send_payment_failed_notification(order, failure_reason=None, request=None):
+        """Send email notification when M-Pesa payment fails"""
+        try:
+            # Format order items
+            order_items = OrderTrackingEmailService.format_order_items_for_email(order)
+
+            # Generate retry payment URL (preserve cart for retry)
+            if request:
+                retry_payment_url = request.build_absolute_uri(reverse('yummytummy_store:payment_retry', kwargs={'order_id': order.id}))
+                track_order_url = request.build_absolute_uri(reverse('yummytummy_store:guest_order_tracking'))
+            else:
+                # Fallback URLs for callback context
+                retry_payment_url = f"https://yummytummy.com/payment/retry/{order.id}/"
+                track_order_url = "https://yummytummy.com/track-order/"
+
+            # Prepare email context
+            context = {
+                'order': order,
+                'order_items': order_items,
+                'order_number': order.get_order_number(),
+                'customer_name': order.get_customer_name(),
+                'failure_reason': failure_reason,
+                'retry_payment_url': retry_payment_url,
+                'track_order_url': track_order_url,
+                'site_name': 'YummyTummy',
+                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
+            }
+
+            # Render email content
+            html_message = render_to_string('yummytummy_store/emails/payment_failed_notification.html', context)
+            plain_message = render_to_string('yummytummy_store/emails/payment_failed_notification.txt', context)
+
+            # Send email
+            send_mail(
+                subject=f'YummyTummy Order #{order.get_order_number()} - Payment Unsuccessful',
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[order.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            return True
+
+        except Exception as e:
+            # Log error (in production, use proper logging)
+            print(f"Failed to send payment failed notification: {e}")
+            return False
+
+
+class CartPreservationService:
+    """Service for preserving cart contents during payment failures"""
+
+    @staticmethod
+    def preserve_cart_for_order(order):
+        """Preserve cart contents from order for retry attempts"""
+        try:
+            # Create cart data from order items
+            cart_data = {}
+
+            for item in order.items.all():
+                # Create cart key similar to how it's done in cart views
+                if item.variant:
+                    cart_key = f"{item.product.id}_variant_{item.variant.id}"
+                    variant_name = item.variant.name
+                    # Use the actual price from the order item (what was paid)
+                    price = str(item.price)
+                else:
+                    cart_key = f"{item.product.id}_base"
+                    variant_name = None
+                    # Use the actual price from the order item (what was paid)
+                    price = str(item.price)
+
+                cart_data[cart_key] = {
+                    'product_id': item.product.id,
+                    'variant_id': item.variant.id if item.variant else None,
+                    'quantity': item.quantity,
+                    'price': price,
+                    'name': item.product.name,
+                    'variant_name': variant_name,
+                }
+
+            # Store cart data in order for later retrieval
+            order.preserved_cart_data = json.dumps(cart_data)
+            order.save()
+
+            return True
+
+        except Exception as e:
+            print(f"Failed to preserve cart for order {order.id}: {e}")
+            return False
+
+    @staticmethod
+    def restore_cart_from_order(request, order):
+        """Restore cart contents from preserved order data"""
+        try:
+            if hasattr(order, 'preserved_cart_data') and order.preserved_cart_data:
+                # Parse preserved cart data
+                cart_data = json.loads(order.preserved_cart_data)
+
+                # Restore cart to session
+                request.session['cart'] = cart_data
+                request.session.modified = True
+
+                return True
+            else:
+                # Fallback: recreate cart from order items
+                return CartPreservationService.recreate_cart_from_order_items(request, order)
+
+        except Exception as e:
+            print(f"Failed to restore cart from order {order.id}: {e}")
+            return False
+
+    @staticmethod
+    def recreate_cart_from_order_items(request, order):
+        """Recreate cart from order items as fallback"""
+        try:
+            cart_data = {}
+
+            for item in order.items.all():
+                if item.variant:
+                    cart_key = f"{item.product.id}_variant_{item.variant.id}"
+                    variant_name = item.variant.name
+                    # Use the actual price from the order item (what was paid)
+                    price = str(item.price)
+                else:
+                    cart_key = f"{item.product.id}_base"
+                    variant_name = None
+                    # Use the actual price from the order item (what was paid)
+                    price = str(item.price)
+
+                cart_data[cart_key] = {
+                    'product_id': item.product.id,
+                    'variant_id': item.variant.id if item.variant else None,
+                    'quantity': item.quantity,
+                    'price': price,
+                    'name': item.product.name,
+                    'variant_name': variant_name,
+                }
+
+            request.session['cart'] = cart_data
+            request.session.modified = True
+
+            return True
+
+        except Exception as e:
+            print(f"Failed to recreate cart from order {order.id}: {e}")
             return False
 
 
