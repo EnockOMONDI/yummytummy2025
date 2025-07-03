@@ -25,6 +25,12 @@ services:
         value: "True"
       - key: SECURE_PROXY_SSL_HEADER
         value: "HTTP_X_FORWARDED_PROTO,https"
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
       # Email Configuration
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.smtp.EmailBackend"
