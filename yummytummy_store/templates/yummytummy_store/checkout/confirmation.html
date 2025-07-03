@@ -418,6 +418,56 @@
         flex-shrink: 0;
     }
 
+    /* What Happens Next Section Styles */
+    .what-happens-next {
+        background-color: var(--highlight-color);
+        border: 1px solid rgba(89, 53, 0, 0.1);
+        border-radius: 8px;
+        padding: 25px;
+        margin: 30px 0;
+        text-align: center;
+    }
+
+    .what-happens-next-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .what-happens-next-content {
+        text-align: left;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+        color: var(--dark-gray);
+    }
+
+    .what-happens-next-content p {
+        margin-bottom: 12px;
+        padding-left: 20px;
+        position: relative;
+    }
+
+    .what-happens-next-content p:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #28a745;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .what-happens-next-content p:last-child {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
         .order-number-container {
@@ -441,6 +491,21 @@
 
         .confirmation-subtitle {
             font-size: 1rem;
+        }
+
+        .what-happens-next {
+            padding: 20px 15px;
+            margin: 20px 0;
+        }
+
+        .what-happens-next-title {
+            font-size: 1.1rem;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .what-happens-next-content {
+            font-size: 0.95rem;
         }
     }
 </style>
@@ -473,6 +538,20 @@
                         <i class="fas fa-search"></i> Track Your Order
                     </a>
                     {% endif %}
+                </div>
+            </div>
+
+            <!-- What Happens Next Section -->
+            <div class="what-happens-next">
+                <h2 class="what-happens-next-title">
+                    <i class="fas fa-info-circle"></i>
+                    What Happens Next?
+                </h2>
+                <div class="what-happens-next-content">
+                    <p>You will receive an order confirmation email with tracking information.</p>
+                    <p>Once your payment is confirmed, we will prepare your order for shipping.</p>
+                    <p>You will receive a shipping notification when your order is on its way.</p>
+                    <p>Your delicious YummyTummy peanut butter will arrive at your doorstep soon!</p>
                 </div>
             </div>
 
