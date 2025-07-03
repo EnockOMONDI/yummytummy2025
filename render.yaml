@@ -49,10 +49,10 @@ services:
       - key: MPESA_BUSINESS_SHORT_CODE
         value: "174379"
       - key: MPESA_PASSKEY
-        value: "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+        value: "f473271a17488fd9a1230c2e43f6fe63db04eabc8bc7db8d1e21e4fe753f598d"
       - key: MPESA_CONSUMER_KEY
-        value: "lU7OGiM7596xKzz9NoErGruBj5rMAyP0"
+        value: "p2D6eI01gcYtvwHgrh7UVsX61sFaAmKA4hZDZaHI3KBN0Xv4"
       - key: MPESA_CONSUMER_SECRET
-        value: "24Pez2DXUqFwHD3f"
+        value: "MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn"
       - key: MPESA_ENVIRONMENT
         value: "sandbox"

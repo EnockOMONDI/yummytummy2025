@@ -266,9 +266,9 @@ UPLOADCARE = {
 
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='174379')
-MPESA_PASSKEY = config('MPESA_PASSKEY', default='bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')
-MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='lU7OGiM7596xKzz9NoErGruBj5rMAyP0')
-MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='24Pez2DXUqFwHD3f')
+MPESA_PASSKEY = config('MPESA_PASSKEY')
+MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET')
 
 # M-Pesa API URLs (Sandbox for testing, Production for live)
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='sandbox')  # 'sandbox' or 'production'
