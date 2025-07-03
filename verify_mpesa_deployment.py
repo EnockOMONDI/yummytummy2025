@@ -135,12 +135,18 @@ class MPesaDeploymentVerifier:
         print("-" * 50)
         
         try:
-            # Get the base URL from Django settings or environment
-            if hasattr(settings, 'SITE_URL'):
-                base_url = settings.SITE_URL
+            # Get the callback URL from Django settings
+            if hasattr(settings, 'MPESA_CALLBACK_URL'):
+                callback_url = settings.MPESA_CALLBACK_URL
+                print(f"✅ M-Pesa Callback URL configured: {callback_url}")
+            elif hasattr(settings, 'SITE_URL'):
+                callback_url = f"{settings.SITE_URL}/mpesa/callback/"
+                print(f"✅ M-Pesa Callback URL derived: {callback_url}")
             else:
-                # Try to determine from environment or use default
-                base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://your-app.onrender.com')
+                # Fallback to environment or default
+                base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://livegreat.co.ke')
+                callback_url = f"{base_url}/mpesa/callback/"
+                print(f"⚠️  M-Pesa Callback URL fallback: {callback_url}")
             
             callback_url = f"{base_url}/mpesa/callback/"
             print(f"Testing callback URL: {callback_url}")

@@ -1,0 +1,36 @@
+{
+  "configuration": {
+    "MPESA_BUSINESS_SHORT_CODE": "CONFIGURED",
+    "MPESA_PASSKEY": "CONFIGURED",
+    "MPESA_CONSUMER_KEY": "CONFIGURED",
+    "MPESA_CONSUMER_SECRET": "CONFIGURED",
+    "MPESA_ENVIRONMENT": "CONFIGURED",
+    "overall": "VALID"
+  },
+  "connectivity": {
+    "base_url": "REACHABLE",
+    "auth": "REACHABLE",
+    "stk_push": "REACHABLE"
+  },
+  "authentication": {
+    "status": "SUCCESS",
+    "token_length": 28
+  },
+  "api_endpoints": {},
+  "stk_push_test": {
+    "status": "FAILED",
+    "error": "Network error occurred while processing payment"
+  },
+  "recommendations": [
+    {
+      "issue": "Network Error",
+      "cause": "Connection timeout or network connectivity issue",
+      "solutions": [
+        "Check internet connectivity",
+        "Verify firewall settings allow outbound HTTPS connections",
+        "Test from different network/server",
+        "Check if M-Pesa API endpoints are accessible"
+      ]
+    }
+  ]
+}

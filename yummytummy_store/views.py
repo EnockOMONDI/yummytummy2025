@@ -664,8 +664,10 @@ def payment(request):
                         # For development, use a placeholder URL since localhost won't work with M-Pesa
                         callback_url = 'https://webhook.site/unique-id'
                     else:
-                        # For production, use the actual callback URL
-                        callback_url = request.build_absolute_uri(reverse('yummytummy_store:mpesa_callback'))
+                        # For production, use the configured callback URL for livegreat.co.ke domain
+                        # This ensures Safaricom sends callbacks to the registered domain
+                        callback_url = getattr(settings, 'MPESA_CALLBACK_URL',
+                                             f"{settings.SITE_URL}/mpesa/callback/")
 
                     # Initialize M-Pesa service
                     mpesa_service = MPesaService()
@@ -709,8 +711,23 @@ def payment(request):
                         except Exception as e:
                             print(f"Failed to send payment failure notification for order {order.id}: {str(e)}")
 
-                        messages.error(request,
-                            f"M-Pesa payment failed: {mpesa_response.get('error', 'Unknown error')}")
+                        # Provide user-friendly error messages based on error type
+                        error_msg = mpesa_response.get('error', 'Unknown error')
+                        error_code = mpesa_response.get('error_code', '')
+
+                        # Map technical errors to user-friendly messages
+                        if '404.001.03' in str(error_code):
+                            user_message = "M-Pesa service is temporarily unavailable. Please try again in a few minutes or contact our support team."
+                        elif 'authentication' in error_msg.lower() or 'access token' in error_msg.lower():
+                            user_message = "Payment service is experiencing technical difficulties. Please contact our support team or try again later."
+                        elif 'invalid' in error_msg.lower() and 'shortcode' in error_msg.lower():
+                            user_message = "Payment configuration issue detected. Please contact our support team."
+                        elif 'network error' in error_msg.lower():
+                            user_message = "Network connectivity issue. Please check your internet connection and try again."
+                        else:
+                            user_message = f"M-Pesa payment failed: {error_msg}"
+
+                        messages.error(request, user_message)
 
                 except Exception as e:
                     # Handle M-Pesa errors gracefully

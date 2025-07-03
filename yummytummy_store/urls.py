@@ -55,8 +55,4 @@ urlpatterns = [
     path('offline-orders/success/<int:order_id>/', offline_views.offline_order_success, name='offline_order_success'),
     path('offline-orders/list/', offline_views.offline_orders_list, name='offline_orders_list'),
     path('api/products/<int:product_id>/variants/', offline_views.get_product_variants, name='get_product_variants'),
-
-    # M-Pesa endpoints
-    path('mpesa-callback/', views.mpesa_callback, name='mpesa_callback'),
-    path('test-mpesa-auth/', views.test_mpesa_auth, name='test_mpesa_auth'),
 ]

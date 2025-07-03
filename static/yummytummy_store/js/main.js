@@ -1,15 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Message dismissal
+    // Message dismissal - Manual only (no auto-timeout)
     const messages = document.querySelectorAll('.message');
     messages.forEach(message => {
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            message.style.opacity = '0';
-            setTimeout(() => {
-                message.remove();
-            }, 300);
-        }, 5000);
-
         // Manual dismiss with close button
         const closeBtn = message.querySelector('.close-message');
         if (closeBtn) {
@@ -20,6 +12,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             });
         }
+
+        // Add accessibility: Allow dismissal with Escape key when message is focused
+        message.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.remove();
+                }, 300);
+            }
+        });
+
+        // Make message focusable for keyboard accessibility
+        message.setAttribute('tabindex', '0');
+        message.setAttribute('role', 'alert');
+        message.setAttribute('aria-live', 'polite');
     });
     // Mobile Menu Toggle
     const menuToggle = document.querySelector('.menu-toggle');

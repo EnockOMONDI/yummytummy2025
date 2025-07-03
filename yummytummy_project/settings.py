@@ -273,6 +273,10 @@ UPLOADCARE = {
     },
 }
 
+# Site URL Configuration for M-Pesa Callbacks
+# This is the domain that Safaricom will send callbacks to
+SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
+
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='6319470')
 MPESA_PASSKEY = config('MPESA_PASSKEY', default='f473271a17488fd9a1230c2e43f6fe63db04eabc8bc7db8d1e21e4fe753f598d')
@@ -282,3 +286,7 @@ MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='MQKc16J58WljEle
 # M-Pesa API URLs (Sandbox for testing, Production for live)
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='production')  # 'sandbox' or 'production'
 MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke' if MPESA_ENVIRONMENT == 'sandbox' else 'https://api.safaricom.co.ke'
+
+# M-Pesa Callback URL Configuration
+# Safaricom requires HTTPS and will only send callbacks to the registered domain
+MPESA_CALLBACK_URL = f"{SITE_URL}/mpesa/callback/"

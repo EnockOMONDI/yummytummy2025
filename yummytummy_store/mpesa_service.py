@@ -182,6 +182,28 @@ class MPesaService:
                 
         except requests.exceptions.RequestException as e:
             logger.error(f"M-Pesa STK Push request failed for order {order_id}: {str(e)}")
+
+            # Parse M-Pesa specific errors for better diagnostics
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_code = error_data.get('errorCode', 'Unknown')
+                    error_message = error_data.get('errorMessage', str(e))
+
+                    logger.error(f"M-Pesa API Error for order {order_id}: {error_code} - {error_message}")
+
+                    # Return specific M-Pesa error with code for better handling
+                    return {
+                        'success': False,
+                        'error': f'M-Pesa API Error {error_code}: {error_message}',
+                        'error_code': error_code,
+                        'error_message': error_message
+                    }
+                except (ValueError, KeyError):
+                    # If response is not valid JSON, fall through to generic error
+                    pass
+
+            # Fallback to generic network error
             return {
                 'success': False,
                 'error': 'Network error occurred while processing payment'

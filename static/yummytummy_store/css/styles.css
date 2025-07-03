@@ -1757,32 +1757,61 @@ ul {
     color: var(--secondary-color);
     padding: 15px 20px;
     margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;
     animation: slideIn 0.3s ease-out;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.message:focus {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Add a subtle left border indicator */
+.message::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: currentColor;
+    opacity: 0.3;
 }
 
 .message.success {
-    background-color: var(--primary-color);
+    background-color: #28a745;
     color: var(--secondary-color);
+    border-left: 4px solid #1e7e34;
 }
 
 .message.info {
-    background-color: var(--primary-color);
+    background-color: #17a2b8;
     color: var(--secondary-color);
+    border-left: 4px solid #117a8b;
 }
 
 .message.warning {
-    background-color: var(--primary-color);
-    color: var(--secondary-color);
+    background-color: var(--highlight-color);
+    color: var(--primary-color);
+    border-left: 4px solid #e0a800;
 }
 
 .message.error {
-    background-color: var(--primary-color);
+    background-color: #dc3545;
     color: var(--secondary-color);
+    border-left: 4px solid #bd2130;
 }
 
 @keyframes slideIn {
@@ -1797,18 +1826,42 @@ ul {
 }
 
 .close-message {
-    background: none;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    color: var(--secondary-color);
-    font-size: 1.2rem;
+    color: inherit;
+    font-size: 1.4rem;
     cursor: pointer;
-    padding: 0 5px;
-    margin-left: 10px;
-    transition: opacity 0.3s ease;
+    padding: 4px 8px;
+    margin-left: 15px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    font-weight: bold;
+    line-height: 1;
 }
 
 .close-message:hover {
-    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.close-message:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Specific close button colors for different message types */
+.message.warning .close-message {
+    color: var(--primary-color);
+    background: rgba(89, 53, 0, 0.2);
+}
+
+.message.warning .close-message:hover {
+    background: rgba(89, 53, 0, 0.3);
 }
 
 /* Mobile Responsive Messages */
@@ -1820,9 +1873,30 @@ ul {
         transform: none;
         max-width: none;
     }
-    
+
     .message {
         padding: 12px 15px;
         font-size: 0.9rem;
+        flex-wrap: wrap;
+        gap: 8px;
     }
+
+    .close-message {
+        font-size: 1.2rem;
+        min-width: 24px;
+        height: 24px;
+        margin-left: 8px;
+        padding: 2px 6px;
+    }
+}
+
+/* Add a subtle pulse animation for new messages */
+@keyframes messagePulse {
+    0% { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    50% { box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    100% { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+}
+
+.message {
+    animation: slideIn 0.3s ease-out, messagePulse 2s ease-in-out;
 }
