@@ -3,7 +3,7 @@ services:
     name: yummytummy-store
     env: python
     plan: free
-    branch: yummymain
+    branch: live
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
@@ -45,9 +45,9 @@ services:
         value: "1528b06f591935e6491d"
       - key: UPLOADCARE_SECRET_KEY
         value: "d3980def5fa035e7eed2"
-      # M-Pesa Configuration
+      # M-Pesa Configuration (Live Safaricom Credentials)
       - key: MPESA_BUSINESS_SHORT_CODE
-        value: "174379"
+        value: "6319470"
       - key: MPESA_PASSKEY
         value: "f473271a17488fd9a1230c2e43f6fe63db04eabc8bc7db8d1e21e4fe753f598d"
       - key: MPESA_CONSUMER_KEY
@@ -55,4 +55,4 @@ services:
       - key: MPESA_CONSUMER_SECRET
         value: "MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn"
       - key: MPESA_ENVIRONMENT
-        value: "sandbox"
+        value: "production"
