@@ -3,7 +3,7 @@ services:
     name: yummytummy-store
     env: python
     plan: free
-    branch: live2
+    branch: livefinal
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
