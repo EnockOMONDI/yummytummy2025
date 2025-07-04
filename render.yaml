@@ -18,7 +18,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "localhost,127.0.0.1,www.livegreat.co.ke,livegreat.co.ke,.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com,https://www.livegreat.co.ke,https://livegreat.co.ke"
       - key: SECURE_SSL_REDIRECT

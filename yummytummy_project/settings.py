@@ -29,7 +29,21 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-*vzt0ewazs4fk@4n^_jaq
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 # ALLOWED_HOSTS configuration for development and production
-ALLOWED_HOSTS = ['*']  # Allow all domains for simplified deployment
+# Using specific domains for security instead of wildcard
+ALLOWED_HOSTS_LIST = [
+    'localhost', '127.0.0.1',  # Development
+    'testserver',  # Django test client
+    'www.livegreat.co.ke',  # Primary domain (www subdomain)
+    'livegreat.co.ke',  # Apex domain (for redirection to www)
+]
+
+# Add Render.com domains dynamically
+RENDER_DOMAINS = [
+    '.onrender.com',
+    'yummytummy-store.onrender.com',  # Specific Render app
+]
+
+ALLOWED_HOSTS = ALLOWED_HOSTS_LIST + RENDER_DOMAINS
 
 # Production security settings
 if not DEBUG:
@@ -52,7 +66,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
 
     # CSRF settings for production
-    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
+    # Prioritize www subdomain in trusted origins for consistency
+    default_csrf_origins = 'https://www.livegreat.co.ke,https://livegreat.co.ke,https://*.onrender.com'
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default=default_csrf_origins, cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 
 
 # Application definition
@@ -83,12 +99,14 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap4'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # For static file serving in production
+    'yummytummy_store.middleware.WWWRedirectMiddleware',  # Custom domain redirection
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'yummytummy_store.middleware.SecurityHeadersMiddleware',  # Custom security headers
 ]
 
 ROOT_URLCONF = 'yummytummy_project.urls'
