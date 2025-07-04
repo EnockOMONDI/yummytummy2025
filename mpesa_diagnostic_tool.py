@@ -252,7 +252,7 @@ class MPesaDiagnosticTool:
             self.print_result("Callback URL (Development)", "INFO",
                             f"Using placeholder: {callback_url}")
         else:
-            # In production, use the configured callback URL for livegreat.co.ke
+            # In production, use the configured callback URL for www.livegreat.co.ke
             try:
                 callback_url = getattr(settings, 'MPESA_CALLBACK_URL',
                                      f"{settings.SITE_URL}/mpesa/callback/")
@@ -260,9 +260,9 @@ class MPesaDiagnosticTool:
                                 f"Using: {callback_url}")
 
                 # Verify the URL format
-                if callback_url.startswith('https://livegreat.co.ke/'):
+                if callback_url.startswith('https://www.livegreat.co.ke/'):
                     self.print_result("Callback Domain", "PASS",
-                                    "Using registered domain: livegreat.co.ke")
+                                    "Using registered domain: www.livegreat.co.ke")
                 else:
                     self.print_result("Callback Domain", "WARN",
                                     f"Domain may not match Safaricom registration: {callback_url}")

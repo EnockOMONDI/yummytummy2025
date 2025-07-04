@@ -275,7 +275,7 @@ UPLOADCARE = {
 
 # Site URL Configuration for M-Pesa Callbacks
 # This is the domain that Safaricom will send callbacks to
-SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
+SITE_URL = config('SITE_URL', default='https://www.livegreat.co.ke')
 
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='6319470')

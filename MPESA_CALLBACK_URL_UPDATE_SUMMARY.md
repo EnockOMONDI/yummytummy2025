@@ -1,9 +1,9 @@
-# 🔗 M-Pesa Callback URL Update for livegreat.co.ke Domain
+# 🔗 M-Pesa Callback URL Update for www.livegreat.co.ke Domain
 
 ## 📊 **UPDATE SUMMARY**
 
-**Domain Change:** Updated M-Pesa callback URL configuration to use the new registered domain `livegreat.co.ke`  
-**Safaricom Requirement:** Callbacks will only be sent to the domain registered with Safaricom for Short Code 6319470  
+**Domain Change:** Updated M-Pesa callback URL configuration to use the new registered domain `www.livegreat.co.ke`
+**Safaricom Requirement:** Callbacks will only be sent to the domain registered with Safaricom for Short Code 6319470
 **Status:** ✅ **COMPLETE - Ready for production deployment**
 
 ---
@@ -17,7 +17,7 @@
 ```python
 # Site URL Configuration for M-Pesa Callbacks
 # This is the domain that Safaricom will send callbacks to
-SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
+SITE_URL = config('SITE_URL', default='https://www.livegreat.co.ke')
 
 # M-Pesa Callback URL Configuration
 # Safaricom requires HTTPS and will only send callbacks to the registered domain
@@ -35,7 +35,7 @@ MPESA_CALLBACK_URL = f"{SITE_URL}/mpesa/callback/"
 
 **Updated callback URL generation:**
 ```python
-# For production, use the configured callback URL for livegreat.co.ke domain
+# For production, use the configured callback URL for www.livegreat.co.ke domain
 # This ensures Safaricom sends callbacks to the registered domain
 callback_url = getattr(settings, 'MPESA_CALLBACK_URL', 
                      f"{settings.SITE_URL}/mpesa/callback/")
@@ -53,7 +53,7 @@ callback_url = getattr(settings, 'MPESA_CALLBACK_URL',
 **Added:**
 ```bash
 # Site URL Configuration (for M-Pesa callbacks and production)
-SITE_URL=https://livegreat.co.ke
+SITE_URL=https://www.livegreat.co.ke
 ```
 
 ### **4. Deployment Configuration** ✅
@@ -63,14 +63,14 @@ SITE_URL=https://livegreat.co.ke
 ```yaml
 # Site URL Configuration for M-Pesa Callbacks
 - key: SITE_URL
-  value: "https://livegreat.co.ke"
+  value: "https://www.livegreat.co.ke"
 ```
 
 ### **5. Diagnostic Tools Update** ✅
 **Files:** `mpesa_diagnostic_tool.py`, `verify_mpesa_deployment.py`
 
 **Enhanced to:**
-- ✅ Verify callback URL uses livegreat.co.ke domain
+- ✅ Verify callback URL uses www.livegreat.co.ke domain
 - ✅ Check HTTPS compliance
 - ✅ Validate URL format against Safaricom requirements
 - ✅ Provide clear status reporting
@@ -81,19 +81,19 @@ SITE_URL=https://livegreat.co.ke
 
 ### **Production Callback URL:**
 ```
-https://livegreat.co.ke/mpesa/callback/
+https://www.livegreat.co.ke/mpesa/callback/
 ```
 
 ### **URL Components:**
 - **Protocol:** `https://` (required by Safaricom)
-- **Domain:** `livegreat.co.ke` (registered with Safaricom)
+- **Domain:** `www.livegreat.co.ke` (registered with Safaricom)
 - **Path:** `/mpesa/callback/` (Django endpoint)
 
 ### **Development vs Production:**
 | Environment | Callback URL | Purpose |
 |-------------|--------------|---------|
 | **Development** | `https://webhook.site/unique-id` | Testing placeholder |
-| **Production** | `https://livegreat.co.ke/mpesa/callback/` | Live Safaricom callbacks |
+| **Production** | `https://www.livegreat.co.ke/mpesa/callback/` | Live Safaricom callbacks |
 
 ---
 
@@ -101,7 +101,7 @@ https://livegreat.co.ke/mpesa/callback/
 
 ### **Requirements Met:**
 - ✅ **HTTPS Protocol:** Required for security
-- ✅ **Registered Domain:** livegreat.co.ke is registered with Safaricom
+- ✅ **Registered Domain:** www.livegreat.co.ke is registered with Safaricom
 - ✅ **Valid Path:** /mpesa/callback/ endpoint exists
 - ✅ **No Localhost:** Production uses live domain
 - ✅ **Proper Format:** Complete URL format compliance
@@ -109,7 +109,7 @@ https://livegreat.co.ke/mpesa/callback/
 ### **Safaricom Configuration:**
 - **Short Code:** 6319470
 - **Environment:** Production
-- **Callback URL:** https://livegreat.co.ke/mpesa/callback/
+- **Callback URL:** https://www.livegreat.co.ke/mpesa/callback/
 - **Transaction Type:** CustomerPayBillOnline (STK Push)
 
 ---
@@ -133,19 +133,19 @@ python verify_mpesa_callback_url.py
 
 **Expected Output:**
 ```
-🔗 M-Pesa Callback URL Verification for livegreat.co.ke
+🔗 M-Pesa Callback URL Verification for www.livegreat.co.ke
 ============================================================
 
 📋 Verifying Django Configuration...
-✅ SITE_URL configured: https://livegreat.co.ke
-✅ SITE_URL matches registered domain: livegreat.co.ke
-✅ MPESA_CALLBACK_URL configured: https://livegreat.co.ke/mpesa/callback/
+✅ SITE_URL configured: https://www.livegreat.co.ke
+✅ SITE_URL matches registered domain: www.livegreat.co.ke
+✅ MPESA_CALLBACK_URL configured: https://www.livegreat.co.ke/mpesa/callback/
 
 🔍 Verifying URL Format Compliance...
 ✅ HTTPS protocol used (required by Safaricom)
-✅ Domain matches registered domain: livegreat.co.ke
+✅ Domain matches registered domain: www.livegreat.co.ke
 ✅ Callback path format correct: /mpesa/callback/
-✅ Complete URL format correct: https://livegreat.co.ke/mpesa/callback/
+✅ Complete URL format correct: https://www.livegreat.co.ke/mpesa/callback/
 
 🎉 All Safaricom requirements met!
 ```
@@ -157,20 +157,20 @@ python verify_mpesa_callback_url.py
 ### **1. Environment Variables**
 Ensure these are set in your production environment:
 ```bash
-SITE_URL=https://livegreat.co.ke
+SITE_URL=https://www.livegreat.co.ke
 MPESA_ENVIRONMENT=production
 DEBUG=False
 ```
 
 ### **2. Domain Configuration**
-- ✅ Domain `livegreat.co.ke` purchased and configured
+- ✅ Domain `www.livegreat.co.ke` purchased and configured
 - ✅ DNS pointing to your application server
 - ✅ SSL certificate installed (HTTPS working)
 - ✅ Domain registered with Safaricom for M-Pesa callbacks
 
 ### **3. Safaricom Verification**
 - ✅ Short Code 6319470 provisioned for production
-- ✅ Callback URL registered: `https://livegreat.co.ke/mpesa/callback/`
+- ✅ Callback URL registered: `https://www.livegreat.co.ke/mpesa/callback/`
 - ✅ STK Push permissions enabled
 - ✅ Live credentials configured
 
@@ -178,7 +178,7 @@ DEBUG=False
 ```bash
 # Deploy with updated configuration
 git add .
-git commit -m "Update M-Pesa callback URL to livegreat.co.ke domain"
+git commit -m "Update M-Pesa callback URL to www.livegreat.co.ke domain"
 git push origin main
 
 # Verify deployment
@@ -212,7 +212,7 @@ python verify_mpesa_callback_url.py
 ### **Verification Commands:**
 ```bash
 # Test callback URL accessibility
-curl -I https://livegreat.co.ke/mpesa/callback/
+curl -I https://www.livegreat.co.ke/mpesa/callback/
 
 # Verify Django configuration
 python manage.py shell -c "from django.conf import settings; print(settings.MPESA_CALLBACK_URL)"
@@ -267,8 +267,8 @@ python verify_mpesa_callback_url.py
    - Verify customer payment experience
 
 ### **Safaricom Coordination:**
-- ✅ Domain registered with Safaricom: livegreat.co.ke
-- ✅ Callback URL confirmed: https://livegreat.co.ke/mpesa/callback/
+- ✅ Domain registered with Safaricom: www.livegreat.co.ke
+- ✅ Callback URL confirmed: https://www.livegreat.co.ke/mpesa/callback/
 - 📞 Contact Safaricom if callback issues persist
 - 📋 Keep Safaricom support ticket reference for follow-up
 
@@ -276,7 +276,7 @@ python verify_mpesa_callback_url.py
 
 ## 🎉 **CONCLUSION**
 
-The M-Pesa callback URL configuration has been successfully updated to use the new domain `livegreat.co.ke`. The changes ensure:
+The M-Pesa callback URL configuration has been successfully updated to use the new domain `www.livegreat.co.ke`. The changes ensure:
 
 1. **Safaricom Compliance:** All requirements met for production callbacks
 2. **Secure Configuration:** HTTPS enforced, proper domain validation

@@ -144,7 +144,7 @@ class MPesaDeploymentVerifier:
                 print(f"✅ M-Pesa Callback URL derived: {callback_url}")
             else:
                 # Fallback to environment or default
-                base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://livegreat.co.ke')
+                base_url = os.environ.get('RENDER_EXTERNAL_URL', 'https://www.livegreat.co.ke')
                 callback_url = f"{base_url}/mpesa/callback/"
                 print(f"⚠️  M-Pesa Callback URL fallback: {callback_url}")
             
