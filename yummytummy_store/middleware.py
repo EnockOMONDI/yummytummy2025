@@ -124,11 +124,16 @@ class WWWRedirectMiddleware:
                 logger.debug(f"Skipping WWW redirect for exempt path: {request_path} (matched {exempt_path})")
                 return False
         
+        # TEMPORARY: Disable middleware to debug redirect loop
+        # TODO: Re-enable after fixing external redirect conflicts
+        logger.debug(f"WWW redirect middleware temporarily disabled for debugging")
+        return False
+
         # Check if we need to redirect from apex domain to www
         if host == self.apex_domain:
             logger.debug(f"WWW redirect needed: {host} -> {self.www_domain}")
             return True
-        
+
         # No redirection needed
         return False
     
