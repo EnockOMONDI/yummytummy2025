@@ -33,8 +33,8 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS_LIST = [
     'localhost', '127.0.0.1',  # Development
     'testserver',  # Django test client
-    'www.livegreat.co.ke',  # Primary domain (www subdomain)
-    'livegreat.co.ke',  # Apex domain (for redirection to www)
+    'livegreat.co.ke',  # Primary domain (apex domain)
+    'www.livegreat.co.ke',  # WWW subdomain (for compatibility)
 ]
 
 # Add Render.com domains dynamically
@@ -293,7 +293,7 @@ UPLOADCARE = {
 
 # Site URL Configuration for M-Pesa Callbacks
 # This is the domain that Safaricom will send callbacks to
-SITE_URL = config('SITE_URL', default='https://www.livegreat.co.ke')
+SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
 
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='6319470')

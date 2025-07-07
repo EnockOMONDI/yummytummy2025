@@ -18,9 +18,9 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "localhost,127.0.0.1,www.livegreat.co.ke,livegreat.co.ke,.onrender.com"
+        value: "localhost,127.0.0.1,livegreat.co.ke,www.livegreat.co.ke,.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com,https://www.livegreat.co.ke,https://livegreat.co.ke"
+        value: "https://livegreat.co.ke,https://*.onrender.com,https://www.livegreat.co.ke"
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SECURE_PROXY_SSL_HEADER
@@ -53,7 +53,7 @@ services:
         value: "d3980def5fa035e7eed2"
       # Site URL Configuration for M-Pesa Callbacks
       - key: SITE_URL
-        value: "https://www.livegreat.co.ke"
+        value: "https://livegreat.co.ke"
       # M-Pesa Configuration (Live Safaricom Credentials)
       - key: MPESA_BUSINESS_SHORT_CODE
         value: "6319470"
