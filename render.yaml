@@ -65,3 +65,9 @@ services:
         value: "MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn"
       - key: MPESA_ENVIRONMENT
         value: "production"
+      # M-Pesa Transaction Type Configuration
+      # CustomerPayBillOnline: For Paybill Numbers
+      # CustomerBuyGoodsOnline: For Till Numbers
+      # CONFIRMED: Shortcode 6319470 is a Till Number (CustomerBuyGoodsOnline)
+      - key: MPESA_TRANSACTION_TYPE
+        value: "CustomerBuyGoodsOnline"

@@ -63,6 +63,7 @@ Copy this list and verify each variable in your Render.com dashboard:
 - [ ] `MPESA_CONSUMER_KEY` = `p2D6eI01gcYtvwHgrh7UVsX61sFaAmKA4hZDZaHI3KBN0Xv4`
 - [ ] `MPESA_CONSUMER_SECRET` = `MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn`
 - [ ] `MPESA_ENVIRONMENT` = `production`
+- [ ] `MPESA_TRANSACTION_TYPE` = `CustomerBuyGoodsOnline` *(Till Number - Confirmed)*
 
 ---
 

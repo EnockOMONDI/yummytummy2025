@@ -130,11 +130,15 @@ class MPesaService:
             }
             
             # Prepare request payload
+            # IMPORTANT: TransactionType must match your shortcode configuration
+            # - CustomerPayBillOnline: For Paybill Numbers
+            # - CustomerBuyGoodsOnline: For Till Numbers
+            # CONFIRMED: Shortcode 6319470 is a Till Number (CustomerBuyGoodsOnline)
             payload = {
                 'BusinessShortCode': int(self.business_short_code),
                 'Password': password,
                 'Timestamp': timestamp,
-                'TransactionType': 'CustomerPayBillOnline',
+                'TransactionType': getattr(settings, 'MPESA_TRANSACTION_TYPE', 'CustomerBuyGoodsOnline'),
                 'Amount': int(float(amount)),  # M-Pesa requires integer amount
                 'PartyA': formatted_phone,
                 'PartyB': int(self.business_short_code),

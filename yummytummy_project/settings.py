@@ -301,6 +301,12 @@ MPESA_PASSKEY = config('MPESA_PASSKEY', default='f473271a17488fd9a1230c2e43f6fe6
 MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='p2D6eI01gcYtvwHgrh7UVsX61sFaAmKA4hZDZaHI3KBN0Xv4')
 MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn')
 
+# M-Pesa Transaction Type Configuration
+# CustomerPayBillOnline: For Paybill Numbers
+# CustomerBuyGoodsOnline: For Till Numbers
+# CONFIRMED: Shortcode 6319470 is a Till Number (CustomerBuyGoodsOnline)
+MPESA_TRANSACTION_TYPE = config('MPESA_TRANSACTION_TYPE', default='CustomerBuyGoodsOnline')
+
 # M-Pesa API URLs (Sandbox for testing, Production for live)
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='production')  # 'sandbox' or 'production'
 MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke' if MPESA_ENVIRONMENT == 'sandbox' else 'https://api.safaricom.co.ke'
