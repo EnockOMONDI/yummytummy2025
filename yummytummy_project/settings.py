@@ -99,7 +99,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap4'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # For static file serving in production
-    'yummytummy_store.middleware.WWWRedirectMiddleware',  # Custom domain redirection
+    # 'yummytummy_store.middleware.WWWRedirectMiddleware',  # REMOVED: Custom domain redirection (causing redirect loop)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
