@@ -2,6 +2,11 @@
 """
 Comprehensive test script for the improved M-Pesa callback view.
 Tests all the production-ready improvements implemented.
+
+IMPORTANT: This test is configured for Till Number (CustomerBuyGoodsOnline)
+- Shortcode 6319470 is CONFIRMED as a Till Number
+- AccountReference field is not required for Till Numbers
+- Mock callback data reflects Till Number behavior
 """
 
 import os
@@ -130,7 +135,8 @@ class ImprovedMPesaCallbackTest:
                     "CheckoutRequestID": order.mpesa_checkout_request_id,
                     "ResultCode": 0,
                     "ResultDesc": "The service request is processed successfully.",
-                    "AccountReference": str(order.id),
+                    # AccountReference not required for Till Numbers (CustomerBuyGoodsOnline)
+                    # "AccountReference": str(order.id),
                     "CallbackMetadata": {
                         "Item": [
                             {"Name": "Amount", "Value": 1000.00},
@@ -180,7 +186,8 @@ class ImprovedMPesaCallbackTest:
                     "CheckoutRequestID": order.mpesa_checkout_request_id,
                     "ResultCode": 1032,
                     "ResultDesc": "Request cancelled by user",
-                    "AccountReference": str(order.id)
+                    # AccountReference not required for Till Numbers (CustomerBuyGoodsOnline)
+                    # "AccountReference": str(order.id)
                 }
             }
         }
@@ -227,7 +234,8 @@ class ImprovedMPesaCallbackTest:
                     "CheckoutRequestID": order.mpesa_checkout_request_id,
                     "ResultCode": 0,
                     "ResultDesc": "The service request is processed successfully.",
-                    "AccountReference": str(order.id),
+                    # AccountReference not required for Till Numbers (CustomerBuyGoodsOnline)
+                    # "AccountReference": str(order.id),
                     "CallbackMetadata": {
                         "Item": [
                             {"Name": "Amount", "Value": 1000.00},
@@ -267,7 +275,8 @@ class ImprovedMPesaCallbackTest:
                     "CheckoutRequestID": "ws_CO_NONEXISTENT123456",
                     "ResultCode": 0,
                     "ResultDesc": "The service request is processed successfully.",
-                    "AccountReference": "999999"
+                    # AccountReference not required for Till Numbers (CustomerBuyGoodsOnline)
+                    # "AccountReference": "999999"
                 }
             }
         }

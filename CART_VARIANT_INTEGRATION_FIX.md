@@ -91,7 +91,7 @@ class OrderItem(models.Model):
 ## Functionality Verification
 
 ### ✅ **Hero Section Testing**
-1. **Expand highlighted product** → "View Sizes" button appears
+1. **Expand highlighted product** → "Add to cart" button appears
 2. **Select specific variant** → Variant card highlighted
 3. **Click "Add to Cart"** → Correct variant added with proper price
 4. **Check cart** → Shows "Product Name - Variant Size" with variant price

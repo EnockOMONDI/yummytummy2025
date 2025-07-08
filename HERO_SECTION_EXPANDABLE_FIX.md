@@ -5,7 +5,7 @@ The highlighted product in the hero section (right-content area) was not display
 
 ## Problem Details
 - **Hero Section**: Still using old static display with fixed price and single "ADD TO CART" button
-- **Featured Products**: Had new expandable functionality with "View Sizes" button and variant drawers
+- **Featured Products**: Had new expandable functionality with "Add to cart" button and variant drawers
 - **User Experience**: Inconsistent interface between highlighted and featured products
 - **Missing Features**: Hero section lacked variant selection capability for products with multiple sizes
 
@@ -15,7 +15,7 @@ The highlighted product in the hero section (right-content area) was not display
 **Updated highlighted product section (lines 52-178) to include:**
 - Added `expandable-card` class and `data-product-id` attribute
 - Implemented compact view with conditional price display
-- Added "View Sizes" button for products with variants
+- Added "Add to cart" button for products with variants
 - Created expandable drawer with variant grid layout
 - Maintained existing styling structure while adding new functionality
 
@@ -44,7 +44,7 @@ The highlighted product in the hero section (right-content area) was not display
 
 ### For Products with Variants:
 - **Price Range Display**: Shows "From KSh X +" instead of single price
-- **View Sizes Button**: Yellow gradient button with expand/collapse functionality
+- **Add to cart Button**: Yellow gradient button with expand/collapse functionality
 - **Expandable Drawer**: Grid layout showing all available variants
 - **Individual Variant Cards**: Each size has its own add-to-cart form
 - **Quantity Selectors**: Mini quantity controls for each variant

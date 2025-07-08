@@ -17,7 +17,7 @@ This checklist verifies that the YummyTummy cart variant functionality is ready 
 - [x] **Cart persistence** - Session-based cart maintains state across requests
 
 ### **✅ User Interface**
-- [x] **Product list variant selection** - Expandable "View Sizes" functionality
+- [x] **Product list variant selection** - Expandable "Add to cart" functionality
 - [x] **Product detail variant selection** - Radio button interface with dynamic pricing
 - [x] **Cart display** - Shows variant information clearly
 - [x] **Quantity controls** - Interactive +/- buttons with validation

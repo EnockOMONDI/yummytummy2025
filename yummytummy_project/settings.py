@@ -297,6 +297,7 @@ SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
 
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='6319470')
+MPESA_TILL_NUMBER = config('MPESA_TILL_NUMBER', default='8464160')  # Actual Till Number for PartyB
 MPESA_PASSKEY = config('MPESA_PASSKEY', default='f473271a17488fd9a1230c2e43f6fe63db04eabc8bc7db8d1e21e4fe753f598d')
 MPESA_CONSUMER_KEY = config('MPESA_CONSUMER_KEY', default='p2D6eI01gcYtvwHgrh7UVsX61sFaAmKA4hZDZaHI3KBN0Xv4')
 MPESA_CONSUMER_SECRET = config('MPESA_CONSUMER_SECRET', default='MQKc16J58WljEleReHaRAXzXSv6nmyxWCYqxAKzvE3NNUIpDYk94LJzQwTu1pGJn')

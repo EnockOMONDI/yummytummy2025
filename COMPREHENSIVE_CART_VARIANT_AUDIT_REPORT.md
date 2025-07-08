@@ -15,7 +15,7 @@ This report documents the comprehensive audit and update of the YummyTummy proje
 - ✅ Dynamic pricing and cart key generation
 
 #### 2. **Product List Page** - **NEWLY IMPLEMENTED**
-- ✅ **Expandable variant selection UI** - "View Sizes" button reveals variant options
+- ✅ **Expandable variant selection UI** - "Add to cart" button reveals variant options
 - ✅ **Variant-specific cart forms** - Each variant has its own cart form with proper selected_variant field
 - ✅ **Dynamic pricing display** - Shows "From KSh X" for products with variants
 - ✅ **Interactive quantity selectors** - +/- buttons with visual feedback

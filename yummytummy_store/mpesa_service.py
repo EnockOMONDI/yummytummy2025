@@ -23,6 +23,7 @@ class MPesaService:
     
     def __init__(self):
         self.business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
+        self.till_number = getattr(settings, 'MPESA_TILL_NUMBER', settings.MPESA_BUSINESS_SHORT_CODE)
         self.passkey = settings.MPESA_PASSKEY
         self.consumer_key = settings.MPESA_CONSUMER_KEY
         self.consumer_secret = settings.MPESA_CONSUMER_SECRET
@@ -131,9 +132,10 @@ class MPesaService:
             
             # Prepare request payload
             # IMPORTANT: TransactionType must match your shortcode configuration
-            # - CustomerPayBillOnline: For Paybill Numbers
-            # - CustomerBuyGoodsOnline: For Till Numbers
+            # - CustomerPayBillOnline: For Paybill Numbers (PartyB = BusinessShortCode)
+            # - CustomerBuyGoodsOnline: For Till Numbers (PartyB = Till Number)
             # CONFIRMED: Shortcode 6319470 is a Till Number (CustomerBuyGoodsOnline)
+            # CONFIRMED: Till Number 8464160 is the receiver party for funds
             payload = {
                 'BusinessShortCode': int(self.business_short_code),
                 'Password': password,
@@ -141,7 +143,7 @@ class MPesaService:
                 'TransactionType': getattr(settings, 'MPESA_TRANSACTION_TYPE', 'CustomerBuyGoodsOnline'),
                 'Amount': int(float(amount)),  # M-Pesa requires integer amount
                 'PartyA': formatted_phone,
-                'PartyB': int(self.business_short_code),
+                'PartyB': int(self.till_number),  # FIXED: Use Till Number for CustomerBuyGoodsOnline
                 'PhoneNumber': formatted_phone,
                 'CallBackURL': callback_url,
                 'AccountReference': f'YummyTummy-{order_id}',

@@ -163,6 +163,7 @@ def main():
         print("2. Test M-Pesa payment with a small amount")
         print("3. Monitor for ResultCode 2028 error resolution")
         print("4. Monitor for successful payments with Till Number configuration")
+        print("5. Run test files to verify Till Number compatibility")
     else:
         print("❌ SOME VERIFICATIONS FAILED")
         print("Please fix the configuration issues before deploying")

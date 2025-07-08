@@ -70,7 +70,7 @@ class FrontendVariantTestCase(TestCase):
         content = response.content.decode()
         
         # Check for variant toggle button
-        self.assertIn('View Sizes', content)
+        self.assertIn('Add to cart', content)
         self.assertIn('variant-toggle-btn', content)
         
         # Check for variant options container

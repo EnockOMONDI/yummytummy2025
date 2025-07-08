@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
 Test M-Pesa Callback Accessibility and Domain Configuration Impact
+
+IMPORTANT: This test is configured for Till Number (CustomerBuyGoodsOnline)
+- Shortcode 6319470 is CONFIRMED as a Till Number
+- AccountReference field is not required for Till Numbers
+- Mock callback data reflects Till Number behavior
 """
 
 import requests
@@ -48,7 +53,8 @@ def test_callback_accessibility():
                         "CheckoutRequestID": "ws_CO_07072025221539652726436676",
                         "ResultCode": 0,
                         "ResultDesc": "The service request is processed successfully.",
-                        "AccountReference": "36",
+                        # AccountReference not required for Till Numbers (CustomerBuyGoodsOnline)
+                        # "AccountReference": "36",
                         "CallbackMetadata": {
                             "Item": [
                                 {

@@ -71,7 +71,7 @@ YummyTummy is a complete e-commerce solution designed specifically for Kenyan fo
 
 **Customer Actions**:
 - Browse featured products on homepage
-- Click "View Sizes" to see product variants
+- Click "Add to cart" to see product variants
 - Compare different package sizes and prices
 - Add items to cart without creating account
 
@@ -95,7 +95,7 @@ YummyTummy is a complete e-commerce solution designed specifically for Kenyan fo
 - No page reloads keep customers engaged
 
 **Customer Actions**:
-- Click "View Sizes" to expand product options
+- Click "Add to cart" to expand product options
 - Compare prices across different package sizes
 - Select desired quantity
 - Add products to cart with one click

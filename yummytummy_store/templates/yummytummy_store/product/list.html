@@ -94,7 +94,7 @@
                         <!-- Expandable Variant Selection -->
                         <div class="variant-toggle-section">
                             <button type="button" class="variant-toggle-btn" data-product-id="{{ product.id }}">
-                                <span class="toggle-text">View Sizes</span>
+                                <span class="toggle-text">Add to cart</span>
                                 <i class="fas fa-chevron-down toggle-icon"></i>
                             </button>
                         </div>
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     variantsContainer.style.display = 'none';
                     this.classList.remove('expanded');
-                    toggleText.textContent = 'View Sizes';
+                    toggleText.textContent = 'Add to cart';
                 }, 300);
             }
         });
