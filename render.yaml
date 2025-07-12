@@ -3,12 +3,12 @@ services:
     name: yummytummy-store
     env: python
     plan: free
-    branch: livefinal2
+    branch: wearelive
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_Spxz4nomvTJ8@ep-billowing-pond-a9faz0tc-pooler.gwc.azure.neon.tech/neondb?sslmode=require"
+        value: "postgresql://neondb_owner:npg_NG34ncVtzPIO@ep-solitary-fire-a2k5kc4y-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY

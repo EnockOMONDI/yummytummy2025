@@ -108,9 +108,19 @@ class OrderTrackingEmailService:
             domain = request.get_host()
             protocol = 'https' if request.is_secure() else 'http'
         else:
-            domain = getattr(settings, 'SITE_DOMAIN', 'localhost:8000')
-            protocol = 'https' if getattr(settings, 'USE_HTTPS', False) else 'http'
-        
+            # Use SITE_URL from settings (configured for production domain)
+            site_url = getattr(settings, 'SITE_URL', 'https://livegreat.co.ke')
+            # Extract domain and protocol from SITE_URL
+            if site_url.startswith('https://'):
+                protocol = 'https'
+                domain = site_url[8:]  # Remove 'https://'
+            elif site_url.startswith('http://'):
+                protocol = 'http'
+                domain = site_url[7:]  # Remove 'http://'
+            else:
+                protocol = 'https'
+                domain = site_url
+
         login_path = reverse('yummytummy_store:first_time_login', args=[auto_account.first_login_token])
         return f"{protocol}://{domain}{login_path}"
     
@@ -191,9 +201,19 @@ class OrderTrackingEmailService:
                 domain = request.get_host()
                 protocol = 'https' if request.is_secure() else 'http'
             else:
-                domain = getattr(settings, 'SITE_DOMAIN', 'localhost:8000')
-                protocol = 'https' if getattr(settings, 'USE_HTTPS', False) else 'http'
-            
+                # Use SITE_URL from settings (configured for production domain)
+                site_url = getattr(settings, 'SITE_URL', 'https://livegreat.co.ke')
+                # Extract domain and protocol from SITE_URL
+                if site_url.startswith('https://'):
+                    protocol = 'https'
+                    domain = site_url[8:]  # Remove 'https://'
+                elif site_url.startswith('http://'):
+                    protocol = 'http'
+                    domain = site_url[7:]  # Remove 'http://'
+                else:
+                    protocol = 'https'
+                    domain = site_url
+
             login_path = reverse('yummytummy_store:order_tracking_dashboard')
             context['login_url'] = f"{protocol}://{domain}{login_path}"
         
