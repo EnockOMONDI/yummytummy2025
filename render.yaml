@@ -8,7 +8,7 @@ services:
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_NG34ncVtzPIO@ep-solitary-fire-a2k5kc4y-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        value: "postgresql://postgres.vrczwyapobhntabulbqg:SEcurity%211234kekekekeke@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=10&application_name=yummytummy_django"
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
