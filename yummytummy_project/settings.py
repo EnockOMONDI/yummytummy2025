@@ -30,6 +30,10 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-*vzt0ewazs4fk@4n^_jaq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
+# Environment indicator
+ENVIRONMENT = "DEVELOPMENT" if DEBUG else "PRODUCTION"
+print(f"🌍 YummyTummy running in {ENVIRONMENT} mode (DEBUG={DEBUG})")
+
 # ALLOWED_HOSTS configuration for development and production
 # Using specific domains for security instead of wildcard
 ALLOWED_HOSTS_LIST = [
@@ -271,11 +275,18 @@ EMAIL_USE_SSL = False
 EMAIL_SSL_CERTFILE = None
 EMAIL_SSL_KEYFILE = None
 
-# For development, you might want to use console backend to avoid SSL issues
+# Development-specific settings
 if DEBUG:
-    # Uncomment the line below to use console email backend for development
-    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    pass
+    # Use console email backend for development (emails will print to console)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+    # Disable SSL/HTTPS security features for local development
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+    print("🔧 Development mode: HTTPS security features disabled, using console email backend")
 
 # Uploadcare settings for image management
 UPLOADCARE = {

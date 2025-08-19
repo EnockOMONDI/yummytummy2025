@@ -154,7 +154,7 @@
 }
 
 .feature-badge.bestseller {
-    background: linear-gradient(135deg, #3f2600, #3f2600) !important;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52) !important;
     border: 2px solid #fff !important;
 }
 
@@ -247,194 +247,6 @@
     line-height: 1.7;
     color: var(--text-color);
 }
-
-
-
-/* Right Content Mission Text Styling */
-.right-content .mission-text {
-    font-size: 2.2rem;
-    font-weight: 700;
-    line-height: 1.3;
-    color: var(--primary-color);
-    text-align: left;
-    margin: 0;
-    padding: 20px 0;
-}
-
-@media (max-width: 768px) {
-    .right-content .mission-text {
-        font-size: 1.8rem;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .right-content .mission-text {
-        font-size: 1.5rem;
-    }
-}
-/* =============================
-   Mobile-first enhancements for sections BELOW hero
-   ============================= */
-
-/* About Section (mobile-first) */
-.about-section {
-    background: var(--accent-color);
-    padding: 32px 0;
-}
-.about-section .container { padding: 0 16px; }
-.about-section .section-title {
-    font-size: 1.6rem; /* mobile base */
-    line-height: 1.25;
-    color: var(--primary-color);
-    text-align: center;
-    margin: 0 0 8px;
-}
-.about-section .section-subtitle {
-    font-size: 0.95rem;
-    color: #6b6b6b;
-    text-align: center;
-    margin: 0 0 16px;
-}
-.about-section .about-content p {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: #3d3d3d;
-    margin: 0 auto;
-}
-
-/* Product Showcase (mobile-first) */
-.product-showcase { background: #fff; padding: 24px 0 40px; }
-.product-showcase .container { padding: 0 12px; }
-.product-showcase .showcase-title {
-    font-size: 1.25rem; letter-spacing: 2px; text-align: center; color: var(--primary-color); margin: 0;
-}
-.product-showcase .showcase-subtitle {
-    font-size: 1rem; text-align: center; color: #2d2d2d; margin: 4px 0 16px;
-}
-
-/* Horizontal scroll on mobile with snap */
-.product-showcase .product-slider {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 8px;
-}
-.product-showcase .product-card {
-    scroll-snap-align: start;
-    min-width: 80vw; /* wide cards on mobile */
-    background: #fff;
-    border: 1px solid #ececec;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.product-showcase .product-card .product-image { aspect-ratio: 1 / 1; background: var(--accent-color); }
-.product-showcase .product-card .product-image img { width: 100%; height: 100%; object-fit: cover; }
-.product-showcase .product-card .product-title { font-size: 1rem; color: #2a2a2a; text-align: center; }
-.product-showcase .product-card .product-title a { color: #2a2a2a; text-decoration: none; }
-.product-showcase .product-card .product-title a:focus-visible { outline: 2px solid var(--highlight-color, #ffc107); outline-offset: 2px; }
-
-/* Prices */
-.product-showcase .price-range-compact, .product-showcase .single-price { justify-content: center; }
-.product-showcase .currency, .product-showcase .amount { color: var(--primary-color); font-weight: 700; }
-
-/* Buttons and interactive controls (scoped) */
-.product-showcase .expand-btn,
-.product-showcase .add-to-cart,
-.product-showcase .add-to-cart.compact,
-.product-showcase .add-to-cart.variant {
-    background: var(--primary-color);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-}
-.product-showcase .expand-btn:hover,
-.product-showcase .add-to-cart:hover { background: #3f2600; }
-.product-showcase .expand-btn:focus-visible,
-.product-showcase .add-to-cart:focus-visible { outline: 3px solid #ffc107; outline-offset: 2px; }
-
-/* Quantity selectors (compact) */
-.product-showcase .quantity-selector { border-radius: 8px; }
-.product-showcase .quantity-selector .minus,
-.product-showcase .quantity-selector .plus { background: #f0ece6; color: #3b2a17; }
-
-/* Card expanded area spacing */
-.product-showcase .card-expanded { padding-top: 8px; }
-.product-showcase .variants-grid { gap: 10px; }
-.product-showcase .variant-card { border: 1px solid #eee; border-radius: 10px; }
-
-/* Focus state for accessibility */
-.product-showcase .product-card:focus-within { outline: 2px solid #ffc107; outline-offset: 2px; }
-
-/* Medium screens */
-@media (min-width: 768px) {
-    .about-section { padding: 56px 0; }
-    .about-section .section-title { font-size: 2rem; }
-    .about-section .section-subtitle { font-size: 1.05rem; }
-    .about-section .about-content p { max-width: 760px; }
-
-    .product-showcase { padding: 32px 0 56px; }
-    .product-showcase .container { padding: 0 16px; }
-    .product-showcase .showcase-title { font-size: 1.4rem; }
-    .product-showcase .showcase-subtitle { font-size: 1.1rem; }
-
-    .product-showcase .product-slider {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        overflow: visible; /* no horizontal scroll on tablets */
-    }
-    .product-showcase .product-card { min-width: auto; }
-}
-
-/* Large screens */
-@media (min-width: 1024px) {
-    .product-showcase .container { max-width: 1100px; margin: 0 auto; }
-    .product-showcase .product-slider { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .product-showcase .product-card .product-title { font-size: 1.05rem; }
-}
-
-/* Brand Sections (mobile-first) */
-.brand-sections { background: #fff; padding: 24px 0 8px; }
-.brand-sections .container { padding: 0 16px; }
-.brand-sections .section-title { font-size: 1.4rem; color: var(--primary-color); text-align: center; margin: 0 0 6px; }
-.brand-sections .section-lead { font-size: 1rem; text-align: center; color: #3b3b3b; margin: 0 auto 16px; max-width: 750px; }
-.brand-sections .info-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.brand-sections .info-grid.two { margin-top: 12px; }
-.brand-sections .info-card { background: var(--f5f2ed, #f5f2ed); border: 1px solid #eee; border-radius: 12px; padding: 14px; }
-.brand-sections .info-card h3 { font-size: 1.05rem; color: var(--primary-color); margin: 0 0 8px; }
-.brand-sections .info-card ul { margin: 0; padding-left: 18px; }
-.brand-sections .info-card li { line-height: 1.55; color: #2f2f2f; }
-
-@media (min-width: 768px) {
-  .brand-sections { padding: 32px 0; }
-  .brand-sections .section-title { font-size: 1.8rem; }
-  .brand-sections .info-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-}
-
-@media (min-width: 1024px) {
-  .brand-sections .container { max-width: 1100px; margin: 0 auto; }
-  .brand-sections .info-card h3 { font-size: 1.1rem; }
-}
-
-/* Footer (homepage overrides, mobile-first) */
-.site-footer { background: #593500; color: #ffffff; }
-.site-footer a { color: #ffc107; }
-.site-footer a:hover { text-decoration: underline; }
-.site-footer a:focus-visible { outline: 3px solid #ffc107; outline-offset: 2px; }
-.site-footer .footer-top, .site-footer .footer-bottom { padding: 16px 0; }
-@media (min-width: 768px) {
-  .site-footer .footer-top, .site-footer .footer-bottom { padding: 20px 0; }
-}
-
-/* Color tokens fallback (if not globally defined) */
-:root { --highlight-color: #ffc107; }
-
 </style>
 {% endblock %}
 
@@ -443,7 +255,7 @@
 <section class="hero-slider">
     <div class="slider-container" style="background-image: url('{% static 'yummytummy_store/img/homebg.webp' %}'); background-size: 75%; background-position: center; background-repeat: no-repeat;">
         <div class="slide active">
-
+        
 
             <div class="left-content">
                 {% if highlighted_product %}
@@ -584,23 +396,62 @@
             </div>
 
             <div class="center-content">
-
+              
                 <div class="product-image">
                     {% if highlighted_product %}
                         {% load image_filters %}
                         <img src="{{ highlighted_product|product_image_list }}" alt="{{ highlighted_product.name }}" loading="lazy">
                         <!-- Debug info (remove in production) -->
-
+                        {% comment %}
+                        <div style="font-size: 10px; color: red;">
+                            Debug: {{ highlighted_product.name }} - {{ highlighted_product|debug_product_image }}
+                        </div>
+                        {% endcomment %}
                     {% else %}
                         <img src="{% static 'yummytummy_store/img/peanutmockup.webp' %}" alt="YummyTummy peanut butter" loading="lazy">
                         <!-- Debug info (remove in production) -->
-
+                        {% comment %}
+                        <div style="font-size: 10px; color: red;">
+                            Debug: No highlighted_product found
+                        </div>
+                        {% endcomment %}
                     {% endif %}
                 </div>
             </div>
 
            <div class="right-content">
-                <h1 class="mission-text">From natural peanut butter to nut-based blends with local honey and cashews, our products promote health and sustainability.</h1>
+                {% if highlighted_product and highlighted_product.feature_type %}
+                    <h2>{{ highlighted_product.get_feature_type_display|upper }}<br>PRODUCT</h2>
+                {% else %}
+                    <h2>BEST<br>SELLERS</h2>
+                {% endif %}
+                <div class="product-variants">
+                    {% if highlighted_product.variants.exists %}
+                        {% for variant in highlighted_product.variants.all %}
+                        <div class="variant">
+                            {% load image_filters %}
+                            <img src="{{ highlighted_product|product_image_list }}" alt="{{ variant.name }}" loading="lazy">
+                            <div class="variant-text">
+                                {% with variant.name|split_variant_name as variant_parts %}
+                                    {% for part in variant_parts %}
+                                        <span>{{ part }}</span>
+                                    {% endfor %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback: Show default variants if no variants exist -->
+                        <div class="variant">
+                            {% load image_filters %}
+                            <img src="{{ highlighted_product|product_image_list }}" alt="{{ highlighted_product.name }}" loading="lazy">
+                            <div class="variant-text">
+                                <span>{{ highlighted_product.name|truncatewords:1 }}</span>
+                                <span>Product</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -626,76 +477,6 @@
         </div>
     </div>
 </section>
-
-<!-- Brand Overview & Programs -->
-<section class="brand-sections" aria-labelledby="brand-overview-title">
-    <div class="container">
-        <h2 id="brand-overview-title" class="section-title">Vision</h2>
-        <p class="section-lead">A world where communities thrive on nutritious, affordable, and climate-friendly foods, with agribusiness serving as a driver of health, sustainability, and prosperity.</p>
-
-        <div class="info-grid">
-            <article class="info-card">
-                <h3>Core Activities</h3>
-                <ul>
-                    <li>Production of natural peanut butter, roasted peanuts, and nut-based blends.</li>
-                    <li>Refill models with eco-friendly packaging to reduce waste.</li>
-                    <li>Locally sourced honey and cashew nuts for diversified healthy products.</li>
-                </ul>
-            </article>
-
-            <article class="info-card">
-                <h3>Sustainable Sourcing & Climate Action</h3>
-                <ul>
-                    <li>Raw peanuts sourced from Malawi and Kenya, emphasizing drought-resilient varieties.</li>
-                    <li>Partnerships with smallholder farmers to promote climate-smart farming and stable markets.</li>
-                    <li>Use of recyclable jars, refill stations, and low-waste production processes.</li>
-                </ul>
-            </article>
-
-            <article class="info-card">
-                <h3>Community Engagement & CSR (Live Great Foundation)</h3>
-                <ul>
-                    <li>Climate literacy programs using GCA Toolkit in primary schools.</li>
-                    <li>Kadogo Climate Hero storytelling initiative.</li>
-                    <li>Waste management projects: converting glass & plastic into eco-blocks.</li>
-                    <li>Sports & nutrition programs to promote health in society.</li>
-                </ul>
-            </article>
-
-            <article class="info-card">
-                <h3>Distribution & Sales</h3>
-                <ul>
-                    <li>Direct sales (in-person, ecommerce, and social media).</li>
-                    <li>Bulk supplies to 5 restaurants, banks, and 20 mini marts.</li>
-                    <li>Participation in expos and community events.</li>
-                </ul>
-            </article>
-        </div>
-
-        <div class="info-grid two">
-            <article class="info-card">
-                <h3>Solutions</h3>
-                <ul>
-                    <li>Nutrition gap: Address malnutrition and limited access to affordable, healthy protein sources.</li>
-                    <li>Food security: Peanuts are resilient and adaptable where traditional crops face drought.</li>
-                    <li>Eco-friendly: We offer eco packaging and refill discounts to reduce environmental stress.</li>
-                    <li>Climate resilience: Value addition increases returns and stabilizes markets for farmers.</li>
-                </ul>
-            </article>
-
-            <article class="info-card">
-                <h3>Unique Value Proposition</h3>
-                <ul>
-                    <li><strong>For consumers:</strong> Healthy, affordable, chemical-free peanut products.</li>
-                    <li><strong>For farmers:</strong> Stable demand and training on climate-smart production.</li>
-                    <li><strong>For the environment:</strong> Reduced waste through eco-packaging and refill models.</li>
-                    <li><strong>For communities:</strong> Education, job creation, and resilience-building initiatives.</li>
-                </ul>
-            </article>
-        </div>
-    </div>
-</section>
-
 
 <!-- Process Section -->
 <!-- <section class="process-section">
@@ -861,3 +642,129 @@
 {% block extra_js %}
 <script src="{% static 'yummytummy_store/js/expandable-cards.js' %}"></script>
 {% endblock %}
+
+
+<!-- Product Showcase -->
+<section class="product-showcase">
+    <div class="container">
+        <h2 class="showcase-title">PROBABLY</h2>
+        <h3 class="showcase-subtitle">THE BEST BUTTER IN THE WORLD</h3>
+        <div class="product-slider">
+            {% for product in featured_products %}
+            <div class="product-card expandable-card" data-product-id="{{ product.id }}">
+                <!-- Compact View (Default) -->
+                <div class="card-compact">
+                    <div class="product-image">
+                        <img src="{{ product|product_image_list }}" alt="{{ product.name }}" loading="lazy">
+                    </div>
+                    <h3 class="product-title">
+                        <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                    </h3>
+                    <div class="product-price-summary">
+                        {% if product.variants.exists %}
+                        <div class="price-range-compact">
+                            <span class="from-label">From</span>
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="range-indicator">+</span>
+                        </div>
+                        {% else %}
+                        <div class="single-price">
+                            <span class="currency">KSh</span>
+                            <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                            <span class="decimal">.{{ product.price|floatformat:"2"|slice:"3:" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Expand/Collapse Button -->
+                    {% if product.variants.exists %}
+                    <button type="button" class="expand-btn" data-expanded="false">
+                        <span class="expand-text">Add to cart</span>
+                        <span class="collapse-text">Close</span>
+                        <svg class="expand-icon" width="16" height="16" viewBox="0 0 16 16">
+                            <path d="M8 12l-4-4h8l-4 4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    {% else %}
+                    <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="quick-add-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <input type="hidden" name="update" value="False">
+                        <button type="submit" class="add-to-cart compact">Quick Add</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Expanded View (Hidden by default) -->
+                {% if product.variants.exists %}
+                <div class="card-expanded" style="display: none;">
+                    <div class="variants-header">
+                        <h4>Choose Your Size</h4>
+                        <p class="variants-subtitle">Select the perfect size for your needs</p>
+                    </div>
+
+                    <div class="variants-grid">
+                        <!-- Base Product Option -->
+                        {% if product.size %}
+                        <div class="variant-option" data-variant-id="base" data-price="{{ product.price }}">
+                            <div class="variant-card">
+                                <div class="variant-size">{{ product.size }}</div>
+                                <div class="variant-price">
+                                    <span class="currency">KSh</span>
+                                    <span class="amount">{{ product.price|floatformat:"0"|intcomma }}</span>
+                                </div>
+                                <div class="variant-description">Standard size</div>
+                                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-form">
+                                    {% csrf_token %}
+                                    <div class="quantity-selector mini">
+                                        <button type="button" class="minus">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                        <button type="button" class="plus">+</button>
+                                    </div>
+                                    <input type="hidden" name="update" value="False">
+                                    <input type="hidden" name="selected_variant" value="base">
+                                    <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Product Variants -->
+                        {% for variant in product.variants.all %}
+                        <div class="variant-option" data-variant-id="{{ variant.id }}" data-price="{{ product.price|add:variant.additional_price }}">
+                            <div class="variant-card">
+                                <div class="variant-size">{{ variant.name }}</div>
+                                <div class="variant-price">
+                                    <span class="currency">KSh</span>
+                                    <span class="amount">{{ product.price|add:variant.additional_price|floatformat:"0"|intcomma }}</span>
+                                </div>
+                                {% if variant.additional_price > 0 %}
+                                <div class="variant-description">+KSh {{ variant.additional_price|floatformat:"0"|intcomma }} extra</div>
+                                {% else %}
+                                <div class="variant-description">Same price</div>
+                                {% endif %}
+                                <form action="{% url 'yummytummy_store:cart_add' product.id %}" method="post" class="variant-form">
+                                    {% csrf_token %}
+                                    <div class="quantity-selector mini">
+                                        <button type="button" class="minus">-</button>
+                                        <input type="number" name="quantity" value="1" min="1" class="form-control">
+                                        <button type="button" class="plus">+</button>
+                                    </div>
+                                    <input type="hidden" name="update" value="False">
+                                    <input type="hidden" name="selected_variant" value="{{ variant.id }}">
+                                    <button type="submit" class="add-to-cart variant">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>No products available at the moment.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>

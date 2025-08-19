@@ -1,72 +1,707 @@
 {% extends "yummytummy_store/base.html" %}
 {% load static %}
 
-{% block title %}About Us | YummyTummy Shop{% endblock %}
+{% block title %}About Live Great Limited | YummyTummy Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+/* About Page Specific Styles */
+.about-hero {
+    position: relative;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    padding: 80px 0;
+    overflow: hidden;
+}
+
+.about-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "yummytummy_store/main.jpeg" %}') center/cover;
+    opacity: 0.05;
+    z-index: 1;
+}
+
+.about-hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.about-hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--dark-gray);
+    margin-bottom: 30px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.about-hero-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-color);
+    margin-bottom: 40px;
+}
+
+/* Mission & Vision Section */
+.mission-vision {
+    padding: 80px 0;
+    background: var(--secondary-color);
+}
+
+.mission-vision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.mission-card, .vision-card {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(89, 53, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.mission-card:hover, .vision-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(89, 53, 0, 0.15);
+    border-color: var(--highlight-color);
+}
+
+.mission-card h2, .vision-card h2 {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.mission-card h2::before {
+    content: '🎯';
+    font-size: 2rem;
+}
+
+.vision-card h2::before {
+    content: '🌟';
+    font-size: 2rem;
+}
+
+.mission-card p, .vision-card p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+
+/* Core Activities Section */
+.core-activities {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #f8f8f8 100%);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.section-header p {
+    font-size: 1.2rem;
+    color: var(--dark-gray);
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    margin-top: 60px;
+}
+
+.activity-card {
+    background: var(--secondary-color);
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(89, 53, 0, 0.1);
+    transition: all 0.3s ease;
+    border-left: 5px solid var(--highlight-color);
+}
+
+.activity-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(89, 53, 0, 0.15);
+    border-left-color: var(--primary-color);
+}
+
+.activity-card h3 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.activity-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.activity-card li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.activity-card li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--highlight-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* Image Showcase Section */
+.image-showcase {
+    padding: 80px 0;
+    background: var(--secondary-color);
+}
+
+.showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 30px;
+    align-items: center;
+}
+
+.showcase-image {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.showcase-image:hover {
+    transform: scale(1.05);
+}
+
+.showcase-image img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.showcase-content {
+    text-align: center;
+    padding: 0 20px;
+}
+
+.showcase-content h3 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.showcase-content p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-color);
+}
+
+/* Solutions Section */
+.solutions-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #f8f8f8 100%);
+}
+
+.solutions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 60px;
+}
+
+.solution-card {
+    background: var(--secondary-color);
+    padding: 40px 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(89, 53, 0, 0.1);
+    transition: all 0.3s ease;
+    border-top: 4px solid var(--highlight-color);
+}
+
+.solution-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(89, 53, 0, 0.15);
+    border-top-color: var(--primary-color);
+}
+
+.solution-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.solution-card h3 {
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.solution-card p {
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Value Proposition Section */
+.value-proposition {
+    padding: 80px 0;
+    background: var(--secondary-color);
+}
+
+.value-content {
+    text-align: center;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.value-content h2 {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.value-intro {
+    font-size: 1.2rem;
+    color: var(--dark-gray);
+    margin-bottom: 50px;
+    line-height: 1.8;
+}
+
+.value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.value-item {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    padding: 30px 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(89, 53, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.value-item:hover {
+    transform: translateY(-5px);
+}
+
+.value-item h3 {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.value-item p {
+    color: var(--text-color);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Call to Action Section */
+.cta-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #4a2800 100%);
+    color: var(--secondary-color);
+}
+
+.cta-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: #e6ac00;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--secondary-color);
+    border: 2px solid var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .about-hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .about-hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .about-hero-description {
+        font-size: 1rem;
+    }
+
+    .mission-vision-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .mission-card, .vision-card {
+        padding: 30px;
+    }
+
+    .mission-card h2, .vision-card h2 {
+        font-size: 1.8rem;
+    }
+
+    .section-header h2 {
+        font-size: 2.2rem;
+    }
+
+    .activities-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .activity-card {
+        padding: 30px 25px;
+    }
+
+    .showcase-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .showcase-image img {
+        height: 250px;
+    }
+
+    .solutions-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .value-content h2 {
+        font-size: 2.2rem;
+    }
+
+    .value-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .cta-content h2 {
+        font-size: 2rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 200px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-hero {
+        padding: 60px 0;
+    }
+
+    .about-hero h1 {
+        font-size: 2rem;
+    }
+
+    .mission-vision, .core-activities, .image-showcase, .solutions-section, .value-proposition, .cta-section {
+        padding: 60px 0;
+    }
+
+    .mission-card, .vision-card, .activity-card {
+        padding: 25px 20px;
+    }
+
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .value-content h2 {
+        font-size: 1.8rem;
+    }
+
+    .cta-content h2 {
+        font-size: 1.6rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- About Section -->
-<section class="about-section">
-    <h2 class="section-title">About YummyTummy</h2>
-    <p class="section-subtitle">OUR STORY AND PASSION</p>
-    <div class="about-content">
-        <p>Our adventure with YummyTummy began when we started searching for the perfect peanut butter for our loved ones. Because it was difficult to find products of the highest quality, we decided to take matters into our own hands. And so our first <strong>homemade butter</strong> was created.</p>
-        
-        <p>What started as a small family project quickly grew into a passion. We discovered that by carefully selecting the finest nuts from around the world and perfecting our grinding process, we could create nut butters with exceptional taste and texture that were also incredibly healthy.</p>
-        
-        <p>Today, YummyTummy offers a wide range of premium nut butters made from 100% natural ingredients with no preservatives, additives, or artificial flavors. Our commitment to quality and sustainability remains at the heart of everything we do.</p>
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <div class="about-hero-content">
+            <h1>Live Great Limited</h1>
+            <p class="about-hero-subtitle">Climate-Smart Agribusiness for Health & Sustainability</p>
+            <p class="about-hero-description">
+                We are not just a food business – we are a climate-smart agribusiness that integrates nutrition,
+                environmental sustainability, and community impact through innovative peanut value addition.
+            </p>
+        </div>
     </div>
 </section>
 
-<!-- Process Section -->
-<section class="process-section">
+<!-- Mission & Vision Section -->
+<section class="mission-vision">
     <div class="container">
-        <h2 class="section-title">Our Process</h2>
-        <p class="section-subtitle">FROM NUT TO BUTTER</p>
-        
-        <div class="process-steps">
-            <div class="process-step">
-                <img src="{% static 'yummytummy_store/img/squirrel.png' %}" alt="Selection and sorting of nuts" class="process-image">
-                <div class="step-number">
-                    <img src="{% static 'yummytummy_store/img/number-1.svg' %}" alt="1">
-                </div>
-                <h3>SELECTION<br>AND SORTING<br>OF NUTS</h3>
-                <p>The nuts we use come from many different corners of the world. We specially import them from India, USA, Bolivia, Argentina, Brazil, Peru, Indonesia and Australia.</p>
+        <div class="mission-vision-grid">
+            <div class="mission-card">
+                <h2>Mission</h2>
+                <p>
+                    To improve nutrition, create sustainable livelihoods, and promote climate-resilient food systems
+                    by innovating around peanuts and other indigenous crops.
+                </p>
             </div>
-            <div class="process-step">
-                <img src="{% static 'yummytummy_store/img/peanutai.png' %}" alt="Grinding process" class="process-image">
-                <div class="step-number">
-                    <img src="{% static 'yummytummy_store/img/number-2.svg' %}" alt="2">
-                </div>
-                <h3>1 GRINDING<br>=50 BUTTERS</h3>
-                <p>In our nut factory, unique nut spreads are created. Our highly specialized "Butter Masters" oversee every stage of their production.</p>
-            </div>
-            <div class="process-step">
-                <img src="{% static 'yummytummy_store/img/peanutmockup.webp' %}" alt="Quality control" class="process-image">
-                <div class="step-number">
-                    <img src="{% static 'yummytummy_store/img/number-3.svg' %}" alt="3">
-                </div>
-                <h3>QUALITY<br>CONTROL</h3>
-                <p>Each butter has a unique taste, aroma and texture, which depends on both the level of roasting of the nuts and the degree of their grinding. We test every batch to ensure it meets our high standards.</p>
+            <div class="vision-card">
+                <h2>Vision</h2>
+                <p>
+                    A world where communities thrive on nutritious, affordable, and climate-friendly foods,
+                    with agribusiness serving as a driver of health, sustainability, and prosperity.
+                </p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- About Brand Section -->
-<section class="about-brand">
+<!-- Core Activities Section -->
+<section class="core-activities">
     <div class="container">
-        <h2 class="brand-title">OUR VALUES</h2>
-        <h3 class="brand-subtitle">what makes us different</h3>
-        <div class="brand-content">
-            <p>At YummyTummy, we believe in:</p>
-            <ul>
-                <li><strong>Quality:</strong> Using only the finest nuts and ingredients</li>
-                <li><strong>Transparency:</strong> Being honest about what goes into our products</li>
-                <li><strong>Sustainability:</strong> Sourcing responsibly and minimizing our environmental impact</li>
-                <li><strong>Health:</strong> Creating nutritious products that contribute to wellbeing</li>
-                <li><strong>Innovation:</strong> Constantly exploring new flavors and techniques</li>
-            </ul>
-            <p>Creamy, melt-in-your-mouth, pleasantly salty or crunchy... Are you licking your lips already? YUMMYTUMMY peanut butter is a delicious snack and breakfast idea not only for gourmets, but also for people leading a healthy lifestyle.</p>
+        <div class="section-header">
+            <h2>Core Activities</h2>
+            <p>Driving change through innovation and sustainability</p>
+        </div>
+
+        <div class="activities-grid">
+            <div class="activity-card">
+                <h3>Peanut Value Addition</h3>
+                <ul>
+                    <li>Production of natural peanut butter, roasted peanuts, and nut-based blends</li>
+                    <li>Development of refill models with eco-friendly packaging to reduce waste</li>
+                    <li>Incorporation of locally sourced honey and cashew nuts for diversified healthy products</li>
+                </ul>
+            </div>
+
+            <div class="activity-card">
+                <h3>Sustainable Sourcing & Climate Action</h3>
+                <ul>
+                    <li>Raw peanuts sourced from Malawi and Kenya, with emphasis on drought-resilient varieties</li>
+                    <li>Partnerships with smallholder farmers to promote climate-smart farming and stable markets</li>
+                    <li>Use of recyclable jars, refill stations, and low-waste production processes</li>
+                </ul>
+            </div>
+
+            <div class="activity-card">
+                <h3>Community Engagement & CSR</h3>
+                <ul>
+                    <li>Climate literacy programs using GCA Toolkit in primary schools</li>
+                    <li>Storytelling initiative (Kadogo Climate hero storybook)</li>
+                    <li>Waste management projects – converting glass & plastic into eco-blocks</li>
+                    <li>Sports & nutrition programs to promote health in the society</li>
+                </ul>
+            </div>
+
+            <div class="activity-card">
+                <h3>Distribution & Sales</h3>
+                <ul>
+                    <li>Direct sales (physical & online via our ecommerce and social media)</li>
+                    <li>Bulk supplies to 5 restaurants, banks, and 20 mini marts</li>
+                    <li>Participation in expos and community events</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Showcase Section -->
+<section class="image-showcase">
+    <div class="container">
+        <div class="showcase-grid">
+            <div class="showcase-image">
+                <img src="{% static 'yummytummy_store/IMG_7134.png' %}" alt="YummyTummy Production Process">
+            </div>
+            <div class="showcase-content">
+                <h3>Our Impact</h3>
+                <p>
+                    Through our climate-smart approach, we're creating positive change in communities while
+                    delivering nutritious, sustainable food products that make a difference.
+                </p>
+            </div>
+            <div class="showcase-image">
+                <img src="{% static 'yummytummy_store/1.jpeg' %}" alt="Community Engagement">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Solutions Section -->
+<section class="solutions-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Solutions We Address</h2>
+            <p>Tackling critical challenges through innovation</p>
+        </div>
+
+        <div class="solutions-grid">
+            <div class="solution-card">
+                <div class="solution-icon">🥜</div>
+                <h3>Nutrition Gap</h3>
+                <p>Addressing malnutrition and limited access to affordable, healthy protein sources through our nutritious peanut-based products.</p>
+            </div>
+
+            <div class="solution-card">
+                <div class="solution-icon">🌱</div>
+                <h3>Climate Vulnerability</h3>
+                <p>Traditional crops are highly affected by droughts; peanuts are resilient and adaptable, providing climate-smart alternatives.</p>
+            </div>
+
+            <div class="solution-card">
+                <div class="solution-icon">♻️</div>
+                <h3>Waste & Sustainability</h3>
+                <p>Reducing environmental stress through eco-packaging, refill models, and sustainable food systems.</p>
+            </div>
+
+            <div class="solution-card">
+                <div class="solution-icon">📈</div>
+                <h3>Market Inefficiencies</h3>
+                <p>Providing farmers with stable markets for peanuts while value addition increases returns and economic opportunities.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Unique Value Proposition Section -->
+<section class="value-proposition">
+    <div class="container">
+        <div class="value-content">
+            <h2>Our Unique Value Proposition</h2>
+            <p class="value-intro">
+                Live Great Limited is not just a food business – we are a climate-smart agribusiness that integrates
+                nutrition, environmental sustainability, and community impact.
+            </p>
+
+            <div class="value-grid">
+                <div class="value-item">
+                    <h3>For Consumers</h3>
+                    <p>Healthy, affordable, chemical-free peanut products that nourish your body and support sustainable practices.</p>
+                </div>
+
+                <div class="value-item">
+                    <h3>For Farmers</h3>
+                    <p>Stable demand and training on climate-smart production techniques that increase yields and income.</p>
+                </div>
+
+                <div class="value-item">
+                    <h3>For the Environment</h3>
+                    <p>Reduced waste through eco-packaging and refill models, promoting sustainable food systems.</p>
+                </div>
+
+                <div class="value-item">
+                    <h3>For Communities</h3>
+                    <p>Education, job creation, and resilience-building initiatives that strengthen local economies.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Join Our Mission</h2>
+            <p>Be part of the change towards healthier, more sustainable food systems</p>
+            <div class="cta-buttons">
+                <a href="{% url 'yummytummy_store:product_list' %}" class="btn-primary">Shop Our Products</a>
+                <a href="{% url 'yummytummy_store:contact' %}" class="btn-secondary">Partner With Us</a>
+            </div>
         </div>
     </div>
 </section>

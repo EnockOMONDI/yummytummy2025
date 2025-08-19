@@ -157,3 +157,64 @@ def product_image(product, css_class="product-img", alt_text=None, size="400x400
         'css_class': css_class,
         'product': product,
     }
+
+
+@register.filter
+def split_variant_name(variant_name):
+    """
+    Split variant name into parts for display in variant cards.
+    Examples:
+    - "Yummy tummy Peanut Butter 500G" -> ["Peanut Butter", "500G"]
+    - "Ground Nuts 250G" -> ["Ground Nuts", "250G"]
+    - "Cashew Nuts Premium" -> ["Cashew Nuts", "Premium"]
+    """
+    if not variant_name:
+        return ["Product"]
+
+    # Remove common prefixes like "Yummy tummy" or product brand names
+    name = variant_name.strip()
+
+    # Common patterns to remove from the beginning
+    prefixes_to_remove = [
+        "Yummy tummy ",
+        "YummyTummy ",
+        "Maslove ",
+    ]
+
+    for prefix in prefixes_to_remove:
+        if name.startswith(prefix):
+            name = name[len(prefix):].strip()
+            break
+
+    # Split by common patterns
+    # Look for size patterns (numbers followed by G, KG, ML, L, etc.)
+    import re
+
+    # Pattern to match sizes like "250G", "500G", "1KG", "500ML", etc.
+    size_pattern = r'\b(\d+(?:\.\d+)?(?:G|KG|ML|L|OZ|LB))\b'
+    size_match = re.search(size_pattern, name, re.IGNORECASE)
+
+    if size_match:
+        size = size_match.group(1)
+        # Remove the size from the name to get the product type
+        product_type = re.sub(size_pattern, '', name, flags=re.IGNORECASE).strip()
+
+        # Clean up any extra spaces
+        product_type = re.sub(r'\s+', ' ', product_type).strip()
+
+        if product_type:
+            return [product_type, size]
+        else:
+            return [size]
+
+    # If no size pattern found, try to split by common words
+    words = name.split()
+
+    if len(words) <= 2:
+        return words
+    elif len(words) == 3:
+        # For 3 words, try to group them intelligently
+        return [f"{words[0]} {words[1]}", words[2]]
+    else:
+        # For more than 3 words, take first two as product type, rest as description
+        return [f"{words[0]} {words[1]}", " ".join(words[2:])]

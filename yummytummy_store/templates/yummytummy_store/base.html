@@ -115,18 +115,18 @@
             <div class="container">
                 <nav class="top-nav">
                     <ul class="main-menu">
-                        <li><a href="{% url 'yummytummy_store:home' %}">HOME</a></li>
-                        <li><a href="{% url 'yummytummy_store:about' %}">ABOUT</a></li>
-                        <li><a href="{% url 'yummytummy_store:product_list' %}">SHOP</a></li>
-                        <li><a href="{% url 'yummytummy_store:guest_order_tracking' %}">TRACK ORDER</a></li>
-                        <li><a href="#">BLOG</a></li>
-                        <li><a href="#">RECIPES</a></li>
+                        <li><a href="{% url 'yummytummy_store:home' %}">Home</a></li>
+                        <li><a href="{% url 'yummytummy_store:about' %}">About us</a></li>
+                        <li><a href="{% url 'yummytummy_store:product_list' %}">Shop</a></li>
+                        <li><a href="#">Our Stories</a></li>
+                        <li><a href="#">Our Recipes</a></li>
                     </ul>
                     <a href="{% url 'yummytummy_store:home' %}" class="logo">
                         <img src="{% static 'yummytummy_store/img/yummytummylogo.png' %}" alt="Logo YummyTummy">
                     </a>
                     <ul class="secondary-menu">
-                        <li><a href="#">BUSINESS COOPERATION</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="{% url 'yummytummy_store:guest_order_tracking' %}">Track Order</a></li>
                         <li><a href="#"><img src="{% static 'yummytummy_store/img/Flag_of_Kenya.svg' %}" alt="Kenyan Flag" class="flag-icon"></a></li>
                         <li class="account-dropdown">
                             {% if user.is_authenticated %}
@@ -269,10 +269,9 @@
                     <a href="#" class="social-link"><img src="{% static 'yummytummy_store/img/instagram-icon.svg' %}" alt="Instagram"></a>
                 </div>
                 <div class="contact-info">
-                    <a href="tel:660805522" class="phone">660 805 522</a>
-                    <a href="mailto:contact@yummytummy.com" class="email">contact@yummytummy.com</a>
-                    <address class="address">1 Industrial St, 16-010 Wasilkow</address>
-                    <a href="#" class="map-link">view on map</a>
+                    <a href="tel:0700061030" class="phone" aria-label="Call us">0700061030</a>
+                    <a href="mailto:info@livegreat.co.ke" class="email" aria-label="Email us">info@livegreat.co.ke</a>
+                    <a href="https://www.livegreat.co.ke" class="website" target="_blank" rel="noopener noreferrer" aria-label="Visit our website">www.livegreat.co.ke</a>
                 </div>
             </div>
             <div class="footer-bottom">

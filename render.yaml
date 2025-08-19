@@ -3,12 +3,12 @@ services:
     name: yummytummy-store
     env: python
     plan: free
-    branch: wearelive
+    branch: mergewithsuperbase
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
       - key: DATABASE_URL
-        value: "postgresql://postgres.nywjfwuobkbpimevbdvr:yummytummy2025@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=10&application_name=yummytummy_django"
+        value: "postgresql://postgres:g5aN8RwUHhb%24yA@db.vrczwyapobhntabulbqg.supabase.co:5432/postgres?sslmode=require&connect_timeout=10&application_name=yummytummy_django"
       - key: SECRET_KEY
         generateValue: true
       - key: WEB_CONCURRENCY
@@ -57,6 +57,8 @@ services:
       # M-Pesa Configuration (Live Safaricom Credentials)
       - key: MPESA_BUSINESS_SHORT_CODE
         value: "6319470"
+      - key: MPESA_TILL_NUMBER
+        value: "8464160"
       - key: MPESA_PASSKEY
         value: "f473271a17488fd9a1230c2e43f6fe63db04eabc8bc7db8d1e21e4fe753f598d"
       - key: MPESA_CONSUMER_KEY
