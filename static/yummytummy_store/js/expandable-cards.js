@@ -109,25 +109,47 @@ function scrollToCardIfNeeded(card) {
 }
 
 function initializeQuantitySelectors(card) {
-    // Skip quantity selector initialization for homepage contexts
-    // The homepage is designed for quick "Add to Cart" actions with quantity=1
-    // Quantity selectors should only work on product detail pages and cart pages
+    const quantitySelectors = card.querySelectorAll('.quantity-selector');
 
-    console.log('Expandable cards: Skipping quantity selector initialization for homepage');
+    quantitySelectors.forEach(selector => {
+        // Skip if already has handlers attached by main.js or expandable-cards.js
+        if (selector.hasAttribute('data-handlers-attached') ||
+            selector.hasAttribute('data-expandable-handlers-attached')) {
+            return;
+        }
 
-    // Instead of initializing quantity selectors, just ensure all inputs have value=1
-    const quantityInputs = card.querySelectorAll('.quantity-selector input[name="quantity"]');
-    quantityInputs.forEach(input => {
-        input.value = 1;
-        input.readOnly = true; // Make inputs read-only to prevent manual editing
-    });
+        const minusBtn = selector.querySelector('.minus');
+        const plusBtn = selector.querySelector('.plus');
+        const quantityInput = selector.querySelector('input[name="quantity"]');
 
-    // Disable plus/minus buttons by adding a disabled class
-    const quantityButtons = card.querySelectorAll('.quantity-selector .minus, .quantity-selector .plus');
-    quantityButtons.forEach(button => {
-        button.style.opacity = '0.5';
-        button.style.cursor = 'not-allowed';
-        button.disabled = true;
+        if (minusBtn && plusBtn && quantityInput) {
+            // Mark as having expandable handlers attached
+            selector.setAttribute('data-expandable-handlers-attached', 'true');
+
+            minusBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                    animateQuantityChange(quantityInput);
+                }
+            });
+
+            plusBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+                animateQuantityChange(quantityInput);
+            });
+
+            // Ensure minimum value
+            quantityInput.addEventListener('change', function() {
+                const value = parseInt(this.value);
+                if (isNaN(value) || value < 1) {
+                    this.value = 1;
+                }
+            });
+        }
     });
 }
 
