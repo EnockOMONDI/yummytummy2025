@@ -140,15 +140,19 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize quantity selectors for cart items
-    const quantitySelectors = document.querySelectorAll('.quantity-selector');
+    // Initialize quantity selectors for cart items only (within .update-form)
+    const quantitySelectors = document.querySelectorAll('.update-form .quantity-selector');
 
     quantitySelectors.forEach(selector => {
         const minusBtn = selector.querySelector('.minus');
         const plusBtn = selector.querySelector('.plus');
         const quantityInput = selector.querySelector('.quantity-input');
 
-        if (minusBtn && plusBtn && quantityInput) {
+        // Skip if already has event handlers (prevent duplicate handlers)
+        if (minusBtn && plusBtn && quantityInput && !selector.hasAttribute('data-cart-handlers-attached')) {
+            // Mark as having cart handlers attached
+            selector.setAttribute('data-cart-handlers-attached', 'true');
+
             minusBtn.addEventListener('click', function() {
                 const currentValue = parseInt(quantityInput.value) || 1;
                 if (currentValue > 1) {

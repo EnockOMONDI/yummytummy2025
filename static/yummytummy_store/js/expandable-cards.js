@@ -109,36 +109,25 @@ function scrollToCardIfNeeded(card) {
 }
 
 function initializeQuantitySelectors(card) {
-    const quantitySelectors = card.querySelectorAll('.quantity-selector');
-    
-    quantitySelectors.forEach(selector => {
-        const minusBtn = selector.querySelector('.minus');
-        const plusBtn = selector.querySelector('.plus');
-        const quantityInput = selector.querySelector('input[name="quantity"]');
-        
-        if (minusBtn && plusBtn && quantityInput) {
-            minusBtn.addEventListener('click', function() {
-                const currentValue = parseInt(quantityInput.value) || 1;
-                if (currentValue > 1) {
-                    quantityInput.value = currentValue - 1;
-                    animateQuantityChange(quantityInput);
-                }
-            });
-            
-            plusBtn.addEventListener('click', function() {
-                const currentValue = parseInt(quantityInput.value) || 1;
-                quantityInput.value = currentValue + 1;
-                animateQuantityChange(quantityInput);
-            });
-            
-            // Ensure minimum value
-            quantityInput.addEventListener('change', function() {
-                const value = parseInt(this.value);
-                if (isNaN(value) || value < 1) {
-                    this.value = 1;
-                }
-            });
-        }
+    // Skip quantity selector initialization for homepage contexts
+    // The homepage is designed for quick "Add to Cart" actions with quantity=1
+    // Quantity selectors should only work on product detail pages and cart pages
+
+    console.log('Expandable cards: Skipping quantity selector initialization for homepage');
+
+    // Instead of initializing quantity selectors, just ensure all inputs have value=1
+    const quantityInputs = card.querySelectorAll('.quantity-selector input[name="quantity"]');
+    quantityInputs.forEach(input => {
+        input.value = 1;
+        input.readOnly = true; // Make inputs read-only to prevent manual editing
+    });
+
+    // Disable plus/minus buttons by adding a disabled class
+    const quantityButtons = card.querySelectorAll('.quantity-selector .minus, .quantity-selector .plus');
+    quantityButtons.forEach(button => {
+        button.style.opacity = '0.5';
+        button.style.cursor = 'not-allowed';
+        button.disabled = true;
     });
 }
 

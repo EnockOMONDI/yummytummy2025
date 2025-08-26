@@ -102,15 +102,20 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(() => showSlide(currentSlide + 1), 5000);
     }
 
-    // Quantity Selectors
-    const quantitySelectors = document.querySelectorAll('.quantity-selector');
+    // Quantity Selectors - Only handle non-cart quantity selectors to avoid conflicts
+    // Cart quantity selectors are handled by page-specific scripts
+    const quantitySelectors = document.querySelectorAll('.quantity-selector:not(.update-form .quantity-selector)');
 
     quantitySelectors.forEach(selector => {
         const minusButton = selector.querySelector('.minus');
         const plusButton = selector.querySelector('.plus');
         const input = selector.querySelector('input');
 
-        if (minusButton && plusButton && input) {
+        // Skip if already has event handlers (prevent duplicate handlers)
+        if (minusButton && plusButton && input && !selector.hasAttribute('data-handlers-attached')) {
+            // Mark as having handlers attached
+            selector.setAttribute('data-handlers-attached', 'true');
+
             minusButton.addEventListener('click', () => {
                 let value = parseInt(input.value);
                 if (value > 1) {
@@ -268,16 +273,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.body.removeChild(message);
                     }, 3000);
 
-                    // Submit the form for recognized containers (except showcase which submits immediately)
-                    if (isProductDetail || isHighlightedProduct) {
+                    // Only submit the form manually for containers that had preventDefault called
+                    if (shouldPreventDefault) {
                         const form = this.closest('form');
                         if (form) {
                             form.submit();
                         }
                     }
                 }, 1000);
-            } else if (isProductDetail || isHighlightedProduct) {
-                // If couldn't find image but in recognized container, still submit the form
+            } else if (shouldPreventDefault) {
+                // If couldn't find image but preventDefault was called, still submit the form
                 const form = this.closest('form');
                 if (form) {
                     form.submit();

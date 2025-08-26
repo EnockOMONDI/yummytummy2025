@@ -135,6 +135,19 @@ ul {
     position: relative;
 }
 
+/* Mobile Header Logo Styling */
+.mobile-header .logo {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-header .logo img {
+    height: 45px;
+    width: auto;
+    max-width: 150px;
+    object-fit: contain;
+}
+
 .mobile-icons {
     display: flex;
     align-items: center;
@@ -1406,6 +1419,11 @@ ul {
         font-size: 0.8rem;
     }
 
+    /* Mobile Header Logo Responsive */
+    .mobile-header .logo img {
+        height: 40px; /* Slightly smaller on mobile */
+    }
+
     /* Hero Section Mobile */
     .hero-expand {
         padding: 8px 16px;
@@ -1457,6 +1475,12 @@ ul {
 }
 
 @media (max-width: 480px) {
+    /* Mobile Header Logo - Extra Small Screens */
+    .mobile-header .logo img {
+        height: 35px; /* Even smaller for very small screens */
+        max-width: 120px;
+    }
+
     .left-content h2 {
         font-size: 1.8rem;
     }
