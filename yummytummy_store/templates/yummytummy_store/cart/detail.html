@@ -6,6 +6,19 @@
 {% block title %}Your Shopping Cart | YummyTummy Shop{% endblock %}
 
 {% block content %}
+
+<style>
+
+    /* Footer (homepage overrides, mobile-first) */
+.site-footer { background: #593500; color: #ffffff; }
+.site-footer a { color: #ffc107; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer a:focus-visible { outline: 3px solid #ffc107; outline-offset: 2px; }
+.site-footer .footer-top, .site-footer .footer-bottom { padding: 16px 0; }
+@media (min-width: 768px) {
+  .site-footer .footer-top, .site-footer .footer-bottom { padding: 20px 0; }
+}
+</style>
 <section class="cart-section">
     <div class="container">
         <h1 class="section-title">Your Shopping Cart</h1>
@@ -134,6 +147,7 @@
         </div>
         {% endif %}
     </div>
+    <br><br>
 </section>
 {% endblock %}
 

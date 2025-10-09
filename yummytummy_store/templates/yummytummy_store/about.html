@@ -26,7 +26,15 @@ body {
     background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(0.5px);
 }
-
+/* Footer (homepage overrides, mobile-first) */
+.site-footer { background: #593500; color: #ffffff; }
+.site-footer a { color: #ffc107; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer a:focus-visible { outline: 3px solid #ffc107; outline-offset: 2px; }
+.site-footer .footer-top, .site-footer .footer-bottom { padding: 16px 0; }
+@media (min-width: 768px) {
+  .site-footer .footer-top, .site-footer .footer-bottom { padding: 20px 0; }
+}
 /* About Page Specific Styles */
 .about-hero {
     background: linear-gradient(135deg, rgba(245, 242, 237, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
