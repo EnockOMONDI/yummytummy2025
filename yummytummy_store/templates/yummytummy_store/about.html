@@ -5,10 +5,31 @@
 
 {% block extra_css %}
 <style>
+/* WhatsApp-Style Background Pattern for About Page */
+body {
+    background-image: url('{% static "yummytummy_store/img/healthy-living-pattern.svg" %}');
+    background-repeat: repeat;
+    background-size: 400px 400px;
+    background-attachment: fixed;
+    background-position: 0 0;
+}
+
+/* Ensure content sections have proper backgrounds over the pattern */
+.about-hero,
+.mission-vision,
+.core-activities,
+.image-showcase,
+.solutions-section,
+.value-proposition,
+.cta-section {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(0.5px);
+}
+
 /* About Page Specific Styles */
 .about-hero {
-    position: relative;
-    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    background: linear-gradient(135deg, rgba(245, 242, 237, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
     padding: 80px 0;
     overflow: hidden;
 }
@@ -59,7 +80,8 @@
 /* Mission & Vision Section */
 .mission-vision {
     padding: 80px 0;
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(1px);
 }
 
 .mission-vision-grid {
@@ -113,7 +135,8 @@
 /* Core Activities Section */
 .core-activities {
     padding: 80px 0;
-    background: linear-gradient(135deg, var(--accent-color) 0%, #f8f8f8 100%);
+    background: linear-gradient(135deg, rgba(245, 242, 237, 0.95) 0%, rgba(248, 248, 248, 0.95) 100%);
+    backdrop-filter: blur(1px);
 }
 
 .section-header {
@@ -189,7 +212,8 @@
 /* Image Showcase Section */
 .image-showcase {
     padding: 80px 0;
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(1px);
 }
 
 .showcase-grid {
@@ -237,7 +261,8 @@
 /* Solutions Section */
 .solutions-section {
     padding: 80px 0;
-    background: linear-gradient(135deg, var(--accent-color) 0%, #f8f8f8 100%);
+    background: linear-gradient(135deg, rgba(245, 242, 237, 0.95) 0%, rgba(248, 248, 248, 0.95) 100%);
+    backdrop-filter: blur(1px);
 }
 
 .solutions-grid {
@@ -284,7 +309,8 @@
 /* Value Proposition Section */
 .value-proposition {
     padding: 80px 0;
-    background: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(1px);
 }
 
 .value-content {
@@ -404,8 +430,36 @@
     transform: translateY(-2px);
 }
 
-/* Responsive Design */
+/* Enhanced Pattern Effects */
+.mission-card, .vision-card, .activity-card, .solution-card, .value-item {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(245, 242, 237, 0.8);
+}
+
+/* Subtle animation for pattern */
+@keyframes patternShift {
+    0% { background-position: 0 0; }
+    100% { background-position: 400px 400px; }
+}
+
+body {
+    animation: patternShift 120s linear infinite;
+}
+
+/* Ensure text readability over pattern */
+.container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Mobile pattern optimization */
 @media (max-width: 768px) {
+    body {
+        background-size: 300px 300px;
+        animation: patternShift 90s linear infinite;
+    }
+
     .about-hero h1 {
         font-size: 2.5rem;
     }
@@ -483,6 +537,11 @@
 }
 
 @media (max-width: 480px) {
+    body {
+        background-size: 250px 250px;
+        animation: patternShift 60s linear infinite;
+    }
+
     .about-hero {
         padding: 60px 0;
     }
@@ -555,28 +614,23 @@
 <section class="core-activities">
     <div class="container">
         <div class="section-header">
-            <h2>Core Activities</h2>
+            <h2>What we do </h2>
             <p>Driving change through innovation and sustainability</p>
         </div>
 
         <div class="activities-grid">
             <div class="activity-card">
-                <h3>Peanut Value Addition</h3>
+                <h3>Core Activities</h3>
                 <ul>
                     <li>Production of natural peanut butter, roasted peanuts, and nut-based blends</li>
-                    <li>Development of refill models with eco-friendly packaging to reduce waste</li>
-                    <li>Incorporation of locally sourced honey and cashew nuts for diversified healthy products</li>
+                    <li>Peanut butter production Trainning</li>
+                    <li>Bee keeping.</li>
+                    <li>Distribution and sales</li>
+                    <li>CSR, Promoting Climate literacy , waste management and circular economy.</li>
                 </ul>
             </div>
 
-            <div class="activity-card">
-                <h3>Sustainable Sourcing & Climate Action</h3>
-                <ul>
-                    <li>Raw peanuts sourced from Malawi and Kenya, with emphasis on drought-resilient varieties</li>
-                    <li>Partnerships with smallholder farmers to promote climate-smart farming and stable markets</li>
-                    <li>Use of recyclable jars, refill stations, and low-waste production processes</li>
-                </ul>
-            </div>
+       
 
             <div class="activity-card">
                 <h3>Community Engagement & CSR</h3>
@@ -595,6 +649,10 @@
                     <li>Bulk supplies to 5 restaurants, banks, and 20 mini marts</li>
                     <li>Participation in expos and community events</li>
                 </ul>
+            </div>
+            <div class="activity-card">
+                <h3>Sustainable Sourcing & Climate Action</h3>
+              
             </div>
         </div>
     </div>

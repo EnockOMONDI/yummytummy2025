@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <!-- Define the pattern -->
+    <pattern id="healthyPattern" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+      <!-- Background -->
+      <rect width="400" height="400" fill="#f5f2ed" opacity="0.3"/>
+      
+      <!-- Peanut Icons -->
+      <!-- Whole peanut -->
+      <g transform="translate(50, 50)" opacity="0.08">
+        <path d="M15 8 C20 5, 25 8, 25 15 C25 20, 22 25, 18 25 C15 25, 12 22, 12 18 C8 18, 5 15, 5 12 C5 8, 8 5, 12 5 C15 5, 15 8, 15 8 Z" 
+              stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <circle cx="18" cy="12" r="1" fill="#8b5a00" opacity="0.6"/>
+        <circle cx="12" cy="18" r="1" fill="#8b5a00" opacity="0.6"/>
+      </g>
+      
+      <!-- Peanut shell -->
+      <g transform="translate(320, 80)" opacity="0.08">
+        <ellipse cx="15" cy="10" rx="12" ry="6" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M8 10 Q15 5, 22 10" stroke="#8b5a00" stroke-width="1" fill="none"/>
+        <path d="M8 10 Q15 15, 22 10" stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Healthy Living Icons -->
+      <!-- Leaf -->
+      <g transform="translate(150, 30)" opacity="0.08">
+        <path d="M10 20 Q5 10, 10 5 Q15 2, 20 5 Q25 10, 20 15 Q15 18, 10 20" 
+              stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M10 20 Q15 12, 20 15" stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Heart -->
+      <g transform="translate(280, 150)" opacity="0.08">
+        <path d="M15 25 C10 20, 5 15, 5 10 C5 7, 7 5, 10 5 C12 5, 14 6, 15 8 C16 6, 18 5, 20 5 C23 5, 25 7, 25 10 C25 15, 20 20, 15 25 Z" 
+              stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+      </g>
+      
+      <!-- Apple -->
+      <g transform="translate(80, 180)" opacity="0.08">
+        <circle cx="15" cy="15" r="8" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M15 7 Q13 5, 15 3" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <ellipse cx="17" cy="6" rx="2" ry="1" stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Carrot -->
+      <g transform="translate(200, 120)" opacity="0.08">
+        <path d="M15 25 L12 5 L18 5 Z" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M12 5 Q10 3, 8 5" stroke="#8b5a00" stroke-width="1" fill="none"/>
+        <path d="M15 5 Q13 2, 11 4" stroke="#8b5a00" stroke-width="1" fill="none"/>
+        <path d="M18 5 Q20 3, 22 5" stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Water drop -->
+      <g transform="translate(350, 200)" opacity="0.08">
+        <path d="M15 25 C10 25, 7 20, 7 15 C7 10, 15 5, 15 5 C15 5, 23 10, 23 15 C23 20, 20 25, 15 25 Z" 
+              stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <circle cx="12" cy="15" r="1.5" fill="#8b5a00" opacity="0.4"/>
+      </g>
+      
+      <!-- Sun -->
+      <g transform="translate(120, 280)" opacity="0.08">
+        <circle cx="15" cy="15" r="6" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M15 3 L15 7" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M15 23 L15 27" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M3 15 L7 15" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M23 15 L27 15" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M6.5 6.5 L9.5 9.5" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M20.5 20.5 L23.5 23.5" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M6.5 23.5 L9.5 20.5" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M20.5 9.5 L23.5 6.5" stroke="#8b5a00" stroke-width="1.5"/>
+      </g>
+      
+      <!-- Broccoli -->
+      <g transform="translate(250, 300)" opacity="0.08">
+        <circle cx="12" cy="8" r="3" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <circle cx="18" cy="8" r="3" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <circle cx="15" cy="12" r="3" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M15 15 L15 25" stroke="#8b5a00" stroke-width="2"/>
+      </g>
+      
+      <!-- Fitness/Exercise icon -->
+      <g transform="translate(50, 320)" opacity="0.08">
+        <rect x="8" y="12" width="4" height="6" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <rect x="18" y="12" width="4" height="6" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M12 15 L18 15" stroke="#8b5a00" stroke-width="2"/>
+        <circle cx="6" cy="15" r="2" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <circle cx="24" cy="15" r="2" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+      </g>
+      
+      <!-- Peanut butter jar -->
+      <g transform="translate(180, 250)" opacity="0.08">
+        <rect x="10" y="8" width="10" height="15" rx="1" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <rect x="12" y="5" width="6" height="3" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M12 12 L18 12" stroke="#8b5a00" stroke-width="1"/>
+        <path d="M12 15 L18 15" stroke="#8b5a00" stroke-width="1"/>
+        <path d="M12 18 L18 18" stroke="#8b5a00" stroke-width="1"/>
+      </g>
+      
+      <!-- Wellness/meditation icon -->
+      <g transform="translate(320, 320)" opacity="0.08">
+        <circle cx="15" cy="10" r="4" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M15 14 L15 20" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M10 18 L15 20 L20 18" stroke="#8b5a00" stroke-width="1.5" fill="none"/>
+        <path d="M8 16 L12 18" stroke="#8b5a00" stroke-width="1.5"/>
+        <path d="M22 16 L18 18" stroke="#8b5a00" stroke-width="1.5"/>
+      </g>
+      
+      <!-- Additional scattered small elements -->
+      <!-- Small leaves -->
+      <g transform="translate(370, 50)" opacity="0.06">
+        <path d="M5 10 Q2 7, 5 5 Q8 4, 10 6 Q12 8, 10 10 Q8 11, 5 10" 
+              stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <g transform="translate(30, 250)" opacity="0.06">
+        <path d="M5 10 Q2 7, 5 5 Q8 4, 10 6 Q12 8, 10 10 Q8 11, 5 10" 
+              stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Small hearts -->
+      <g transform="translate(100, 100)" opacity="0.06">
+        <path d="M8 12 C6 10, 4 8, 4 6 C4 5, 5 4, 6 4 C7 4, 7.5 4.5, 8 5 C8.5 4.5, 9 4, 10 4 C11 4, 12 5, 12 6 C12 8, 10 10, 8 12 Z" 
+              stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <g transform="translate(300, 250)" opacity="0.06">
+        <path d="M8 12 C6 10, 4 8, 4 6 C4 5, 5 4, 6 4 C7 4, 7.5 4.5, 8 5 C8.5 4.5, 9 4, 10 4 C11 4, 12 5, 12 6 C12 8, 10 10, 8 12 Z" 
+              stroke="#8b5a00" stroke-width="1" fill="none"/>
+      </g>
+      
+      <!-- Small peanuts -->
+      <g transform="translate(220, 60)" opacity="0.06">
+        <ellipse cx="6" cy="4" rx="4" ry="2" stroke="#8b5a00" stroke-width="1" fill="none"/>
+        <path d="M3 4 Q6 2, 9 4" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+
+      <g transform="translate(150, 350)" opacity="0.06">
+        <ellipse cx="6" cy="4" rx="4" ry="2" stroke="#8b5a00" stroke-width="1" fill="none"/>
+        <path d="M3 4 Q6 2, 9 4" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+
+      <!-- Additional scattered elements for better coverage -->
+      <!-- Tiny wellness symbols -->
+      <g transform="translate(380, 120)" opacity="0.05">
+        <circle cx="5" cy="5" r="3" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+        <path d="M5 2 L5 8 M2 5 L8 5" stroke="#8b5a00" stroke-width="0.8"/>
+      </g>
+
+      <g transform="translate(20, 150)" opacity="0.05">
+        <circle cx="5" cy="5" r="3" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+        <path d="M5 2 L5 8 M2 5 L8 5" stroke="#8b5a00" stroke-width="0.8"/>
+      </g>
+
+      <!-- Tiny leaf sprigs -->
+      <g transform="translate(270, 20)" opacity="0.05">
+        <path d="M5 8 Q3 5, 5 3 Q7 2, 8 4 Q9 6, 7 7 Q6 8, 5 8"
+              stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+
+      <g transform="translate(60, 380)" opacity="0.05">
+        <path d="M5 8 Q3 5, 5 3 Q7 2, 8 4 Q9 6, 7 7 Q6 8, 5 8"
+              stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+
+      <!-- Tiny nutrition symbols -->
+      <g transform="translate(340, 280)" opacity="0.05">
+        <rect x="3" y="3" width="4" height="6" rx="1" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+        <circle cx="5" cy="1" r="1" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+
+      <g transform="translate(90, 40)" opacity="0.05">
+        <rect x="3" y="3" width="4" height="6" rx="1" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+        <circle cx="5" cy="1" r="1" stroke="#8b5a00" stroke-width="0.8" fill="none"/>
+      </g>
+    </pattern>
+  </defs>
+  
+  <!-- Apply the pattern -->
+  <rect width="100%" height="100%" fill="url(#healthyPattern)"/>
+</svg>

@@ -28,6 +28,29 @@ body {
     background-color: var(--secondary-color);
 }
 
+/* WhatsApp-Style Background Pattern Utilities */
+.whatsapp-pattern-bg {
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(139, 90, 0, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(139, 90, 0, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 60%, rgba(139, 90, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 60% 40%, rgba(139, 90, 0, 0.02) 0%, transparent 50%);
+    background-size: 200px 200px, 300px 300px, 150px 150px, 250px 250px;
+    background-position: 0 0, 100px 100px, 50px 150px, 200px 50px;
+    background-repeat: repeat;
+}
+
+/* Fallback pattern for browsers that don't support SVG backgrounds */
+.pattern-fallback {
+    background-image:
+        linear-gradient(45deg, rgba(245, 242, 237, 0.1) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(245, 242, 237, 0.1) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(245, 242, 237, 0.1) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(245, 242, 237, 0.1) 75%);
+    background-size: 60px 60px;
+    background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+}
+
 a {
     text-decoration: none;
     color: var(--primary-color);
@@ -1149,59 +1172,307 @@ ul {
     text-align: justify;
 }
 
-/* Footer */
+/* ================================================================
+   BEAUTIFUL FOOTER DESIGN
+   ================================================================ */
+
 .site-footer {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: var(--secondary-color);
-    padding: 50px 0 20px;
+    padding: 60px 0 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.footer-top {
+/* Subtle background pattern for footer */
+.site-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    background-size: 300px 300px, 200px 200px;
+    background-position: 0 0, 150px 100px;
+    pointer-events: none;
+}
+
+/* Main Footer Grid */
+.footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Footer Sections */
+.footer-section {
+    padding: 0;
+}
+
+.footer-section h4 {
+    color: var(--highlight-color);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--highlight-color);
+    border-radius: 1px;
+}
+
+.footer-section h5 {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 20px 0 12px 0;
+    opacity: 0.9;
+}
+
+/* Company Info Section */
+.company-info .footer-logo {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 50px;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.company-info .logo-img {
+    height: 50px;
+    width: auto;
+    filter: brightness(1.1);
+}
+
+.company-info .footer-logo h3 {
+    color: var(--secondary-color);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.company-description {
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
+/* Social Media */
+.social-media h4 {
+    margin-bottom: 15px;
 }
 
 .social-links {
     display: flex;
+    gap: 15px;
+}
+
+.social-link {
+    display: flex;
     align-items: center;
-    gap: 20px;
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.contact-info a {
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
     color: var(--secondary-color);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.footer-bottom {
+.social-link:hover {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.social-link.instagram:hover {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: white;
+}
+
+.social-link.linkedin:hover {
+    background: #0077b5;
+    color: white;
+}
+
+/* Quick Links */
+.quick-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.quick-links li {
+    margin-bottom: 12px;
+}
+
+.quick-links a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    padding-left: 15px;
+}
+
+.quick-links a::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--highlight-color);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
+.quick-links a:hover {
+    color: var(--highlight-color);
+    padding-left: 20px;
+}
+
+.quick-links a:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Contact & Locations */
+.contact-item {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 8px 0;
+}
+
+.contact-item svg {
+    color: var(--highlight-color);
+    flex-shrink: 0;
+}
+
+.contact-item a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.contact-item a:hover {
+    color: var(--highlight-color);
+}
+
+.locations {
+    margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.2);
-    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.footer-links, .legal-links {
+.location-item {
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
 }
 
-.footer-bottom a {
-    color: var(--secondary-color);
+.location-item svg {
+    color: var(--highlight-color);
+    flex-shrink: 0;
+}
+
+/* Legal & Policies */
+.legal-policies ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.legal-policies li {
+    margin-bottom: 12px;
+}
+
+.legal-policies a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
     font-size: 0.9rem;
 }
 
-/* Kenyan flag in footer */
-.kenyan-flag .flag-icon {
-    height: 12px;
-    vertical-align: middle;
-    margin-right: 8px;
+.legal-policies a:hover {
+    color: var(--highlight-color);
+}
+
+.kenyan-pride {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 25px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.kenyan-pride .flag-icon {
+    height: 20px;
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.kenyan-pride span {
+    color: var(--secondary-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 25px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.copyright p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.footer-tagline p {
+    color: var(--highlight-color);
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 600;
+    font-style: italic;
 }
 
 /* Responsive Styles */
@@ -1325,11 +1596,19 @@ ul {
         max-height: 250px;
     }
 
-    .footer-top {
-        flex-direction: column;
+    /* Footer Responsive - Tablet */
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
         gap: 30px;
-        align-items: center;
+    }
+
+    .company-info {
+        grid-column: 1 / -1;
         text-align: center;
+    }
+
+    .footer-section h4 {
+        font-size: 1.1rem;
     }
 }
 
@@ -1380,11 +1659,51 @@ ul {
         grid-template-columns: 1fr;
     }
 
+    /* Footer Responsive - Mobile */
+    .footer-main {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .footer-section h4 {
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+
+    .company-info .footer-logo {
+        justify-content: center;
+    }
+
+    .company-info .logo-img {
+        height: 40px;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    .contact-item {
+        justify-content: center;
+    }
+
+    .kenyan-pride {
+        justify-content: center;
+        margin: 20px auto 0;
+        max-width: 200px;
+    }
+
     .footer-bottom {
         flex-direction: column;
-        gap: 20px;
+        gap: 15px;
         align-items: center;
         text-align: center;
+        padding: 20px 0;
+    }
+
+    .copyright p,
+    .footer-tagline p {
+        font-size: 0.85rem;
     }
 
     /* Expandable Cards Mobile */

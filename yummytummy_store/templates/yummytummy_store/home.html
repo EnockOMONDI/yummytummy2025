@@ -605,30 +605,74 @@
         </div>
     </div>
 </section>
-
-<!-- About Section -->
-<section class="about-section">
+<!-- Hero Section -->
+<section class="about-hero">
     <div class="container">
-        <h2 class="section-title">Live Great Limited</h2>
-        <p class="section-subtitle">CLIMATE-SMART AGRIBUSINESS FOR HEALTH & SUSTAINABILITY</p>
-        <div class="about-content">
-            <p>We are a <strong>climate-smart agribusiness</strong> that integrates nutrition, environmental sustainability, and community impact through innovative peanut value addition. Our <strong>nutritious peanut products</strong> are sourced through <strong>sustainable sourcing</strong> practices from drought-resilient varieties.</p>
+        <div class="about-hero-content">
+            <h1>Live Great Limited</h1>
+            <p class="about-hero-subtitle">Climate-Smart Agribusiness for Health & Sustainability</p>
+            <p class="about-hero-description">
+                We are not just a food business – we are a climate-smart agribusiness that integrates nutrition,
+                environmental sustainability, and community impact through innovative peanut value addition.
+            </p>
         </div>
     </div>
 </section>
+<style>
+    /* About Page Specific Styles */
+.about-hero {
+    padding: 80px 0;
+    overflow: hidden;
+}
 
-<!-- Mission Section -->
-<section class="mission-section">
-    <div class="container">
-        <div class="mission-content">
-            <h3>Our Mission</h3>
-            <p>To improve nutrition, create sustainable livelihoods, and promote climate-resilient food systems by innovating around peanuts and other indigenous crops.</p>
-        </div>
-    </div>
-</section>
+.about-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.05;
+    z-index: 1;
+}
+
+.about-hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.about-hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--dark-gray);
+    margin-bottom: 30px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.about-hero-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-color);
+    margin-bottom: 40px;
+}
+</style>
+
+
+
 
 <!-- Brand Overview & Programs -->
-<section class="brand-sections" aria-labelledby="brand-overview-title">
+<!-- <section class="brand-sections" aria-labelledby="brand-overview-title">
     <div class="container">
         <h2 id="brand-overview-title" class="section-title">Vision</h2>
         <p class="section-lead">A world where communities thrive on nutritious, affordable, and climate-friendly foods, with agribusiness serving as a driver of health, sustainability, and prosperity.</p>
@@ -694,7 +738,7 @@
             </article>
         </div>
     </div>
-</section>
+</section> -->
 
 
 <!-- Process Section -->
@@ -737,6 +781,8 @@
     <div class="container">
         <h2 class="showcase-title">PROBABLY</h2>
         <h3 class="showcase-subtitle">THE BEST BUTTER IN THE WORLD</h3>
+
+        <br>
         <div class="product-slider">
             {% for product in featured_products %}
             <div class="product-card expandable-card" data-product-id="{{ product.id }}">
