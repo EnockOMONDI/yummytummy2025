@@ -4,6 +4,7 @@ Handles automatic account creation and order tracking emails.
 """
 
 import json
+import logging
 import secrets
 import string
 from django.core.mail import send_mail
@@ -14,6 +15,9 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 from .models import Order, AutoCreatedAccount, OrderTrackingStatus
+
+# Get logger
+logger = logging.getLogger(__name__)
 
 
 class OrderTrackingEmailService:
@@ -381,6 +385,80 @@ class OrderTrackingEmailService:
             print(f"Failed to send payment failed notification: {e}")
             return False
 
+    @staticmethod
+    def send_recipe_purchase_confirmation(order, recipe_purchases):
+        """
+        Send recipe purchase confirmation email with download links
+
+        Args:
+            order: Order instance
+            recipe_purchases: QuerySet of RecipePurchase instances
+        """
+        try:
+            # Import here to avoid circular imports
+            from django.template.loader import render_to_string
+            from django.core.mail import EmailMultiAlternatives
+            from django.conf import settings
+            from django.utils import timezone
+            import pytz
+
+            # Get Kenya timezone for email timestamp
+            kenya_tz = pytz.timezone('Africa/Nairobi')
+            current_time = timezone.now().astimezone(kenya_tz)
+
+            # Collect related products for upselling
+            related_products = set()
+            for purchase in recipe_purchases:
+                related_products.update(purchase.recipe.related_products.all())
+
+            # Limit to 6 products for email
+            related_products = list(related_products)[:6]
+
+            # Email context
+            context = {
+                'order': order,
+                'recipe_purchases': recipe_purchases,
+                'related_products': related_products,
+                'current_time': current_time,
+                'request': None,  # Will be set by template context processor if available
+            }
+
+            # Render email templates
+            subject = f'Your YummyTummy Recipes Are Ready! Order #{order.id}'
+
+            # HTML version
+            html_content = render_to_string(
+                'yummytummy_store/emails/recipe_purchase_confirmation.html',
+                context
+            )
+
+            # Plain text version
+            text_content = render_to_string(
+                'yummytummy_store/emails/recipe_purchase_confirmation.txt',
+                context
+            )
+
+            # Create email
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[order.email],
+            )
+
+            # Attach HTML version
+            email.attach_alternative(html_content, "text/html")
+
+            # Send email
+            email.send()
+
+            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to send recipe purchase confirmation email for order {order.id}: {str(e)}")
+            return False
+
 
 class CartPreservationService:
     """Service for preserving cart contents during payment failures"""
@@ -530,3 +608,5 @@ class OrderTrackingService:
         }
         
         return status_progress.get(latest_status.status, 0)
+
+

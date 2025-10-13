@@ -14,9 +14,16 @@ urlpatterns = [
     path('products/<slug:category_slug>/', views.product_list, name='product_list_by_category'),
     path('product/<slug:slug>/', views.product_detail, name='product_detail'),
 
+    # Recipe URLs
+    path('recipes/', views.recipe_list, name='recipe_list'),
+    path('recipe/<slug:slug>/', views.recipe_detail, name='recipe_detail'),
+    path('recipe/<slug:slug>/download/', views.recipe_download, name='recipe_download'),
+    path('my-recipes/', views.my_recipes, name='my_recipes'),
+
     # Cart URLs
     path('cart/', views.cart_detail, name='cart_detail'),
     path('cart/add/<int:product_id>/', views.cart_add, name='cart_add'),
+    path('cart/add-recipe/<int:recipe_id>/', views.cart_add_recipe, name='cart_add_recipe'),
     path('cart/remove/<int:product_id>/', views.cart_remove, name='cart_remove'),
 
     # Cart URLs with cart key support (for variants)

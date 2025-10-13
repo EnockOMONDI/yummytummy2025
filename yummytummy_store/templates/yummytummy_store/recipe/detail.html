@@ -1,0 +1,756 @@
+{% extends 'yummytummy_store/base.html' %}
+{% load static %}
+{% load humanize %}
+{% load recipe_filters %}
+
+{% block title %}{{ recipe.title }} - YummyTummy Recipes{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Recipe Detail Page Styles */
+.recipe-detail-hero {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    padding: 40px 0;
+}
+
+.recipe-detail-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.recipe-image-section {
+    position: sticky;
+    top: 100px;
+}
+
+.recipe-main-image {
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(89, 53, 0, 0.15);
+    margin-bottom: 20px;
+}
+
+.recipe-info-section {
+    padding: 20px 0;
+}
+
+.recipe-category-badge {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.recipe-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.recipe-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-color);
+    margin-bottom: 30px;
+}
+
+.recipe-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 25px;
+    background: var(--light-gray);
+    border-radius: 12px;
+}
+
+.meta-item {
+    text-align: center;
+}
+
+.meta-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.meta-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+.meta-label {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.recipe-price-section {
+    background: var(--secondary-color);
+    border: 3px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.recipe-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.price-description {
+    color: var(--dark-gray);
+    margin-bottom: 20px;
+}
+
+.purchase-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-purchase,
+.btn-download {
+    flex: 1;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-purchase {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+}
+
+.btn-purchase:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(89, 53, 0, 0.3);
+}
+
+.btn-download {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+}
+
+.btn-download:hover {
+    background: #e6ac00;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.purchased-notice {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+/* Recipe Content Sections */
+.recipe-content-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.preview-content {
+    background: var(--light-gray);
+    padding: 25px;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.preview-notice {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 20px;
+}
+
+/* Enhanced Preview Styles */
+.preview-count {
+    font-size: 0.8rem;
+    color: var(--highlight-color);
+    background: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.preview-mode {
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-mode::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, rgba(245, 242, 237, 0.9));
+    pointer-events: none;
+}
+
+.preview-more {
+    color: var(--primary-color);
+    font-style: italic;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.preview-notice-enhanced {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    border: 2px solid var(--highlight-color);
+    border-radius: 15px;
+    padding: 30px;
+    margin: 40px 0;
+    box-shadow: 0 10px 30px rgba(89, 53, 0, 0.1);
+}
+
+.preview-notice-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.preview-icon {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.preview-text h3 {
+    color: var(--primary-color);
+    margin: 0 0 15px 0;
+    font-size: 1.4rem;
+}
+
+.preview-text p {
+    margin: 0 0 15px 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+.unlock-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.unlock-benefits li {
+    padding: 8px 0;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.unlock-benefits i {
+    color: var(--highlight-color);
+    margin-right: 10px;
+    width: 16px;
+}
+
+.preview-cta {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.recipe-price-large {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.price-note {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.ingredients-list,
+.instructions-list {
+    background: var(--secondary-color);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(89, 53, 0, 0.1);
+}
+
+.ingredients-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.ingredients-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--light-gray);
+    position: relative;
+    padding-left: 25px;
+}
+
+.ingredients-list li:before {
+    content: '•';
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.instructions-list ol {
+    padding-left: 0;
+    counter-reset: step-counter;
+}
+
+.instructions-list li {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--light-gray);
+    position: relative;
+    padding-left: 50px;
+    counter-increment: step-counter;
+}
+
+.instructions-list li:before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 15px;
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Related Products */
+.related-products {
+    background: var(--light-gray);
+    padding: 40px 0;
+    margin-top: 60px;
+}
+
+.related-products h3 {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.product-card {
+    background: var(--secondary-color);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(89, 53, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.product-card h4 {
+    font-size: 1.1rem;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.product-card .price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.product-card .btn {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Related Recipes */
+.related-recipes {
+    padding: 60px 0;
+}
+
+.related-recipes h3 {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 40px;
+}
+
+.recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .recipe-detail-container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .recipe-image-section {
+        position: static;
+    }
+    
+    .recipe-title {
+        font-size: 2.2rem;
+    }
+    
+    .recipe-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .purchase-actions {
+        flex-direction: column;
+    }
+    
+    .products-grid,
+    .recipes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Preview Mobile Styles */
+    .preview-notice-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .preview-icon {
+        align-self: center;
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .recipe-price-large {
+        font-size: 1.6rem;
+    }
+
+    .preview-cta {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="recipe-detail-hero">
+    <div class="container">
+        <div class="recipe-detail-container">
+            <!-- Recipe Image Section -->
+            <div class="recipe-image-section">
+                {% if recipe.get_image_url %}
+                    <img src="{{ recipe.get_image_url }}/-/preview/600x400/" alt="{{ recipe.title }}" class="recipe-main-image">
+                {% else %}
+                    <img src="{% static 'yummytummy_store/img/recipe-placeholder.jpg' %}" alt="{{ recipe.title }}" class="recipe-main-image">
+                {% endif %}
+            </div>
+
+            <!-- Recipe Info Section -->
+            <div class="recipe-info-section">
+                <div class="recipe-category-badge">{{ recipe.category.name }}</div>
+                <h1 class="recipe-title">{{ recipe.title }}</h1>
+                <p class="recipe-description">{{ recipe.description }}</p>
+
+                <!-- Recipe Meta Information -->
+                <div class="recipe-meta-grid">
+                    <div class="meta-item">
+                        <div class="meta-icon"><i class="fas fa-clock"></i></div>
+                        <div class="meta-value">{{ recipe.prep_time_minutes }}</div>
+                        <div class="meta-label">Prep Time</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon"><i class="fas fa-fire"></i></div>
+                        <div class="meta-value">{{ recipe.cook_time_minutes }}</div>
+                        <div class="meta-label">Cook Time</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon"><i class="fas fa-users"></i></div>
+                        <div class="meta-value">{{ recipe.servings }}</div>
+                        <div class="meta-label">Servings</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon"><i class="fas fa-signal"></i></div>
+                        <div class="meta-value">{{ recipe.get_difficulty_display }}</div>
+                        <div class="meta-label">Difficulty</div>
+                    </div>
+                </div>
+
+                <!-- Purchase Section -->
+                <div class="recipe-price-section">
+                    {% if user_has_purchased %}
+                        <div class="purchased-notice">
+                            <i class="fas fa-check-circle"></i> You own this recipe!
+                        </div>
+                        <div class="purchase-actions">
+                            <a href="{% url 'yummytummy_store:recipe_download' recipe.slug %}" class="btn-download">
+                                <i class="fas fa-download"></i> Download PDF
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="recipe-price">{{ recipe.get_formatted_price }}</div>
+                        <p class="price-description">Get the complete recipe with detailed instructions and tips</p>
+                        <div class="purchase-actions">
+                            <form method="post" action="{% url 'yummytummy_store:cart_add_recipe' recipe.id %}">
+                                {% csrf_token %}
+                                {{ cart_form.as_p }}
+                                <button type="submit" class="btn-purchase">
+                                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Recipe Tags -->
+                {% if recipe.get_tags_list %}
+                <div class="recipe-tags">
+                    <h4 style="color: var(--primary-color); margin-bottom: 10px;">Tags:</h4>
+                    {% for tag in recipe.get_tags_list %}
+                        <span style="background: var(--light-gray); padding: 5px 10px; border-radius: 15px; font-size: 0.85rem; margin-right: 8px; margin-bottom: 8px; display: inline-block;">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recipe Content -->
+<section class="recipe-content">
+    <div class="container">
+        {% if user_has_purchased %}
+            <!-- Full Recipe Content for Purchased Users -->
+            <div class="recipe-content-section">
+                <h2 class="section-title">Ingredients</h2>
+                <div class="ingredients-list">
+                    <ul>
+                        {% for ingredient in recipe.ingredients %}
+                            <li>{{ ingredient }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="recipe-content-section">
+                <h2 class="section-title">Instructions</h2>
+                <div class="instructions-list">
+                    <ol>
+                        {% for instruction in recipe.instructions %}
+                            <li>{{ instruction }}</li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        {% else %}
+            <!-- Preview Content for Non-Purchased Users -->
+            {% recipe_purchase_status user recipe as purchase_status %}
+            {% with stats=recipe|recipe_preview_stats %}
+
+            <div class="recipe-content-section">
+                <h2 class="section-title">
+                    Ingredients Preview
+                    <span class="preview-count">({{ stats.ingredients_shown }}/{{ stats.total_ingredients }})</span>
+                </h2>
+                <div class="ingredients-list preview-mode">
+                    <ul>
+                        {% for ingredient in recipe.ingredients|truncate_ingredients:15 %}
+                            <li class="{% if 'more ingredients' in ingredient %}preview-more{% endif %}">
+                                {{ ingredient }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="recipe-content-section">
+                <h2 class="section-title">
+                    Instructions Preview
+                    <span class="preview-count">({{ stats.steps_shown }}/{{ stats.total_steps }})</span>
+                </h2>
+                <div class="instructions-list preview-mode">
+                    <ol>
+                        {% for instruction in recipe.instructions|truncate_instructions:1 %}
+                            <li class="{% if 'more steps' in instruction %}preview-more{% endif %}">
+                                {{ instruction }}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Enhanced Preview Notice -->
+            <div class="preview-notice-enhanced">
+                <div class="preview-notice-content">
+                    <div class="preview-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="preview-text">
+                        <h3>🔓 Unlock the Complete Recipe</h3>
+                        <p>You're seeing a preview with <strong>{{ stats.ingredients_shown }}/{{ stats.total_ingredients }} ingredients</strong> and <strong>{{ stats.steps_shown }}/{{ stats.total_steps }} cooking steps</strong>.</p>
+                        <p>Purchase this recipe to get:</p>
+                        <ul class="unlock-benefits">
+                            <li><i class="fas fa-check"></i> Complete ingredients list with exact measurements</li>
+                            <li><i class="fas fa-check"></i> Detailed step-by-step cooking instructions</li>
+                            <li><i class="fas fa-check"></i> Professional cooking tips and techniques</li>
+                            <li><i class="fas fa-check"></i> Downloadable PDF for offline cooking</li>
+                        </ul>
+                        <div class="preview-cta">
+                            <span class="recipe-price-large">{{ recipe.get_formatted_price }}</span>
+                            <span class="price-note">One-time purchase • Lifetime access</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if recipe.preview_content %}
+            <div class="recipe-content-section">
+                <h2 class="section-title">About This Recipe</h2>
+                <div class="preview-content">
+                    {{ recipe.preview_content|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% endwith %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- Related Products -->
+{% if recipe.related_products.exists %}
+<section class="related-products">
+    <div class="container">
+        <h3>Perfect with these YummyTummy products</h3>
+        <div class="products-grid">
+            {% for product in recipe.related_products.all %}
+                <div class="product-card">
+                    {% if product.get_image_url %}
+                        <img src="{{ product.get_image_url }}/-/preview/150x150/" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{% static 'yummytummy_store/img/product-placeholder.jpg' %}" alt="{{ product.name }}">
+                    {% endif %}
+                    <h4>{{ product.name }}</h4>
+                    <div class="price">{{ product.get_formatted_price }}</div>
+                    <a href="{% url 'yummytummy_store:product_detail' product.slug %}" class="btn">View Product</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Related Recipes -->
+{% if related_recipes %}
+<section class="related-recipes">
+    <div class="container">
+        <h3>More {{ recipe.category.name }} Recipes</h3>
+        <div class="recipes-grid">
+            {% for related_recipe in related_recipes %}
+                <div class="recipe-card">
+                    <div class="recipe-image">
+                        {% if related_recipe.get_image_url %}
+                            <img src="{{ related_recipe.get_image_url }}/-/preview/400x300/" alt="{{ related_recipe.title }}">
+                        {% else %}
+                            <img src="{% static 'yummytummy_store/img/recipe-placeholder.jpg' %}" alt="{{ related_recipe.title }}">
+                        {% endif %}
+                    </div>
+                    <div class="recipe-content">
+                        <div class="recipe-category">{{ related_recipe.category.name }}</div>
+                        <h3 class="recipe-title">{{ related_recipe.title }}</h3>
+                        <p class="recipe-description">{{ related_recipe.description|truncatewords:15 }}</p>
+                        <div class="recipe-meta">
+                            <div class="recipe-time">
+                                <i class="fas fa-clock"></i>
+                                {{ related_recipe.get_total_time_display }}
+                            </div>
+                            <div class="recipe-difficulty">
+                                <i class="fas fa-signal"></i>
+                                {{ related_recipe.get_difficulty_display }}
+                            </div>
+                        </div>
+                        <div class="recipe-price">{{ related_recipe.get_formatted_price }}</div>
+                        <div class="recipe-actions">
+                            <a href="{% url 'yummytummy_store:recipe_detail' related_recipe.slug %}" class="btn-view-recipe">View Recipe</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -271,8 +271,59 @@
                 <form method="post" class="checkout-form">
                     {% csrf_token %}
 
+                    {% if is_recipe_only %}
+                    <!-- Recipe-only checkout: Simplified form -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-book text-warning"></i> Digital Recipe Delivery
+                        </h3>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Digital Delivery:</strong> Your recipes will be delivered via email after payment confirmation.
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.first_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.last_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-envelope"></i> Your recipes will be sent to this email address
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Standard checkout: Full form with shipping -->
                     <div class="form-section">
                         <h3 class="form-section-title">Contact Information</h3>
+                        {% if is_mixed_order %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Mixed Order:</strong> Physical products will be delivered to your address, and digital recipes will be sent to your email.
+                        </div>
+                        {% endif %}
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="{{ form.first_name.id_for_label }}">First Name</label>
@@ -314,7 +365,10 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
+                    {% if not is_recipe_only %}
+                    <!-- Delivery address section only for physical products -->
                     <div class="form-section">
                         <h3 class="form-section-title">Delivery Address</h3>
                         <div class="form-group">
@@ -368,9 +422,8 @@
                                 {% endif %}
                             </div>
                         </div>
-
-
                     </div>
+                    {% endif %}
 
                     <div class="form-section">
                         <h3 class="form-section-title">Order Notes</h3>

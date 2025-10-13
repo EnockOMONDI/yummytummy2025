@@ -1,0 +1,76 @@
+I need you to complete the YummyTummy Recipe feature integration with the existing checkout and order system. Before implementing, please confirm your understanding of these requirements and explain your implementation approach:
+
+**CRITICAL: Do NOT break existing functionality**
+- The current M-Pesa payment system for products must continue working
+- Existing product checkout flow must remain unchanged
+- All current cart functionality for products must be preserved
+- Test thoroughly to ensure no regressions
+- Write a new test to unerstand the current functionality, or detailed md file for backup purposes, 
+**Requirements to Implement:**
+
+**1. Checkout & Order System Integration**
+- Modify the checkout process (`yummytummy_store/views.py` checkout views) to handle BOTH products AND recipes in the same order
+- When an order is successfully paid (M-Pesa callback success), automatically create `RecipePurchase` records for any recipes in the cart
+- Link RecipePurchase records to the Order and User
+- Ensure the M-Pesa payment flow works seamlessly whether the cart contains products only, recipes only, or both , if a checkout has only recipes they should get a checkout for to fill email only, not the entire address, location form 
+- Update order confirmation pages to display both products and recipes
+
+**2. Email Notification System**
+- Create a new email template for recipe purchase confirmations that includes:
+  - Confirmation message for purchased recipes
+  - Direct PDF download links for each purchased recipe
+  - Related YummyTummy products section for upselling (show 2-3 related products from the recipe's `related_products` field)
+- Integrate recipe purchase emails into the existing order confirmation email flow
+- Use the existing email service (`OrderTrackingEmailService`) pattern
+- Ensure emails are sent after successful M-Pesa payment confirmation
+- **Delivery Method**: Purchased recipes must be delivered via email with download links immediately after payment
+- **Download Limits**: NO download limits - customers can download purchased recipe PDFs unlimited times
+
+**3. PDF Auto-Generation**
+- Implement automatic PDF generation from Recipe model data using a Python PDF library (suggest ReportLab or WeasyPrint)
+- PDF Design Requirements:
+  - Include YummyTummy logo at the top
+  - Use the WhatsApp-style healthy living background pattern (from `static/yummytummy_store/img/healthy-living-pattern.svg`)
+  - Apply YummyTummy brand colors (Primary: #593500, Accent: #f5f2ed, Highlight: #ffc107)
+  - Include all recipe details: title, description, ingredients list, step-by-step instructions, prep/cook time, servings, difficulty
+  - Professional, print-friendly layout
+  - Recipe image if available
+- Auto-generate PDF when recipe is created/updated in admin
+- Store generated PDF in the `pdf_file` field of Recipe model
+- Serve PDFs securely through the existing `recipe_download` view
+
+**4. Cart Template Updates**
+- Update `yummytummy_store/templates/yummytummy_store/cart/detail.html` to display both products AND recipes
+- Visual Differentiation:
+  - Add a badge or icon to distinguish recipe items from product items
+  - Different background color or border for recipe cart items
+  - Show "Digital Recipe" or similar label
+  - Display recipe icon (e.g., book or chef hat icon)
+- Recipe-Specific Cart Actions:
+  - Recipes should NOT have quantity controls (always quantity 1)
+  - Show "Remove" button only (no update quantity)
+  - Display recipe price clearly
+  - Show preview indicator if user hasn't purchased yet
+- Cart summary should show subtotals for products and recipes separately (optional but nice to have)
+
+**5. Recipe Preview System**
+- **Preview Content**: Show 15% of the full recipe content to non-purchased users
+- **Ingredients Visibility**: Display only the first 15% of ingredients (e.g., if 10 ingredients, show first 1-2 with "... and 8 more ingredients")
+- **Instructions Preview**: Show only the first instruction step with "Purchase to unlock all X steps"
+- Update `recipe_detail.html` template to implement this preview logic
+- Add clear "Purchase to Unlock" call-to-action buttons
+
+**6. Recipe Content Structure**
+- Recipes must have BOTH:
+  - **Web Content**: Full recipe displayed on the website after purchase (ingredients, instructions, images)
+  - **Downloadable PDF**: Auto-generated beautiful PDF for offline use and printing
+- Both should contain the same recipe information
+
+**Before you proceed with implementation:**
+1. Confirm you understand all requirements above
+2. Explain your implementation approach for each section
+3. Identify any potential issues or conflicts with existing code
+4. Suggest the order of implementation (which parts to do first)
+5. Clarify if you need any additional information
+
+**After I confirm, you may proceed with the implementation.**

@@ -1,6 +1,8 @@
 /* Base Styles */
 :root {
     --primary-color: #593500;
+    --primary-dark: #3d2400;
+    --primary-light: #8b5a00;
     --secondary-color: #ffffff;
     --accent-color: #f5f2ed;
     --highlight-color: #ffc107;

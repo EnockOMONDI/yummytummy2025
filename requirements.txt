@@ -28,6 +28,7 @@ defusedxml==0.7.1  # Secure XML processing
 six==1.16.0  # Python 2 and 3 compatibility utilities
 requests==2.31.0  # HTTP library for M-Pesa API integration
 pytz==2022.7.1  # Timezone support for Kenya (EAT) - Compatible with pyuploadcare 4.1.0
+reportlab==4.4.4  # PDF generation for recipe downloads
 
 # Production Dependencies
 dj-database-url==2.1.0  # Database URL parsing

@@ -1,0 +1,425 @@
+{% extends 'yummytummy_store/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Recipes - YummyTummy{% endblock %}
+
+{% block extra_css %}
+<style>
+/* My Recipes Page Styles */
+.my-recipes-hero {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+    padding: 80px 0 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.my-recipes-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "yummytummy_store/img/healthy-living-pattern.svg" %}');
+    background-repeat: repeat;
+    background-size: 300px 300px;
+    opacity: 0.03;
+    z-index: 1;
+}
+
+.my-recipes-hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.my-recipes-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.my-recipes-hero-subtitle {
+    font-size: 1.3rem;
+    color: var(--dark-gray);
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Recipe Stats */
+.recipe-stats {
+    background: var(--secondary-color);
+    padding: 40px 0;
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    text-align: center;
+}
+
+.stat-item {
+    padding: 20px;
+    background: var(--light-gray);
+    border-radius: 12px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--dark-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* My Recipes Grid */
+.my-recipes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    padding: 60px 0;
+}
+
+.my-recipe-card {
+    background: var(--secondary-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(89, 53, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.my-recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(89, 53, 0, 0.15);
+}
+
+.recipe-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.recipe-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.my-recipe-card:hover .recipe-image img {
+    transform: scale(1.05);
+}
+
+.owned-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.recipe-content {
+    padding: 25px;
+}
+
+.recipe-category {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.recipe-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 15px;
+    line-height: 1.3;
+}
+
+.recipe-description {
+    color: var(--dark-gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.purchase-info {
+    background: var(--light-gray);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.purchase-date {
+    color: var(--dark-gray);
+    margin-bottom: 5px;
+}
+
+.download-count {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.recipe-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-view-recipe,
+.btn-download-recipe {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-view-recipe {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-view-recipe:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.btn-download-recipe {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    border: 2px solid var(--highlight-color);
+}
+
+.btn-download-recipe:hover {
+    background: #e6ac00;
+    border-color: #e6ac00;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 0;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: var(--medium-gray);
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    color: var(--dark-gray);
+    margin-bottom: 15px;
+}
+
+.empty-state p {
+    color: var(--dark-gray);
+    margin-bottom: 30px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-browse-recipes {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-browse-recipes:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(89, 53, 0, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .my-recipes-hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .my-recipes-hero-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .my-recipes-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 40px 0;
+    }
+    
+    .recipe-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- My Recipes Hero Section -->
+<section class="my-recipes-hero">
+    <div class="container">
+        <div class="my-recipes-hero-content">
+            <h1>My Recipe Collection</h1>
+            <p class="my-recipes-hero-subtitle">
+                Your personal collection of delicious YummyTummy recipes. 
+                Access your purchased recipes anytime, anywhere.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Recipe Stats -->
+{% if purchased_recipes %}
+<section class="recipe-stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ purchased_recipes|length }}</div>
+                <div class="stat-label">Recipes Owned</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">
+                    {% for purchase in purchased_recipes %}{{ purchase.download_count|add:0 }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                </div>
+                <div class="stat-label">Total Downloads</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">
+                    {% regroup purchased_recipes by recipe.category as category_list %}
+                    {{ category_list|length }}
+                </div>
+                <div class="stat-label">Categories</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">
+                    KSh {% widthratio purchased_recipes|length 1 100 %}.00
+                </div>
+                <div class="stat-label">Total Value</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- My Recipes Grid -->
+<section class="my-recipes-list">
+    <div class="container">
+        {% if purchased_recipes %}
+            <div class="my-recipes-grid">
+                {% for purchase in purchased_recipes %}
+                    <div class="my-recipe-card">
+                        <div class="recipe-image">
+                            {% if purchase.recipe.get_image_url %}
+                                <img src="{{ purchase.recipe.get_image_url }}/-/preview/400x300/" alt="{{ purchase.recipe.title }}">
+                            {% else %}
+                                <img src="{% static 'yummytummy_store/img/recipe-placeholder.jpg' %}" alt="{{ purchase.recipe.title }}">
+                            {% endif %}
+                            <div class="owned-badge">
+                                <i class="fas fa-check-circle"></i> Owned
+                            </div>
+                        </div>
+                        <div class="recipe-content">
+                            <div class="recipe-category">{{ purchase.recipe.category.name }}</div>
+                            <h3 class="recipe-title">{{ purchase.recipe.title }}</h3>
+                            <p class="recipe-description">{{ purchase.recipe.description|truncatewords:20 }}</p>
+                            
+                            <div class="purchase-info">
+                                <div class="purchase-date">
+                                    <i class="fas fa-calendar"></i>
+                                    Purchased {{ purchase.purchased_at|naturaltime }}
+                                </div>
+                                <div class="download-count">
+                                    <i class="fas fa-download"></i>
+                                    Downloaded {{ purchase.download_count }} time{{ purchase.download_count|pluralize }}
+                                </div>
+                            </div>
+                            
+                            <div class="recipe-actions">
+                                <a href="{% url 'yummytummy_store:recipe_detail' purchase.recipe.slug %}" class="btn-view-recipe">
+                                    <i class="fas fa-eye"></i> View Recipe
+                                </a>
+                                <a href="{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}" class="btn-download-recipe">
+                                    <i class="fas fa-download"></i> Download PDF
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h3>No Recipes Yet</h3>
+                <p>
+                    You haven't purchased any recipes yet. Browse our collection of delicious 
+                    peanut-based recipes and start building your personal cookbook!
+                </p>
+                <a href="{% url 'yummytummy_store:recipe_list' %}" class="btn-browse-recipes">
+                    <i class="fas fa-search"></i> Browse Recipes
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Quick Actions -->
+{% if purchased_recipes %}
+<section style="background: var(--light-gray); padding: 40px 0;">
+    <div class="container">
+        <div style="text-align: center;">
+            <h3 style="color: var(--primary-color); margin-bottom: 20px;">Want More Recipes?</h3>
+            <p style="color: var(--dark-gray); margin-bottom: 30px;">
+                Discover more delicious recipes to add to your collection
+            </p>
+            <a href="{% url 'yummytummy_store:recipe_list' %}" class="btn-browse-recipes">
+                <i class="fas fa-plus"></i> Browse More Recipes
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

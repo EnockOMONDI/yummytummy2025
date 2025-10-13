@@ -14,8 +14,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from datetime import datetime, timedelta
-from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus
-from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm
+from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus, RecipeCategory, Recipe, RecipePurchase
+from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm
 from .mpesa_service import MPesaService
 from .services import OrderTrackingEmailService, OrderTrackingService
 
@@ -196,6 +196,50 @@ def cart_remove(request, product_id):
 
     return redirect('yummytummy_store:cart_detail')
 
+
+@require_POST
+def cart_add_recipe(request, recipe_id):
+    """Add a recipe to the cart"""
+    recipe = get_object_or_404(Recipe, id=recipe_id, is_published=True)
+    form = CartAddRecipeForm(request.POST)
+
+    if form.is_valid():
+        # Initialize the cart in the session if it doesn't exist
+        if 'cart' not in request.session:
+            request.session['cart'] = {}
+
+        # Get the cart from the session
+        cart = request.session['cart']
+
+        # Create a unique cart key for recipes
+        cart_key = f"recipe_{recipe_id}"
+
+        # Check if recipe is already in cart
+        if cart_key in cart:
+            messages.info(request, f'{recipe.title} is already in your cart.')
+        else:
+            # Add the recipe to the cart
+            cart[cart_key] = {
+                'recipe_id': recipe_id,
+                'quantity': 1,  # Recipes are always quantity 1
+                'price': str(recipe.price),
+                'name': recipe.title,
+                'type': 'recipe',  # Mark as recipe for cart processing
+            }
+
+            # Mark the session as modified to ensure it gets saved
+            request.session.modified = True
+            messages.success(request, f'{recipe.title} added to your cart.')
+
+    else:
+        # Add error messages for form validation failures
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f'Error in {field}: {error}')
+
+    return redirect('yummytummy_store:cart_detail')
+
+
 @require_POST
 def cart_update(request, cart_key):
     """Update quantity of a specific cart item using cart key"""
@@ -269,25 +313,53 @@ def cart_detail(request):
             item_subtotal = price * quantity
             subtotal += item_subtotal
 
-            # Get the actual product for additional information
-            product_id = item_data.get('product_id')
-            product = None
-            if product_id:
-                try:
-                    product = Product.objects.get(id=product_id)
-                except Product.DoesNotExist:
-                    continue
+            # Check if this is a recipe or product
+            item_type = item_data.get('type', 'product')  # Default to product for backward compatibility
 
-            cart_items.append({
-                'cart_key': cart_key,
-                'id': product_id,
-                'product': product,
-                'name': item_data['name'],
-                'variant_name': item_data.get('variant_name'),
-                'price': price,
-                'quantity': quantity,
-                'subtotal': item_subtotal,
-            })
+            if item_type == 'recipe':
+                # Handle recipe items
+                recipe_id = item_data.get('recipe_id')
+                recipe = None
+                if recipe_id:
+                    try:
+                        recipe = Recipe.objects.get(id=recipe_id, is_published=True)
+                    except Recipe.DoesNotExist:
+                        continue
+
+                cart_items.append({
+                    'cart_key': cart_key,
+                    'id': recipe_id,
+                    'recipe': recipe,
+                    'product': None,  # No product for recipes
+                    'name': item_data['name'],
+                    'variant_name': None,  # Recipes don't have variants
+                    'price': price,
+                    'quantity': quantity,
+                    'subtotal': item_subtotal,
+                    'type': 'recipe',
+                })
+            else:
+                # Handle product items (existing logic)
+                product_id = item_data.get('product_id')
+                product = None
+                if product_id:
+                    try:
+                        product = Product.objects.get(id=product_id)
+                    except Product.DoesNotExist:
+                        continue
+
+                cart_items.append({
+                    'cart_key': cart_key,
+                    'id': product_id,
+                    'product': product,
+                    'recipe': None,  # No recipe for products
+                    'name': item_data['name'],
+                    'variant_name': item_data.get('variant_name'),
+                    'price': price,
+                    'quantity': quantity,
+                    'subtotal': item_subtotal,
+                    'type': 'product',
+                })
         except (ValueError, KeyError) as e:
             # Handle any corrupted cart data
             messages.error(request, f"Error processing cart item: {e}")
@@ -431,16 +503,18 @@ def coupon_remove(request):
 
 
 def checkout(request):
-    """Checkout page with shipping address form"""
+    """Checkout page with conditional form based on cart contents"""
     # Check if cart is empty
     if 'cart' not in request.session or not request.session['cart']:
         messages.warning(request, "Your cart is empty. Please add some products before proceeding to checkout.")
         return redirect('yummytummy_store:product_list')
 
-    # Process cart items
+    # Process cart items and analyze cart contents
     cart = request.session['cart']
     cart_items = []
     subtotal = 0
+    has_products = False
+    has_recipes = False
 
     for cart_key, item_data in cart.items():
         try:
@@ -449,18 +523,30 @@ def checkout(request):
             item_subtotal = price * quantity
             subtotal += item_subtotal
 
+            # Check item type
+            item_type = item_data.get('type', 'product')  # Default to product for backward compatibility
+            if item_type == 'recipe':
+                has_recipes = True
+            else:
+                has_products = True
+
             cart_items.append({
                 'cart_key': cart_key,
-                'id': item_data.get('product_id'),
+                'id': item_data.get('product_id') if item_type == 'product' else item_data.get('recipe_id'),
                 'name': item_data['name'],
                 'variant_name': item_data.get('variant_name'),
                 'price': price,
                 'quantity': quantity,
                 'subtotal': item_subtotal,
+                'type': item_type,
             })
         except (ValueError, KeyError) as e:
             messages.error(request, f"Error processing cart item: {e}")
             continue
+
+    # Determine checkout type
+    is_recipe_only = has_recipes and not has_products
+    is_mixed_order = has_recipes and has_products
 
     # Get coupon from session if exists
     coupon_id = request.session.get('coupon_id')
@@ -490,30 +576,50 @@ def checkout(request):
     total = subtotal - discount
 
     if request.method == 'POST':
-        form = CheckoutForm(request.POST)
+        # Use appropriate form based on cart contents
+        if is_recipe_only:
+            form = RecipeOnlyCheckoutForm(request.POST)
+        else:
+            form = CheckoutForm(request.POST)
+
         if form.is_valid():
             # Store checkout data in session for payment step
             checkout_data = form.cleaned_data
-            request.session['checkout_data'] = {
+
+            # Base checkout data
+            session_data = {
                 'first_name': checkout_data['first_name'],
                 'last_name': checkout_data['last_name'],
                 'email': checkout_data['email'],
-                'phone': checkout_data['phone'],
-                'address': checkout_data['address'],
-                'area': checkout_data['area'],
-                'estate': checkout_data['estate'],
-                'building': checkout_data['building'],
-                'landmark': checkout_data['landmark'],
-                'order_notes': checkout_data['order_notes'],
+                'order_notes': checkout_data.get('order_notes', ''),
                 'subtotal_amount': float(subtotal),
                 'discount_amount': float(discount),
                 'total_amount': float(total),
                 'coupon_id': coupon_id,
+                'is_recipe_only': is_recipe_only,
+                'is_mixed_order': is_mixed_order,
             }
+
+            # Add shipping fields only for product orders
+            if not is_recipe_only:
+                session_data.update({
+                    'phone': checkout_data['phone'],
+                    'address': checkout_data['address'],
+                    'area': checkout_data['area'],
+                    'estate': checkout_data['estate'],
+                    'building': checkout_data['building'],
+                    'landmark': checkout_data['landmark'],
+                })
+
+            request.session['checkout_data'] = session_data
             request.session.modified = True
             return redirect('yummytummy_store:payment')
     else:
-        form = CheckoutForm()
+        # Use appropriate form based on cart contents
+        if is_recipe_only:
+            form = RecipeOnlyCheckoutForm()
+        else:
+            form = CheckoutForm()
 
     context = {
         'form': form,
@@ -522,6 +628,10 @@ def checkout(request):
         'discount': discount,
         'total': total,
         'coupon': coupon,
+        'is_recipe_only': is_recipe_only,
+        'is_mixed_order': is_mixed_order,
+        'has_products': has_products,
+        'has_recipes': has_recipes,
     }
     return render(request, 'yummytummy_store/checkout/shipping.html', context)
 
@@ -570,19 +680,22 @@ def payment(request):
                     'temp_password': temp_password
                 }
 
+            # Get order type from checkout data
+            is_recipe_only = checkout_data.get('is_recipe_only', False)
+
             # Create the order
             order = Order(
                 user=user_account,  # Link order to user account
                 first_name=checkout_data['first_name'],
                 last_name=checkout_data['last_name'],
                 email=checkout_data['email'],
-                phone=checkout_data['phone'],
-                address=checkout_data['address'],
+                phone=checkout_data.get('phone', ''),  # Optional for recipe-only orders
+                address=checkout_data.get('address', ''),  # Optional for recipe-only orders
                 area=checkout_data.get('area', ''),
                 estate=checkout_data.get('estate', ''),
                 building=checkout_data.get('building', ''),
                 landmark=checkout_data.get('landmark', ''),
-                order_notes=checkout_data['order_notes'],
+                order_notes=checkout_data.get('order_notes', ''),
                 payment_method=payment_method,
                 payment_status='pending',
                 subtotal_amount=subtotal_amount,
@@ -606,32 +719,48 @@ def payment(request):
             # Save the order
             order.save()
 
-            # Create order items
+            # Create order items and recipe purchases
             cart = request.session['cart']
             for cart_key, item_data in cart.items():
                 try:
-                    product_id = item_data.get('product_id')
-                    product = Product.objects.get(id=product_id)
                     price = float(item_data['price'])
                     quantity = int(item_data['quantity'])
-                    variant_id = item_data.get('variant_id')
+                    item_type = item_data.get('type', 'product')  # Default to product for backward compatibility
 
-                    # Get variant if specified
-                    variant = None
-                    if variant_id:
-                        try:
-                            variant = ProductVariant.objects.get(id=variant_id)
-                        except ProductVariant.DoesNotExist:
-                            pass
+                    if item_type == 'recipe':
+                        # Handle recipe items
+                        recipe_id = item_data.get('recipe_id')
+                        recipe = Recipe.objects.get(id=recipe_id, is_published=True)
 
-                    OrderItem.objects.create(
-                        order=order,
-                        product=product,
-                        variant=variant,
-                        price=price,
-                        quantity=quantity
-                    )
-                except (Product.DoesNotExist, ValueError, KeyError) as e:
+                        # Create RecipePurchase record
+                        RecipePurchase.objects.create(
+                            user=user_account,
+                            recipe=recipe,
+                            order=order,
+                            # purchased_at is auto-set by auto_now_add
+                        )
+                    else:
+                        # Handle product items (existing logic)
+                        product_id = item_data.get('product_id')
+                        product = Product.objects.get(id=product_id)
+                        variant_id = item_data.get('variant_id')
+
+                        # Get variant if specified
+                        variant = None
+                        if variant_id:
+                            try:
+                                variant = ProductVariant.objects.get(id=variant_id)
+                            except ProductVariant.DoesNotExist:
+                                pass
+
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            variant=variant,
+                            price=price,
+                            quantity=quantity
+                        )
+                except (Product.DoesNotExist, Recipe.DoesNotExist, ValueError, KeyError) as e:
                     messages.error(request, f"Error processing order item: {e}")
                     continue
 
@@ -1270,6 +1399,20 @@ def mpesa_callback(request):
                     except:
                         pass  # Don't let admin email failure affect callback
 
+                # Send recipe purchase emails if order contains recipes
+                try:
+                    recipe_purchases = RecipePurchase.objects.filter(order=order).select_related('recipe', 'recipe__category')
+                    if recipe_purchases.exists():
+                        from .services import OrderTrackingEmailService
+                        success = OrderTrackingEmailService.send_recipe_purchase_confirmation(order, recipe_purchases)
+                        if success:
+                            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id} with {recipe_purchases.count()} recipes")
+                        else:
+                            logger.warning(f"Failed to send recipe purchase confirmation email for order {order.id}")
+                except Exception as e:
+                    # Log recipe email failure but don't fail the callback
+                    logger.error(f"Failed to process recipe emails for order {order.id}: {str(e)}")
+
                 logger.info(f"M-Pesa payment successful for order {order.id} - "
                            f"Receipt: {receipt_number}, Amount: {amount}")
 
@@ -1573,3 +1716,143 @@ def test_mpesa_auth(request):
             'success': False,
             'error': str(e)
         })
+
+
+# ================================================================
+# RECIPE VIEWS
+# ================================================================
+
+def recipe_list(request):
+    """View for displaying all published recipes"""
+    recipes = Recipe.objects.filter(is_published=True).select_related('category')
+    categories = RecipeCategory.objects.all()
+
+    # Filter by category if specified
+    category_slug = request.GET.get('category')
+    if category_slug:
+        category = get_object_or_404(RecipeCategory, slug=category_slug)
+        recipes = recipes.filter(category=category)
+    else:
+        category = None
+
+    # Filter by search query
+    search_query = request.GET.get('search')
+    if search_query:
+        recipes = recipes.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(tags__icontains=search_query)
+        )
+
+    # Filter by difficulty
+    difficulty = request.GET.get('difficulty')
+    if difficulty and difficulty in ['easy', 'medium', 'hard']:
+        recipes = recipes.filter(difficulty=difficulty)
+
+    # Order recipes
+    order_by = request.GET.get('order_by', '-created')
+    if order_by in ['title', '-title', 'price', '-price', 'created', '-created', 'prep_time_minutes', '-prep_time_minutes']:
+        recipes = recipes.order_by(order_by)
+
+    # Get featured recipes
+    featured_recipes = Recipe.objects.filter(is_published=True, is_featured=True)[:3]
+
+    context = {
+        'recipes': recipes,
+        'categories': categories,
+        'current_category': category,
+        'featured_recipes': featured_recipes,
+        'search_query': search_query,
+        'current_difficulty': difficulty,
+        'current_order': order_by,
+    }
+
+    return render(request, 'yummytummy_store/recipe/list.html', context)
+
+
+def recipe_detail(request, slug):
+    """View for displaying a single recipe"""
+    recipe = get_object_or_404(Recipe, slug=slug, is_published=True)
+
+    # Check if user has purchased this recipe
+    user_has_purchased = False
+    if request.user.is_authenticated:
+        user_has_purchased = RecipePurchase.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists()
+
+    # Get related recipes from the same category
+    related_recipes = Recipe.objects.filter(
+        category=recipe.category,
+        is_published=True
+    ).exclude(id=recipe.id)[:3]
+
+    # Get cart form for adding recipe to cart
+    cart_form = CartAddRecipeForm()
+
+    context = {
+        'recipe': recipe,
+        'user_has_purchased': user_has_purchased,
+        'related_recipes': related_recipes,
+        'cart_form': cart_form,
+    }
+
+    return render(request, 'yummytummy_store/recipe/detail.html', context)
+
+
+@login_required
+def recipe_download(request, slug):
+    """View for downloading purchased recipe PDF"""
+    recipe = get_object_or_404(Recipe, slug=slug, is_published=True)
+
+    # Check if user has purchased this recipe
+    try:
+        purchase = RecipePurchase.objects.get(user=request.user, recipe=recipe)
+    except RecipePurchase.DoesNotExist:
+        messages.error(request, "You haven't purchased this recipe yet.")
+        return redirect('yummytummy_store:recipe_detail', slug=slug)
+
+    # Increment download count
+    purchase.download_count += 1
+    purchase.save()
+
+    # Check if PDF file exists, generate if missing
+    if not recipe.pdf_file:
+        try:
+            # Try to generate PDF on-demand
+            from .pdf_utils import generate_recipe_pdf
+            pdf_file = generate_recipe_pdf(recipe)
+            recipe.pdf_file.save(pdf_file.name, pdf_file, save=True)
+            messages.success(request, "Recipe PDF generated successfully.")
+        except Exception as e:
+            messages.error(request, "Recipe PDF is not available for download.")
+            return redirect('yummytummy_store:recipe_detail', slug=slug)
+
+    # Serve the PDF file
+    from django.http import FileResponse
+
+    try:
+        response = FileResponse(
+            recipe.pdf_file.open('rb'),
+            as_attachment=True,
+            filename=f"{recipe.title.replace(' ', '_')}_Recipe.pdf"
+        )
+        return response
+    except Exception as e:
+        messages.error(request, "Error downloading recipe. Please try again later.")
+        return redirect('yummytummy_store:recipe_detail', slug=slug)
+
+
+@login_required
+def my_recipes(request):
+    """View for displaying user's purchased recipes"""
+    purchased_recipes = RecipePurchase.objects.filter(
+        user=request.user
+    ).select_related('recipe', 'recipe__category').order_by('-purchased_at')
+
+    context = {
+        'purchased_recipes': purchased_recipes,
+    }
+
+    return render(request, 'yummytummy_store/recipe/my_recipes.html', context)

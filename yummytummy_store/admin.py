@@ -4,7 +4,8 @@ from pyuploadcare.dj.forms import FileWidget
 from pyuploadcare.dj.models import ImageField
 from .models import (
     Category, Product, ProductVariant, Ingredient, ProductIngredient,
-    Order, OrderItem, Coupon, CouponUsage, OrderTrackingStatus
+    Order, OrderItem, Coupon, CouponUsage, OrderTrackingStatus,
+    RecipeCategory, Recipe, RecipePurchase
 )
 
 class ProductVariantInline(admin.TabularInline):
@@ -503,6 +504,148 @@ class OrderTrackingStatusAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return True  # Allow adding tracking status entries
+
+
+# ================================================================
+# RECIPE ADMINISTRATION
+# ================================================================
+
+@admin.register(RecipeCategory)
+class RecipeCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'recipe_count', 'created']
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ['name', 'description']
+    date_hierarchy = 'created'
+
+    def recipe_count(self, obj):
+        count = obj.recipes.count()
+        return format_html('<span style="color: #007bff; font-weight: bold;">{}</span>', count)
+    recipe_count.short_description = 'Recipes'
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'formatted_price', 'recipe_image', 'difficulty',
+                   'total_time_display', 'servings', 'is_published', 'is_featured', 'created']
+    list_filter = ['category', 'difficulty', 'is_published', 'is_featured', 'created']
+    list_editable = ['is_published', 'is_featured']
+    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ['title', 'description', 'tags']
+    date_hierarchy = 'created'
+    filter_horizontal = ['related_products']
+
+    # Use Uploadcare widget for the image field
+    formfield_overrides = {
+        ImageField: {'widget': FileWidget(attrs={
+            'data-images-only': 'true',
+            'data-preview-step': 'true',
+            'data-image-shrink': '1024x1024',
+            'data-crop': 'free',
+            'data-validators': 'image, max-size: 10485760'
+        })},
+    }
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'slug', 'category', 'description')
+        }),
+        ('Recipe Details', {
+            'fields': ('ingredients', 'instructions', 'preview_content'),
+            'description': 'Use JSON format for ingredients and instructions. Example: ["1 cup peanuts", "2 tbsp oil"]'
+        }),
+        ('Timing & Difficulty', {
+            'fields': (('prep_time_minutes', 'cook_time_minutes'), ('servings', 'difficulty'))
+        }),
+        ('Media & Pricing', {
+            'fields': ('image', 'price', 'pdf_file'),
+            'description': 'Upload recipe image and PDF file. Price is in Kenyan Shillings (KES)'
+        }),
+        ('Related Products & Tags', {
+            'fields': ('related_products', 'tags'),
+            'description': 'Select related YummyTummy products for upselling. Tags should be comma-separated.'
+        }),
+        ('Publishing', {
+            'fields': ('is_published', 'is_featured')
+        }),
+    )
+
+    def formatted_price(self, obj):
+        formatted_value = 'KSh {:,.2f}'.format(obj.price)
+        return format_html('<span style="color: #28a745; font-weight: bold;">{}</span>', formatted_value)
+    formatted_price.short_description = 'Price (KES)'
+
+    def recipe_image(self, obj):
+        """Display recipe image thumbnail in admin list view"""
+        try:
+            if obj.image:
+                return format_html('<img src="{}/-/preview/100x100/" width="50" height="50" style="object-fit: cover; border-radius: 4px;" />',
+                                  obj.image.cdn_url)
+        except (AttributeError, ValueError):
+            pass
+        return format_html('<span style="color: #999;">No image</span>')
+    recipe_image.short_description = 'Image'
+
+    def total_time_display(self, obj):
+        total_time = obj.get_total_time_display()
+        return format_html('<span style="color: #6c757d;">{}</span>', total_time)
+    total_time_display.short_description = 'Total Time'
+
+    actions = ['make_published', 'make_unpublished', 'make_featured', 'make_unfeatured']
+
+    @admin.action(description='Publish selected recipes')
+    def make_published(self, request, queryset):
+        updated = queryset.update(is_published=True)
+        self.message_user(request, f'{updated} recipes have been published.')
+
+    @admin.action(description='Unpublish selected recipes')
+    def make_unpublished(self, request, queryset):
+        updated = queryset.update(is_published=False)
+        self.message_user(request, f'{updated} recipes have been unpublished.')
+
+    @admin.action(description='Mark selected recipes as featured')
+    def make_featured(self, request, queryset):
+        updated = queryset.update(is_featured=True)
+        self.message_user(request, f'{updated} recipes have been marked as featured.')
+
+    @admin.action(description='Remove featured status from selected recipes')
+    def make_unfeatured(self, request, queryset):
+        updated = queryset.update(is_featured=False)
+        self.message_user(request, f'{updated} recipes are no longer featured.')
+
+
+@admin.register(RecipePurchase)
+class RecipePurchaseAdmin(admin.ModelAdmin):
+    list_display = ['user_email', 'recipe_title', 'formatted_price', 'purchased_at', 'download_count', 'order_link']
+    list_filter = ['purchased_at', 'recipe__category']
+    search_fields = ['user__email', 'user__first_name', 'user__last_name', 'recipe__title']
+    readonly_fields = ['user', 'recipe', 'order', 'purchased_at', 'formatted_price']
+    date_hierarchy = 'purchased_at'
+
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = 'Customer Email'
+
+    def recipe_title(self, obj):
+        return obj.recipe.title
+    recipe_title.short_description = 'Recipe'
+
+    def formatted_price(self, obj):
+        formatted_value = 'KSh {:,.2f}'.format(obj.recipe.price)
+        return format_html('<span>{}</span>', formatted_value)
+    formatted_price.short_description = 'Price (KES)'
+
+    def order_link(self, obj):
+        if obj.order:
+            return format_html('<a href="/admin/yummytummy_store/order/{}/change/">Order #{}</a>',
+                             obj.order.id, obj.order.get_order_number())
+        return format_html('<span style="color: #999;">No order</span>')
+    order_link.short_description = 'Order'
+
+    def has_add_permission(self, request):
+        return False  # Prevent manual creation of recipe purchases
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Prevent deletion of recipe purchases
 
 
 # Admin site customization with YummyTummy branding

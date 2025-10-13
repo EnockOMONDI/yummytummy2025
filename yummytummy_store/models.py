@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from pyuploadcare.dj.models import ImageField
 import secrets
+import json
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -556,3 +557,172 @@ class OrderTrackingStatus(models.Model):
             'refunded': 'text-secondary',
         }
         return status_colors.get(self.status, 'text-muted')
+
+
+class RecipeCategory(models.Model):
+    """Categories for organizing recipes (e.g., Breakfast, Snacks, Desserts, Main Course)"""
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Recipe Categories'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+
+class Recipe(models.Model):
+    """Recipe model for YummyTummy peanut-based recipes"""
+
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard'),
+    ]
+
+    CURRENCY = 'KES'  # Kenyan Shillings as default currency
+
+    # Basic Information
+    title = models.CharField(max_length=200, help_text="Recipe name/title")
+    slug = models.SlugField(max_length=200, unique=True)
+    description = models.TextField(help_text="Recipe introduction/description")
+    category = models.ForeignKey(RecipeCategory, related_name='recipes', on_delete=models.CASCADE)
+
+    # Recipe Details
+    ingredients = models.JSONField(
+        help_text="List of ingredients with quantities (JSON format)",
+        default=list
+    )
+    instructions = models.JSONField(
+        help_text="Step-by-step cooking instructions (JSON format)",
+        default=list
+    )
+
+    # Timing and Servings
+    prep_time_minutes = models.PositiveIntegerField(help_text="Preparation time in minutes")
+    cook_time_minutes = models.PositiveIntegerField(help_text="Cooking time in minutes")
+    servings = models.PositiveIntegerField(help_text="Number of servings/yield")
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
+
+    # Media and Pricing
+    image = ImageField(blank=True, manual_crop="", help_text="Upload recipe image")
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=100.00,
+        help_text="Price in Kenyan Shillings (KES)"
+    )
+
+    # Recipe Content (for delivery)
+    pdf_file = models.FileField(
+        upload_to='recipes/pdfs/%Y/%m/%d',
+        blank=True,
+        null=True,
+        help_text="PDF file of the complete recipe"
+    )
+
+    # Product Relations (for upselling)
+    related_products = models.ManyToManyField(
+        Product,
+        blank=True,
+        help_text="YummyTummy products that complement this recipe"
+    )
+
+    # Tags and Metadata
+    tags = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Comma-separated tags (e.g., 'healthy, quick, protein-rich')"
+    )
+
+    # Publishing and Status
+    is_published = models.BooleanField(default=True, help_text="Recipe visibility status")
+    is_featured = models.BooleanField(default=False, help_text="Featured recipe")
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    # SEO and Preview
+    preview_content = models.TextField(
+        blank=True,
+        help_text="Free preview content for non-purchased users"
+    )
+
+    class Meta:
+        ordering = ['-created']
+        indexes = [
+            models.Index(fields=['id', 'slug']),
+            models.Index(fields=['title']),
+            models.Index(fields=['-created']),
+            models.Index(fields=['is_published']),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('yummytummy_store:recipe_detail', args=[self.slug])
+
+    def get_formatted_price(self):
+        """Return the price formatted with KES currency symbol"""
+        return f"KSh {self.price:,.2f}"
+
+    def get_total_time_minutes(self):
+        """Return total cooking time (prep + cook)"""
+        return self.prep_time_minutes + self.cook_time_minutes
+
+    def get_total_time_display(self):
+        """Return human-readable total time"""
+        total_minutes = self.get_total_time_minutes()
+        if total_minutes < 60:
+            return f"{total_minutes} mins"
+        else:
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            if minutes == 0:
+                return f"{hours} hr{'s' if hours > 1 else ''}"
+            else:
+                return f"{hours} hr{'s' if hours > 1 else ''} {minutes} mins"
+
+    def get_image_url(self):
+        """Return the recipe image URL"""
+        try:
+            if self.image:
+                return self.image.cdn_url
+        except (AttributeError, ValueError):
+            pass
+        return None
+
+    def get_tags_list(self):
+        """Return tags as a list"""
+        if self.tags:
+            return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+        return []
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+
+class RecipePurchase(models.Model):
+    """Track recipe purchases by customers"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, null=True, blank=True)
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    download_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ['user', 'recipe']
+        ordering = ['-purchased_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.recipe.title}"

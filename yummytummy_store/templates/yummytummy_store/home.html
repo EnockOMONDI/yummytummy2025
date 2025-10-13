@@ -605,66 +605,200 @@
         </div>
     </div>
 </section>
-<!-- Hero Section -->
-<section class="about-hero">
+<!-- About Company Section -->
+<section class="company-about-hero">
     <div class="container">
-        <div class="about-hero-content">
-            <h1>Live Great Limited</h1>
-            <p class="about-hero-subtitle">Climate-Smart Agribusiness for Health & Sustainability</p>
-            <p class="about-hero-description">
-                We are not just a food business – we are a climate-smart agribusiness that integrates nutrition,
-                environmental sustainability, and community impact through innovative peanut value addition.
-            </p>
+        <div class="company-hero-grid">
+            <!-- Image Column -->
+            <div class="company-hero-image">
+                <img src="{% static 'yummytummy_store/img/homeimage-min.png' %}" alt="Live Great Limited - YummyTummy Products" class="hero-company-img">
+            </div>
+
+            <!-- Content Column -->
+            <div class="company-hero-content">
+                <h2>Live Great Limited</h2>
+                <p class="company-hero-subtitle">Climate-Smart Agribusiness for Health & Sustainability</p>
+                <p class="company-hero-description">
+                    We are not just a food business – we are a climate-smart agribusiness that integrates nutrition,
+                    environmental sustainability, and community impact through innovative peanut value addition.
+                </p>
+                <div class="company-hero-actions">
+                    <a href="{% url 'yummytummy_store:about' %}" class="btn-learn-more">Learn More About Us</a>
+                    <a href="{% url 'yummytummy_store:product_list' %}" class="btn-shop-now">Shop Our Products</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 <style>
-    /* About Page Specific Styles */
-.about-hero {
+/* Company About Hero Section - Two Column Layout */
+.company-about-hero {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
     padding: 80px 0;
+    position: relative;
     overflow: hidden;
 }
 
-.about-hero::before {
+.company-about-hero::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: 0.05;
+    background: url('{% static "yummytummy_store/img/healthy-living-pattern.svg" %}');
+    background-repeat: repeat;
+    background-size: 300px 300px;
+    opacity: 0.03;
     z-index: 1;
 }
 
-.about-hero-content {
+.company-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
     position: relative;
     z-index: 2;
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto;
 }
 
-.about-hero h1 {
-    font-size: 3.5rem;
+.company-hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-company-img {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(89, 53, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.hero-company-img:hover {
+    transform: scale(1.02);
+}
+
+.company-hero-content {
+    padding: 20px 0;
+}
+
+.company-hero-content h2 {
+    font-size: 3.2rem;
     font-weight: 700;
     color: var(--primary-color);
     margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    line-height: 1.2;
 }
 
-.about-hero-subtitle {
-    font-size: 1.3rem;
+.company-hero-subtitle {
+    font-size: 1.4rem;
     color: var(--dark-gray);
-    margin-bottom: 30px;
-    font-weight: 300;
-    letter-spacing: 1px;
+    margin-bottom: 25px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
 }
 
-.about-hero-description {
+.company-hero-description {
     font-size: 1.1rem;
-    line-height: 1.8;
+    line-height: 1.7;
     color: var(--text-color);
-    margin-bottom: 40px;
+    margin-bottom: 35px;
+}
+
+.company-hero-actions {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-learn-more,
+.btn-shop-now {
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-size: 1rem;
+    text-align: center;
+    min-width: 180px;
+}
+
+.btn-learn-more {
+    background: var(--primary-color);
+    color: var(--secondary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-learn-more:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(89, 53, 0, 0.3);
+}
+
+.btn-shop-now {
+    background: var(--highlight-color);
+    color: var(--primary-color);
+    border: 2px solid var(--highlight-color);
+}
+
+.btn-shop-now:hover {
+    background: #e6ac00;
+    border-color: #e6ac00;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .company-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .company-hero-content h2 {
+        font-size: 2.5rem;
+    }
+
+    .company-hero-subtitle {
+        font-size: 1.2rem;
+    }
+
+    .company-hero-description {
+        font-size: 1rem;
+    }
+
+    .company-hero-actions {
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-learn-more,
+    .btn-shop-now {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .company-about-hero {
+        padding: 60px 0;
+    }
+
+    .company-hero-content h2 {
+        font-size: 2rem;
+    }
+
+    .company-hero-subtitle {
+        font-size: 1.1rem;
+    }
 }
 </style>
 

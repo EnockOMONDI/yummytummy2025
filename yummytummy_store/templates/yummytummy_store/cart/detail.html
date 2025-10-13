@@ -18,6 +18,75 @@
 @media (min-width: 768px) {
   .site-footer .footer-top, .site-footer .footer-bottom { padding: 20px 0; }
 }
+
+/* Recipe Cart Item Styling */
+.cart-item-recipe {
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, #f5f2ed 0%, #ffffff 100%);
+    position: relative;
+}
+
+.cart-item-recipe::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('{% static "yummytummy_store/img/healthy-living-pattern.svg" %}');
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cart-item-recipe > * {
+    position: relative;
+    z-index: 2;
+}
+
+.recipe-badge {
+    background: #593500;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+}
+
+.recipe-badge i {
+    font-size: 0.7rem;
+}
+
+.recipe-quantity {
+    text-align: center;
+    padding: 10px;
+}
+
+.quantity-fixed {
+    display: block;
+    font-weight: 600;
+    color: #593500;
+    margin-bottom: 4px;
+}
+
+.recipe-note {
+    display: block;
+    color: #666;
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+/* Ensure recipe images have consistent sizing */
+.cart-item-recipe .cart-product-image img {
+    border-radius: 8px;
+    border: 2px solid #ffc107;
+}
 </style>
 <section class="cart-section">
     <div class="container">
@@ -34,30 +103,51 @@
             </div>
 
             {% for item in cart_items %}
-            <div class="cart-item">
+            <div class="cart-item {% if item.type == 'recipe' %}cart-item-recipe{% endif %}">
                 <div class="cart-product">
                     <div class="cart-product-image">
-                        <img src="{{ item.product|product_image_thumbnail }}" alt="{{ item.name }}" loading="lazy">
+                        {% if item.type == 'recipe' %}
+                            {% if item.recipe.get_image_url %}
+                                <img src="{{ item.recipe.get_image_url }}/-/preview/150x150/" alt="{{ item.name }}" loading="lazy">
+                            {% else %}
+                                <img src="{% static 'yummytummy_store/img/recipe-placeholder.jpg' %}" alt="{{ item.name }}" loading="lazy">
+                            {% endif %}
+                        {% else %}
+                            <img src="{{ item.product|product_image_thumbnail }}" alt="{{ item.name }}" loading="lazy">
+                        {% endif %}
                     </div>
                     <div class="cart-product-info">
                         <h3>{{ item.name }}</h3>
-                        {% if item.variant_name %}
-                        <p class="variant-info">Size: {{ item.variant_name }}</p>
+                        {% if item.type == 'recipe' %}
+                            <div class="recipe-badge">
+                                <i class="fas fa-book"></i> Digital Recipe
+                            </div>
+                        {% elif item.variant_name %}
+                            <p class="variant-info">Size: {{ item.variant_name }}</p>
                         {% endif %}
                     </div>
                 </div>
                 <div class="cart-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
                 <div class="cart-quantity">
-                    <form action="{% url 'yummytummy_store:cart_update' item.cart_key %}" method="post" class="update-form">
-                        {% csrf_token %}
-                        <div class="quantity-selector">
-                            <button type="button" class="minus">-</button>
-                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
-                            <button type="button" class="plus">+</button>
+                    {% if item.type == 'recipe' %}
+                        <!-- Recipes are always quantity 1, no quantity controls -->
+                        <div class="recipe-quantity">
+                            <span class="quantity-fixed">Qty: 1</span>
+                            <small class="recipe-note">Digital recipes are single purchase</small>
                         </div>
-                        <input type="hidden" name="update" value="True">
-                        <button type="submit" class="update-btn">Update</button>
-                    </form>
+                    {% else %}
+                        <!-- Product quantity controls (existing logic) -->
+                        <form action="{% url 'yummytummy_store:cart_update' item.cart_key %}" method="post" class="update-form">
+                            {% csrf_token %}
+                            <div class="quantity-selector">
+                                <button type="button" class="minus">-</button>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input">
+                                <button type="button" class="plus">+</button>
+                            </div>
+                            <input type="hidden" name="update" value="True">
+                            <button type="submit" class="update-btn">Update</button>
+                        </form>
+                    {% endif %}
                 </div>
                 <div class="cart-subtotal">KSh {{ item.subtotal|floatformat:"2"|intcomma }}</div>
                 <div class="cart-actions">

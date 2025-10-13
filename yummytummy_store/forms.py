@@ -1,12 +1,21 @@
 from django import forms
 from django.core.validators import RegexValidator
 from django.utils import timezone
-from .models import Product, Order, Coupon
+from .models import Product, Order, Coupon, Recipe
 
 class CartAddProductForm(forms.Form):
     quantity = forms.IntegerField(
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'value': 1})
+    )
+    update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+
+
+class CartAddRecipeForm(forms.Form):
+    """Form for adding recipes to cart - recipes are always quantity 1"""
+    quantity = forms.IntegerField(
+        initial=1,
+        widget=forms.HiddenInput()  # Hidden since recipes are always quantity 1
     )
     update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
     selected_variant = forms.CharField(required=False, widget=forms.HiddenInput)
@@ -46,6 +55,25 @@ class CheckoutForm(forms.ModelForm):
             'landmark': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nearby Recognizable Location'}),
             'order_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Order Notes (Optional)'}),
         }
+
+
+class RecipeOnlyCheckoutForm(forms.Form):
+    """Simplified checkout form for recipe-only orders (digital delivery)"""
+    first_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'})
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'})
+    )
+    order_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Order Notes (Optional)'})
+    )
 
 
 class PaymentForm(forms.Form):

@@ -1,0 +1,302 @@
+{% load image_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Purchase Confirmation - YummyTummy</title>
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f2ed;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #593500 0%, #8b5a00 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #593500;
+            margin-bottom: 20px;
+        }
+        .order-info {
+            background-color: #f5f2ed;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .order-info h3 {
+            color: #593500;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .recipe-item {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        .recipe-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #ffc107;
+        }
+        .recipe-details h4 {
+            color: #593500;
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        .recipe-details p {
+            margin: 0;
+            color: #666666;
+            font-size: 14px;
+        }
+        .recipe-price {
+            color: #593500;
+            font-weight: bold;
+            font-size: 16px;
+            margin-left: auto;
+        }
+        .download-section {
+            background: linear-gradient(135deg, #ffc107 0%, #ffcd38 100%);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .download-section h3 {
+            color: #593500;
+            margin: 0 0 15px 0;
+            font-size: 20px;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #593500;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .download-btn:hover {
+            background-color: #3d2400;
+        }
+        .upsell-section {
+            border-top: 2px solid #f5f2ed;
+            padding-top: 25px;
+            margin-top: 25px;
+        }
+        .upsell-section h3 {
+            color: #593500;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .product-item {
+            background-color: #f5f2ed;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            width: 150px;
+            border: 1px solid #e0e0e0;
+        }
+        .product-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        .product-item h5 {
+            color: #593500;
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        .product-item p {
+            color: #666666;
+            margin: 0;
+            font-size: 12px;
+        }
+        .footer {
+            background-color: #593500;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #ffc107;
+            text-decoration: none;
+        }
+        .timestamp {
+            color: #999999;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        @media (max-width: 600px) {
+            .recipe-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            .recipe-image {
+                margin: 0 0 15px 0;
+            }
+            .recipe-price {
+                margin: 10px 0 0 0;
+            }
+            .product-grid {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>YummyTummy</h1>
+            <p>Healthy Living Made Delicious</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hello {{ order.first_name }}! 🎉
+            </div>
+
+            <p>Thank you for purchasing our delicious recipes! Your order has been confirmed and your digital recipes are ready for download.</p>
+
+            <!-- Order Information -->
+            <div class="order-info">
+                <h3>📋 Order Details</h3>
+                <p><strong>Order Number:</strong> #{{ order.id }}</p>
+                <p><strong>Order Date:</strong> {{ order.created|date:"F d, Y \a\t g:i A T" }}</p>
+                <p><strong>Total Amount:</strong> KSh {{ order.total_amount|floatformat:2 }}</p>
+            </div>
+
+            <!-- Recipe Items -->
+            <h3 style="color: #593500; margin-bottom: 15px;">📖 Your Purchased Recipes</h3>
+            {% for purchase in recipe_purchases %}
+            <div class="recipe-item">
+                {% if purchase.recipe.get_image_url %}
+                    <img src="{{ purchase.recipe.get_image_url }}/-/preview/160x160/" alt="{{ purchase.recipe.title }}" class="recipe-image">
+                {% else %}
+                    <div class="recipe-image" style="background-color: #f5f2ed; display: flex; align-items: center; justify-content: center; color: #593500; font-size: 24px;">📖</div>
+                {% endif %}
+                <div class="recipe-details">
+                    <h4>{{ purchase.recipe.title }}</h4>
+                    <p>{{ purchase.recipe.description|truncatewords:15 }}</p>
+                    <p><strong>Prep:</strong> {{ purchase.recipe.prep_time_minutes }} min | <strong>Cook:</strong> {{ purchase.recipe.cook_time_minutes }} min | <strong>Serves:</strong> {{ purchase.recipe.servings }}</p>
+                </div>
+                <div class="recipe-price">
+                    KSh {{ purchase.recipe.price|floatformat:2 }}
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h3>📥 Download Your Recipes</h3>
+                <p>Click the buttons below to download your recipe PDFs. You can access them anytime from your account dashboard.</p>
+                {% for purchase in recipe_purchases %}
+                <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}" class="download-btn">
+                    📖 Download {{ purchase.recipe.title }}
+                </a>
+                {% endfor %}
+                <p style="margin-top: 15px; font-size: 14px; color: #593500;">
+                    <strong>💡 Tip:</strong> Save these PDFs to your device for offline cooking!
+                </p>
+            </div>
+
+            <!-- Upsell Section -->
+            {% if related_products %}
+            <div class="upsell-section">
+                <h3>🛒 Complete Your Kitchen with These Products</h3>
+                <p style="text-align: center; color: #666666; margin-bottom: 20px;">
+                    Enhance your cooking experience with our premium peanut products used in these recipes:
+                </p>
+                <div class="product-grid">
+                    {% for product in related_products %}
+                    <div class="product-item">
+                        <img src="{{ product|product_image_thumbnail }}" alt="{{ product.name }}">
+                        <h5>{{ product.name }}</h5>
+                        <p>From KSh {{ product.get_min_price|floatformat:2 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:product_list' %}" class="download-btn">
+                        🛍️ Shop Now
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <p style="margin-top: 30px;">
+                Happy cooking! We can't wait to see what delicious creations you make with these recipes. 
+                Don't forget to tag us <strong>@yummytummygoodies_ke</strong> when you share your cooking adventures!
+            </p>
+
+            <p style="color: #666666; font-size: 14px; margin-top: 20px;">
+                Need help? Contact us at <a href="mailto:livegreatagrilife@gmail.com" style="color: #593500;">livegreatagrilife@gmail.com</a> 
+                or visit our website at <a href="{{ request.scheme }}://{{ request.get_host }}" style="color: #593500;">www.livegreat.co.ke</a>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2025 YummyTummy - Healthy Living Made Delicious</p>
+            <p>
+                <a href="{{ request.scheme }}://{{ request.get_host }}">Visit Our Website</a> | 
+                <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_list' %}">Browse More Recipes</a>
+            </p>
+            <div class="timestamp">
+                Email sent on {{ current_time|date:"F d, Y \a\t g:i A T" }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
