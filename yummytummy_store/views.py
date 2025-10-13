@@ -732,13 +732,20 @@ def payment(request):
                         recipe_id = item_data.get('recipe_id')
                         recipe = Recipe.objects.get(id=recipe_id, is_published=True)
 
-                        # Create RecipePurchase record
-                        RecipePurchase.objects.create(
+                        # Create or get existing RecipePurchase record (handle duplicates)
+                        recipe_purchase, created = RecipePurchase.objects.get_or_create(
                             user=user_account,
                             recipe=recipe,
-                            order=order,
-                            # purchased_at is auto-set by auto_now_add
+                            defaults={
+                                'order': order,
+                                # purchased_at is auto-set by auto_now_add
+                            }
                         )
+
+                        # If recipe purchase already exists, update the order reference
+                        if not created:
+                            recipe_purchase.order = order
+                            recipe_purchase.save()
                     else:
                         # Handle product items (existing logic)
                         product_id = item_data.get('product_id')
