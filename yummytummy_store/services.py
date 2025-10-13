@@ -406,10 +406,18 @@ class OrderTrackingEmailService:
             kenya_tz = pytz.timezone('Africa/Nairobi')
             current_time = timezone.now().astimezone(kenya_tz)
 
-            # Collect related products for upselling
+            # Collect related products for upselling (optimized for performance)
             related_products = set()
-            for purchase in recipe_purchases:
-                related_products.update(purchase.recipe.related_products.all())
+            try:
+                for purchase in recipe_purchases:
+                    # Limit database queries by only getting first 3 related products per recipe
+                    related_products.update(purchase.recipe.related_products.all()[:3])
+                    # Stop if we have enough products
+                    if len(related_products) >= 6:
+                        break
+            except Exception:
+                # If related products query fails, continue without them
+                related_products = set()
 
             # Limit to 6 products for email
             related_products = list(related_products)[:6]

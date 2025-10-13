@@ -1375,11 +1375,11 @@ def mpesa_callback(request):
                 # Schedule background email sending (immediate fallback if no background task system)
                 try:
                     # TODO: Replace with background task (Celery/Django-RQ) for production
-                    # For now, send email immediately but with timeout protection
+                    # For now, send email immediately with optimized error handling
                     from django.core.mail import mail_admins
 
-                    # Send confirmation email based on account type
-                    if order.auto_created_account:
+                    # Send confirmation email based on account type with minimal processing
+                    if hasattr(order, 'auto_created_account') and order.auto_created_account:
                         # Send payment confirmation with account details
                         OrderTrackingEmailService.send_payment_confirmation_email(order, None)
                     else:
@@ -1399,14 +1399,16 @@ def mpesa_callback(request):
                     except:
                         pass  # Don't let admin email failure affect callback
 
-                # Send recipe purchase emails if order contains recipes
+                # Send recipe purchase emails if order contains recipes (optimized for performance)
                 try:
-                    recipe_purchases = RecipePurchase.objects.filter(order=order).select_related('recipe', 'recipe__category')
-                    if recipe_purchases.exists():
-                        from .services import OrderTrackingEmailService
+                    # Quick check for recipe purchases with minimal database queries
+                    recipe_count = RecipePurchase.objects.filter(order=order).count()
+                    if recipe_count > 0:
+                        # Only fetch full data if recipes exist
+                        recipe_purchases = RecipePurchase.objects.filter(order=order).select_related('recipe', 'recipe__category')
                         success = OrderTrackingEmailService.send_recipe_purchase_confirmation(order, recipe_purchases)
                         if success:
-                            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id} with {recipe_purchases.count()} recipes")
+                            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id} with {recipe_count} recipes")
                         else:
                             logger.warning(f"Failed to send recipe purchase confirmation email for order {order.id}")
                 except Exception as e:
