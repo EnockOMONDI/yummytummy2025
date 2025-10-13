@@ -3,7 +3,7 @@ services:
     name: yummytummy-store
     env: python
     plan: free
-    branch: wow3
+    branch: wow4
     buildCommand: "./build.sh"
     startCommand: "gunicorn yummytummy_project.wsgi:application"
     envVars:
