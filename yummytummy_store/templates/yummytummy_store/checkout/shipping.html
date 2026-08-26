@@ -273,7 +273,7 @@
 
                     {% if is_guest_checkout %}
                     <div class="form-section">
-                        <h3 class="form-section-title">Guest Checkout</h3>
+                        <h3 class="form-section-title">{% if is_whatsapp_checkout %}WhatsApp Order Details{% else %}Guest Checkout{% endif %}</h3>
                         <div class="form-group">
                             <label for="{{ form.phone.id_for_label }}">Phone Number</label>
                             {{ form.phone }}
@@ -446,7 +446,9 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="checkout-button">Continue to Payment</button>
+                    <button type="submit" class="checkout-button">
+                        {% if is_whatsapp_checkout %}Continue to WhatsApp{% else %}Continue to Payment{% endif %}
+                    </button>
                 </form>
             </div>
 

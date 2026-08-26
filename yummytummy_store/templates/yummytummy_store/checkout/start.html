@@ -66,6 +66,11 @@
         color: var(--secondary-color);
     }
 
+    .whatsapp-button {
+        background-color: #25D366;
+        color: white;
+    }
+
     .checkout-choice-button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
@@ -106,6 +111,21 @@
                 </ul>
                 <button type="submit" class="checkout-choice-button account-button">
                     Create Account
+                </button>
+            </form>
+
+            <form method="post" class="checkout-choice">
+                {% csrf_token %}
+                <input type="hidden" name="checkout_mode" value="whatsapp">
+                <h2>No Payment WhatsApp Order</h2>
+                <p>Place the order now and confirm payment or delivery details with our team on WhatsApp.</p>
+                <ul>
+                    <li>Phone number for follow-up</li>
+                    <li>Delivery address</li>
+                    <li>No online payment required</li>
+                </ul>
+                <button type="submit" class="checkout-choice-button whatsapp-button">
+                    Order on WhatsApp
                 </button>
             </form>
         </div>

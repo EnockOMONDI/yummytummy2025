@@ -558,8 +558,13 @@
                     What Happens Next?
                 </h2>
                 <div class="what-happens-next-content">
+                    {% if order.payment_method == 'whatsapp' %}
+                    <p>Your WhatsApp order has been saved. Send the pre-filled WhatsApp message so our team can confirm delivery and payment details with you.</p>
+                    <p>No online payment has been collected for this order yet.</p>
+                    {% else %}
                     <p>You will receive an order confirmation email with tracking information.</p>
                     <p>Once your payment is confirmed, we will prepare your order for shipping.</p>
+                    {% endif %}
                     <p>You will receive a shipping notification when your order is on its way.</p>
                     <p>Your delicious YummyTummy peanut butter will arrive at your doorstep soon!</p>
                 </div>
@@ -677,6 +682,13 @@
                         </div>
                         {% endif %}
                     </div>
+                    {% elif order.payment_method == 'whatsapp' %}
+                    <div class="payment-info">
+                        <div class="payment-method">
+                            <div class="payment-icon"><i class="fab fa-whatsapp"></i></div>
+                            <div>WhatsApp order created. Payment will be arranged with the YummyTummy team.</div>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -689,7 +701,9 @@
                             <div class="info-group">
                                 <div class="info-label">Contact Information</div>
                                 <div class="info-value">{{ order.first_name }} {{ order.last_name }}</div>
+                                {% if order.email %}
                                 <div class="info-value">{{ order.email }}</div>
+                                {% endif %}
                                 <div class="info-value">{{ order.phone }}</div>
                             </div>
                         </div>
@@ -716,8 +730,13 @@
             <div class="next-steps">
                 <h3 class="next-steps-title">What Happens Next?</h3>
                 <ol class="next-steps-list">
+                    {% if order.payment_method == 'whatsapp' %}
+                    <li>Send the pre-filled WhatsApp message to confirm your order with our team.</li>
+                    <li>Our team will confirm payment and delivery details directly on WhatsApp.</li>
+                    {% else %}
                     <li>You will receive an order confirmation email with tracking information.</li>
                     <li>Once your payment is confirmed, we will prepare your order for shipping.</li>
+                    {% endif %}
                     <li>You will receive a shipping notification when your order is on its way.</li>
                     <li>Your delicious YummyTummy peanut butter will arrive at your doorstep soon!</li>
                 </ol>
@@ -730,12 +749,14 @@
                         You can track your order progress in two ways:
                     </p>
                     <ul style="margin-bottom: 15px; color: var(--dark-gray);">
-                        <li><strong>Guest Tracking:</strong> Use your order number and email address</li>
+                        <li><strong>Guest Tracking:</strong> Use your order number and phone or email</li>
                         <li><strong>Account Access:</strong> Log in to view all your orders and history</li>
                     </ul>
+                    {% if order.email and order.payment_method != 'whatsapp' %}
                     <p style="font-size: 0.9rem; color: #666;">
                         <em>We've sent you an email with login details for easy access to your order history.</em>
                     </p>
+                    {% endif %}
                 </div>
 
                 <div class="confirmation-actions">

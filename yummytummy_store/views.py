@@ -14,10 +14,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from datetime import datetime, timedelta
+from urllib.parse import quote
 from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus, RecipeCategory, Recipe, RecipePurchase
 from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm, GuestCheckoutForm
 from .mpesa_service import MPesaService
 from .services import OrderTrackingEmailService, OrderTrackingService
+
+WHATSAPP_ORDER_PHONE = '254700061030'
 
 def home(request):
     """View for the homepage"""
@@ -529,7 +532,7 @@ def checkout_start(request):
 
     if request.method == 'POST':
         checkout_mode = request.POST.get('checkout_mode')
-        if checkout_mode in ['guest', 'account']:
+        if checkout_mode in ['guest', 'account', 'whatsapp']:
             request.session['checkout_mode'] = checkout_mode
             request.session.modified = True
             return redirect('yummytummy_store:checkout')
@@ -594,7 +597,8 @@ def checkout(request):
     elif not checkout_mode and not is_recipe_only and not is_mixed_order:
         return redirect('yummytummy_store:checkout_start')
 
-    is_guest_checkout = checkout_mode == 'guest' and not is_recipe_only and not is_mixed_order
+    is_guest_checkout = checkout_mode in ['guest', 'whatsapp'] and not is_recipe_only and not is_mixed_order
+    is_whatsapp_checkout = checkout_mode == 'whatsapp' and not is_recipe_only and not is_mixed_order
 
     # Get coupon from session if exists
     coupon_id = request.session.get('coupon_id')
@@ -665,6 +669,19 @@ def checkout(request):
 
             request.session['checkout_data'] = session_data
             request.session.modified = True
+
+            if is_whatsapp_checkout:
+                order = _create_checkout_order(
+                    request=request,
+                    checkout_data=session_data,
+                    payment_method='whatsapp',
+                    payment_status='pending',
+                    requires_account=False,
+                )
+                _clear_checkout_session(request)
+                messages.success(request, "Your WhatsApp order has been created. Send the pre-filled WhatsApp message to confirm it with our team.")
+                return redirect(_build_whatsapp_order_url(order))
+
             return redirect('yummytummy_store:payment')
     else:
         # Use appropriate form based on cart contents
@@ -688,6 +705,7 @@ def checkout(request):
         'has_recipes': has_recipes,
         'checkout_mode': checkout_mode,
         'is_guest_checkout': is_guest_checkout,
+        'is_whatsapp_checkout': is_whatsapp_checkout,
     }
     return render(request, 'yummytummy_store/checkout/shipping.html', context)
 
@@ -705,6 +723,173 @@ def _resolve_checkout_user(request, checkout_data, requires_account):
         return existing_user, None
 
     return OrderTrackingEmailService.create_user_account(checkout_data)
+
+
+def _create_checkout_order(request, checkout_data, payment_method, payment_status='pending', requires_account=False, mpesa_phone=''):
+    """Create and store an order from checkout session data."""
+    user_account, temp_password = _resolve_checkout_user(
+        request,
+        checkout_data,
+        requires_account
+    )
+
+    order = Order(
+        user=user_account,
+        first_name=checkout_data['first_name'],
+        last_name=checkout_data['last_name'],
+        email=checkout_data['email'],
+        phone=checkout_data.get('phone', ''),
+        address=checkout_data.get('address', ''),
+        area=checkout_data.get('area', ''),
+        estate=checkout_data.get('estate', ''),
+        building=checkout_data.get('building', ''),
+        landmark=checkout_data.get('landmark', ''),
+        order_notes=checkout_data.get('order_notes', ''),
+        payment_method=payment_method,
+        payment_status=payment_status,
+        subtotal_amount=checkout_data.get('subtotal_amount', 0),
+        discount_amount=checkout_data.get('discount_amount', 0),
+        total_amount=checkout_data.get('total_amount', 0),
+        auto_created_account=bool(temp_password),
+    )
+
+    if mpesa_phone:
+        order.mpesa_phone = mpesa_phone
+
+    coupon_id = checkout_data.get('coupon_id')
+    if coupon_id:
+        try:
+            coupon = Coupon.objects.get(id=coupon_id, is_active=True)
+            order.coupon = coupon
+        except Coupon.DoesNotExist:
+            pass
+
+    order.save()
+
+    cart = request.session['cart']
+    for cart_key, item_data in cart.items():
+        try:
+            price = float(item_data['price'])
+            quantity = int(item_data['quantity'])
+            item_type = item_data.get('type', 'product')
+
+            if item_type == 'recipe':
+                recipe_id = item_data.get('recipe_id')
+                recipe = Recipe.objects.get(id=recipe_id, is_published=True)
+                recipe_purchase, created = RecipePurchase.objects.get_or_create(
+                    user=user_account,
+                    recipe=recipe,
+                    defaults={'order': order}
+                )
+
+                if not created:
+                    recipe_purchase.order = order
+                    recipe_purchase.save()
+            else:
+                product_id = item_data.get('product_id')
+                product = Product.objects.get(id=product_id)
+                variant_id = item_data.get('variant_id')
+
+                variant = None
+                if variant_id:
+                    try:
+                        variant = ProductVariant.objects.get(id=variant_id)
+                    except ProductVariant.DoesNotExist:
+                        pass
+
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    variant=variant,
+                    price=price,
+                    quantity=quantity
+                )
+        except (Product.DoesNotExist, Recipe.DoesNotExist, ValueError, KeyError) as e:
+            messages.error(request, f"Error processing order item: {e}")
+            continue
+
+    if coupon_id and order.coupon:
+        coupon = order.coupon
+        coupon.usage_count += 1
+        coupon.save()
+
+        CouponUsage.objects.create(
+            coupon=coupon,
+            order=order,
+            user=user_account,
+            discount_amount=checkout_data.get('discount_amount', 0)
+        )
+
+    if temp_password:
+        auto_account = OrderTrackingEmailService.create_auto_account_record(
+            user_account, order, temp_password
+        )
+        request.session['pending_account_email'] = {
+            'order_id': order.id,
+            'user_id': user_account.id,
+            'temp_password': temp_password,
+            'auto_account_id': auto_account.id if auto_account else None
+        }
+    elif checkout_data.get('email'):
+        request.session['pending_order_email'] = {
+            'order_id': order.id
+        }
+
+    OrderTrackingService.create_initial_tracking_status(order)
+
+    request.session['order_id'] = order.id
+
+    from .services import CartPreservationService
+    CartPreservationService.preserve_cart_for_order(order)
+
+    request.session.modified = True
+    return order
+
+
+def _clear_checkout_session(request):
+    """Clear cart and checkout state after an order is stored."""
+    request.session['cart'] = {}
+    for key in ['checkout_data', 'coupon_id', 'checkout_mode']:
+        if key in request.session:
+            del request.session[key]
+    request.session.modified = True
+
+
+def _build_whatsapp_order_url(order):
+    """Build a WhatsApp click-to-chat URL with pre-filled order details."""
+    item_lines = []
+    for item in order.items.all():
+        variant = f" ({item.variant.name})" if item.variant else ""
+        item_lines.append(f"- {item.quantity} x {item.product.name}{variant} @ KSh {item.price:,.2f}")
+
+    delivery_parts = [
+        order.address,
+        order.area,
+        order.estate,
+        order.building,
+        f"Near {order.landmark}" if order.landmark else "",
+    ]
+    delivery_address = ", ".join(part for part in delivery_parts if part)
+
+    message = "\n".join([
+        "Hello YummyTummy, I would like to place a WhatsApp order.",
+        "",
+        f"Order: {order.get_order_number()}",
+        f"Customer: {order.first_name} {order.last_name}",
+        f"Phone: {order.phone}",
+        f"Delivery: {delivery_address}",
+        "",
+        "Items:",
+        *item_lines,
+        "",
+        f"Subtotal: KSh {order.subtotal_amount:,.2f}",
+        f"Discount: KSh {order.discount_amount:,.2f}",
+        f"Total: KSh {order.total_amount:,.2f}",
+        "",
+        f"Notes: {order.order_notes}" if order.order_notes else "Notes: None",
+    ])
+
+    return f"https://api.whatsapp.com/send?phone={WHATSAPP_ORDER_PHONE}&text={quote(message)}"
 
 
 def payment(request):

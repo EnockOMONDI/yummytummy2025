@@ -1,4 +1,5 @@
 from decimal import Decimal
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -124,4 +125,41 @@ class GuestCheckoutTestCase(TestCase):
         order = Order.objects.get(email='buyer@example.com')
         self.assertEqual(order.user, user)
         self.assertFalse(order.auto_created_account)
+        self.assertFalse(AutoCreatedAccount.objects.exists())
+
+    def test_whatsapp_checkout_creates_order_record_and_redirects_with_details(self):
+        self.add_product_to_session_cart()
+
+        response = self.client.get(reverse('yummytummy_store:checkout_start'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No Payment WhatsApp Order')
+
+        response = self.choose_checkout_mode('whatsapp')
+        self.assertRedirects(response, reverse('yummytummy_store:checkout'))
+
+        response = self.client.get(reverse('yummytummy_store:checkout'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'WhatsApp Order Details')
+        self.assertNotContains(response, 'Email Address')
+
+        response = self.submit_guest_checkout()
+        self.assertEqual(response.status_code, 302)
+
+        redirect_url = response['Location']
+        parsed_url = urlparse(redirect_url)
+        query = parse_qs(parsed_url.query)
+
+        self.assertEqual(parsed_url.scheme, 'https')
+        self.assertEqual(parsed_url.netloc, 'api.whatsapp.com')
+        self.assertEqual(parsed_url.path, '/send')
+        self.assertEqual(query['phone'], ['254700061030'])
+
+        order = Order.objects.get(phone='0712345678', payment_method='whatsapp')
+        self.assertIsNone(order.user)
+        self.assertEqual(order.payment_status, 'pending')
+        self.assertEqual(order.email, '')
+        self.assertEqual(order.items.count(), 1)
+        self.assertIn(order.get_order_number(), query['text'][0])
+        self.assertIn('Peanut Butter', query['text'][0])
+        self.assertIn('123 Test Street', query['text'][0])
         self.assertFalse(AutoCreatedAccount.objects.exists())

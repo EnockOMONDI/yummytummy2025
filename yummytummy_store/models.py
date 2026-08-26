@@ -147,6 +147,7 @@ class Order(models.Model):
         ('mpesa', 'M-Pesa'),
         ('card', 'Credit/Debit Card'),
         ('bank', 'Bank Transfer'),
+        ('whatsapp', 'WhatsApp Order'),
     ]
 
     # Customer Information
