@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.urls import reverse
 from pyuploadcare.dj.forms import FileWidget
 from pyuploadcare.dj.models import ImageField
 from .models import (
@@ -160,10 +161,12 @@ class OrderTrackingStatusInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'get_order_number', 'first_name', 'last_name', 'email',
-                    'payment_status', 'payment_method', 'formatted_subtotal', 'formatted_discount', 'formatted_total', 'created']
+    list_display = ['get_order_number', 'customer_name', 'customer_contact', 'delivery_summary',
+                    'payment_status', 'payment_method', 'formatted_total', 'created', 'view_order_link']
+    list_display_links = ['get_order_number', 'customer_name']
     list_filter = ['payment_status', 'payment_method', 'created', 'updated']
-    search_fields = ['first_name', 'last_name', 'email', 'transaction_id', 'mpesa_receipt_number']
+    search_fields = ['first_name', 'last_name', 'email', 'phone', 'address', 'area', 'estate',
+                     'building', 'landmark', 'transaction_id', 'mpesa_receipt_number']
     date_hierarchy = 'created'
     inlines = [OrderItemInline, OrderCouponUsageInline, OrderTrackingStatusInline]
     readonly_fields = ['get_order_number', 'subtotal_amount', 'discount_amount', 'formatted_subtotal', 'formatted_discount', 'formatted_total',
@@ -190,6 +193,37 @@ class OrderAdmin(admin.ModelAdmin):
             'description': 'All monetary values are in Kenyan Shillings (KES)'
         }),
     )
+
+    def customer_name(self, obj):
+        return obj.get_customer_name()
+    customer_name.short_description = 'Customer'
+    customer_name.admin_order_field = 'first_name'
+
+    def customer_contact(self, obj):
+        contact_lines = []
+        if obj.phone:
+            contact_lines.append(obj.phone)
+        if obj.email:
+            contact_lines.append(obj.email)
+        return format_html('<br>'.join(contact_lines)) if contact_lines else '-'
+    customer_contact.short_description = 'Contact'
+
+    def delivery_summary(self, obj):
+        delivery_parts = [
+            obj.address,
+            obj.area,
+            obj.estate,
+            obj.building,
+            f"Near: {obj.landmark}" if obj.landmark else '',
+        ]
+        delivery = ', '.join(part for part in delivery_parts if part)
+        return delivery or '-'
+    delivery_summary.short_description = 'Delivery Details'
+
+    def view_order_link(self, obj):
+        url = reverse('admin:yummytummy_store_order_change', args=[obj.pk])
+        return format_html('<a class="button" href="{}">View Full Order</a>', url)
+    view_order_link.short_description = 'View'
 
     def formatted_subtotal(self, obj):
         # Pre-format the value first, then pass it to format_html
