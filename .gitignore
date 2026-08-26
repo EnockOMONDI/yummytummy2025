@@ -10,6 +10,8 @@ media/
 
 # Environment variables
 .env
+.env.local
+.env.production
 .venv
 env/
 venv/
@@ -67,4 +69,3 @@ htmlcov/
 # Deployment
 *.manifest
 *.spec
-

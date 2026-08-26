@@ -636,6 +636,21 @@ def checkout(request):
     return render(request, 'yummytummy_store/checkout/shipping.html', context)
 
 
+def _resolve_checkout_user(request, checkout_data, requires_account):
+    """Return the user for this order, creating one only when account access is required."""
+    if request.user.is_authenticated:
+        return request.user, None
+
+    if not requires_account:
+        return None, None
+
+    existing_user = User.objects.filter(email=checkout_data['email']).first()
+    if existing_user:
+        return existing_user, None
+
+    return OrderTrackingEmailService.create_user_account(checkout_data)
+
+
 def payment(request):
     """Payment page with payment method selection"""
     # Check if checkout data exists in session
@@ -659,33 +674,21 @@ def payment(request):
         if form.is_valid():
             payment_method = form.cleaned_data['payment_method']
 
-            # Automatic Account Creation Logic
-            user_account = None
             auto_account = None
-            temp_password = None
-
-            # Check if user already exists
-            existing_user = User.objects.filter(email=checkout_data['email']).first()
-
-            if existing_user:
-                # Link order to existing user
-                user_account = existing_user
-            else:
-                # Create new user account automatically
-                user_account, temp_password = OrderTrackingEmailService.create_user_account(checkout_data)
-
-                # Create AutoCreatedAccount record for tracking (will be linked after order creation)
-                auto_account_data = {
-                    'user': user_account,
-                    'temp_password': temp_password
-                }
 
             # Get order type from checkout data
             is_recipe_only = checkout_data.get('is_recipe_only', False)
+            is_mixed_order = checkout_data.get('is_mixed_order', False)
+            requires_account = is_recipe_only or is_mixed_order
+            user_account, temp_password = _resolve_checkout_user(
+                request,
+                checkout_data,
+                requires_account
+            )
 
             # Create the order
             order = Order(
-                user=user_account,  # Link order to user account
+                user=user_account,
                 first_name=checkout_data['first_name'],
                 last_name=checkout_data['last_name'],
                 email=checkout_data['email'],

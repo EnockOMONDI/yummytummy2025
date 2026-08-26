@@ -326,5 +326,5 @@ MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='production')  # 'sandbo
 MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke' if MPESA_ENVIRONMENT == 'sandbox' else 'https://api.safaricom.co.ke'
 
 # M-Pesa Callback URL Configuration
-# Safaricom requires HTTPS and will only send callbacks to the registered domain
-MPESA_CALLBACK_URL = f"{SITE_URL}/mpesa/callback/"
+# Safaricom requires HTTPS and recommends avoiding M-Pesa keywords in callback URLs.
+MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL', default=f"{SITE_URL}/payments/callback/")

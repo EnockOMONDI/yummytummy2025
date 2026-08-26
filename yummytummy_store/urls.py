@@ -49,6 +49,7 @@ urlpatterns = [
 
     # M-Pesa Integration URLs
     path('mpesa/callback/', views.mpesa_callback, name='mpesa_callback'),
+    path('payments/callback/', views.mpesa_callback, name='payment_callback'),
     path('mpesa/test-auth/', views.test_mpesa_auth, name='test_mpesa_auth'),
 
     # Admin Documentation URLs
