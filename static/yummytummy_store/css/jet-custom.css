@@ -1617,3 +1617,212 @@ body #changelist .results table td:not(.field-view_order_link) a:not(.button):no
     min-height: 0 !important;
     display: inline !important;
 }
+
+/* Uploadcare/file widgets use nested controls that do not always inherit
+   Django admin button classes. Keep those button labels white. */
+.form-row .uploadcare--widget__button,
+.form-row .uploadcare--widget__button:link,
+.form-row .uploadcare--widget__button:visited,
+.form-row .uploadcare--button,
+.form-row .uploadcare--button:link,
+.form-row .uploadcare--button:visited,
+.form-row .uploadcare-widget-button,
+.form-row .uploadcare-widget-button:link,
+.form-row .uploadcare-widget-button:visited,
+.form-row [role="button"],
+.form-row button,
+.form-row input[type="button"],
+.form-row input[type="file"]::file-selector-button,
+.form-row input[type="file"]::-webkit-file-upload-button {
+    background: var(--primary-color) !important;
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+
+.form-row .uploadcare--widget__button *,
+.form-row .uploadcare--button *,
+.form-row .uploadcare-widget-button *,
+.form-row [role="button"] * {
+    color: #ffffff !important;
+}
+
+.form-row .uploadcare--widget__button:hover,
+.form-row .uploadcare--button:hover,
+.form-row .uploadcare-widget-button:hover,
+.form-row [role="button"]:hover,
+.form-row button:hover,
+.form-row input[type="button"]:hover,
+.form-row input[type="file"]::file-selector-button:hover,
+.form-row input[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+}
+
+/* Mobile-friendly admin layout for changelist and detail pages. */
+@media (max-width: 900px) {
+    #container,
+    #content,
+    #content-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    #content {
+        padding: 16px !important;
+    }
+
+    #content h1 {
+        font-size: 1.45rem !important;
+        line-height: 1.25 !important;
+        margin-bottom: 16px !important;
+    }
+
+    #header {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 12px 16px !important;
+    }
+
+    #branding,
+    #user-tools {
+        float: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #site-name,
+    #site-name a {
+        font-size: 1.1rem !important;
+        line-height: 1.25 !important;
+        flex-wrap: wrap !important;
+    }
+
+    .branding-logo {
+        height: 36px !important;
+        max-width: 100px !important;
+    }
+
+    #user-tools {
+        font-size: 0.85rem !important;
+    }
+
+    .breadcrumbs {
+        margin: 0 0 14px !important;
+        padding: 10px 12px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    .object-tools {
+        width: 100% !important;
+    }
+
+    .object-tools li,
+    .object-tools a {
+        width: 100% !important;
+    }
+
+    #changelist {
+        border-radius: 8px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #changelist #toolbar form,
+    #changelist .actions {
+        align-items: stretch !important;
+    }
+
+    #changelist #toolbar input[type="text"],
+    #changelist #toolbar input[type="submit"],
+    #changelist .actions select,
+    #changelist .actions button {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    #changelist .results {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #changelist .results table {
+        min-width: 760px !important;
+    }
+
+    .module,
+    fieldset.module {
+        border-radius: 8px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .module h2,
+    .module caption,
+    .inline-group h2 {
+        padding: 12px 14px !important;
+        font-size: 1rem !important;
+    }
+
+    .form-row {
+        padding: 14px !important;
+        display: block !important;
+    }
+
+    .form-row > div,
+    .aligned .form-row > div,
+    .aligned label + p,
+    .aligned label + div,
+    .aligned .readonly {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .aligned label,
+    .form-row label {
+        display: block !important;
+        float: none !important;
+        width: 100% !important;
+        margin: 0 0 8px !important;
+        padding: 0 !important;
+    }
+
+    .form-row input[type="text"],
+    .form-row input[type="email"],
+    .form-row input[type="password"],
+    .form-row input[type="number"],
+    .form-row input[type="url"],
+    .form-row input[type="date"],
+    .form-row input[type="datetime-local"],
+    .form-row textarea,
+    .form-row select {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .submit-row {
+        position: sticky !important;
+        bottom: 0 !important;
+        z-index: 20 !important;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        border-top: 1px solid var(--border-light) !important;
+        box-shadow: 0 -4px 14px rgba(89, 53, 0, 0.08) !important;
+    }
+
+    .submit-row input,
+    .submit-row a {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
