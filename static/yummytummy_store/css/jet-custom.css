@@ -1362,3 +1362,57 @@ button:hover,
     background-color: var(--primary-dark) !important;
     color: #ffffff !important;
 }
+
+/* Django admin index side action links: Add / Change buttons.
+   These need higher specificity than table/link readability rules above. */
+body.dashboard #content-main .module table td a.addlink,
+body.dashboard #content-main .module table td a.changelink,
+body.dashboard #content-main .module table td a.deletelink,
+#content-main .module table td a.addlink,
+#content-main .module table td a.changelink,
+#content-main .module table td a.deletelink,
+.module table td a.addlink,
+.module table td a.changelink,
+.module table td a.deletelink,
+#changelist .results table td a.addlink,
+#changelist .results table td a.changelink,
+#changelist .results table td a.deletelink {
+    background: var(--primary-color) !important;
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    text-decoration: none !important;
+}
+
+body.dashboard #content-main .module table td a.addlink *,
+body.dashboard #content-main .module table td a.changelink *,
+body.dashboard #content-main .module table td a.deletelink *,
+#content-main .module table td a.addlink *,
+#content-main .module table td a.changelink *,
+#content-main .module table td a.deletelink *,
+.module table td a.addlink *,
+.module table td a.changelink *,
+.module table td a.deletelink *,
+#changelist .results table td a.addlink *,
+#changelist .results table td a.changelink *,
+#changelist .results table td a.deletelink * {
+    color: #ffffff !important;
+}
+
+body.dashboard #content-main .module table td a.addlink:hover,
+body.dashboard #content-main .module table td a.changelink:hover,
+body.dashboard #content-main .module table td a.deletelink:hover,
+#content-main .module table td a.addlink:hover,
+#content-main .module table td a.changelink:hover,
+#content-main .module table td a.deletelink:hover,
+.module table td a.addlink:hover,
+.module table td a.changelink:hover,
+.module table td a.deletelink:hover,
+#changelist .results table td a.addlink:hover,
+#changelist .results table td a.changelink:hover,
+#changelist .results table td a.deletelink:hover {
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
