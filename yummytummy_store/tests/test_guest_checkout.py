@@ -37,7 +37,23 @@ class GuestCheckoutTestCase(TestCase):
         }
         session.save()
 
-    def submit_checkout(self, email='guest@example.com'):
+    def choose_checkout_mode(self, mode):
+        return self.client.post(reverse('yummytummy_store:checkout_start'), {
+            'checkout_mode': mode,
+        })
+
+    def submit_guest_checkout(self):
+        return self.client.post(reverse('yummytummy_store:checkout'), {
+            'phone': '0712345678',
+            'address': '123 Test Street',
+            'area': 'Westlands',
+            'estate': '',
+            'building': '',
+            'landmark': '',
+            'order_notes': '',
+        })
+
+    def submit_account_checkout(self, email='guest@example.com'):
         return self.client.post(reverse('yummytummy_store:checkout'), {
             'first_name': 'Guest',
             'last_name': 'Customer',
@@ -60,16 +76,29 @@ class GuestCheckoutTestCase(TestCase):
     def test_anonymous_product_checkout_creates_guest_order(self):
         self.add_product_to_session_cart()
 
-        response = self.submit_checkout()
+        response = self.client.get(reverse('yummytummy_store:checkout'))
+        self.assertRedirects(response, reverse('yummytummy_store:checkout_start'))
+
+        response = self.choose_checkout_mode('guest')
+        self.assertRedirects(response, reverse('yummytummy_store:checkout'))
+
+        response = self.client.get(reverse('yummytummy_store:checkout'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Guest Checkout')
+        self.assertNotContains(response, 'Email Address')
+
+        response = self.submit_guest_checkout()
         self.assertRedirects(response, reverse('yummytummy_store:payment'))
 
         response = self.submit_bank_payment()
         self.assertRedirects(response, reverse('yummytummy_store:order_confirmation'))
 
-        order = Order.objects.get(email='guest@example.com')
+        order = Order.objects.get(phone='0712345678')
         self.assertIsNone(order.user)
+        self.assertEqual(order.first_name, 'Guest')
+        self.assertEqual(order.last_name, 'Customer')
+        self.assertEqual(order.email, '')
         self.assertFalse(order.auto_created_account)
-        self.assertFalse(User.objects.filter(email='guest@example.com').exists())
         self.assertFalse(AutoCreatedAccount.objects.exists())
 
     def test_authenticated_product_checkout_links_to_logged_in_user(self):
@@ -83,7 +112,10 @@ class GuestCheckoutTestCase(TestCase):
         self.client.login(username='buyer@example.com', password='testpass123')
         self.add_product_to_session_cart()
 
-        response = self.submit_checkout(email='buyer@example.com')
+        response = self.client.get(reverse('yummytummy_store:checkout_start'))
+        self.assertRedirects(response, reverse('yummytummy_store:checkout'))
+
+        response = self.submit_account_checkout(email='buyer@example.com')
         self.assertRedirects(response, reverse('yummytummy_store:payment'))
 
         response = self.submit_bank_payment()

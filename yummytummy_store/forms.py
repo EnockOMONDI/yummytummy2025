@@ -57,6 +57,42 @@ class CheckoutForm(forms.ModelForm):
         }
 
 
+class GuestCheckoutForm(forms.Form):
+    """Minimal checkout form for guest physical-product orders."""
+    phone = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone Number'})
+    )
+    address = forms.CharField(
+        max_length=250,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Street Address'})
+    )
+    area = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Area/Neighborhood'})
+    )
+    estate = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Estate/Community Name'})
+    )
+    building = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apartment/Building/House Number'})
+    )
+    landmark = forms.CharField(
+        max_length=150,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nearby Recognizable Location'})
+    )
+    order_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Order Notes (Optional)'})
+    )
+
+
 class RecipeOnlyCheckoutForm(forms.Form):
     """Simplified checkout form for recipe-only orders (digital delivery)"""
     first_name = forms.CharField(

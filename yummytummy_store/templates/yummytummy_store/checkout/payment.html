@@ -418,6 +418,13 @@
                                 </div>
                             </div>
 
+                            {% if checkout_data.checkout_mode == 'guest' and checkout_data.phone %}
+                            <input type="hidden" name="{{ form.mpesa_phone.name }}" value="{{ checkout_data.phone }}">
+                            <div class="form-group">
+                                <label>M-Pesa Phone Number</label>
+                                <div class="form-control">{{ checkout_data.phone }}</div>
+                            </div>
+                            {% else %}
                             <div class="form-group">
                                 <label for="{{ form.mpesa_phone.id_for_label }}">M-Pesa Phone Number</label>
                                 {{ form.mpesa_phone }}
@@ -428,6 +435,7 @@
                                 {% endif %}
                                 <small class="form-text text-muted">Format: 07XXXXXXXX or 254XXXXXXXXX</small>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -456,9 +464,14 @@
                     <div class="customer-info">
                         <div class="info-group">
                             <div class="info-label">Contact Information</div>
+                            {% if checkout_data.checkout_mode == 'guest' %}
+                            <div class="info-value">Guest Checkout</div>
+                            <div class="info-value">{{ checkout_data.phone }}</div>
+                            {% else %}
                             <div class="info-value">{{ checkout_data.first_name }} {{ checkout_data.last_name }}</div>
                             <div class="info-value">{{ checkout_data.email }}</div>
                             <div class="info-value">{{ checkout_data.phone }}</div>
+                            {% endif %}
                         </div>
 
                         <div class="info-group">

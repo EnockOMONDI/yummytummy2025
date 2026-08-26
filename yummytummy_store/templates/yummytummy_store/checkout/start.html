@@ -1,0 +1,114 @@
+{% extends "yummytummy_store/base.html" %}
+{% load humanize %}
+
+{% block title %}Checkout | YummyTummy Shop{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-choice-section {
+        padding: 60px 0;
+    }
+
+    .checkout-choice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        max-width: 860px;
+        margin: 0 auto;
+    }
+
+    .checkout-choice {
+        background-color: var(--secondary-color);
+        border: 1px solid var(--light-gray);
+        border-radius: 8px;
+        padding: 28px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .checkout-choice h2 {
+        color: var(--primary-color);
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+    }
+
+    .checkout-choice p {
+        color: var(--dark-gray);
+        margin-bottom: 18px;
+        line-height: 1.5;
+    }
+
+    .checkout-choice ul {
+        margin: 0 0 24px 18px;
+        color: var(--dark-gray);
+    }
+
+    .checkout-choice li {
+        margin-bottom: 8px;
+    }
+
+    .checkout-choice-button {
+        width: 100%;
+        border: none;
+        border-radius: 5px;
+        padding: 14px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .guest-button {
+        background-color: var(--yellow);
+        color: var(--primary-color);
+    }
+
+    .account-button {
+        background-color: var(--primary-color);
+        color: var(--secondary-color);
+    }
+
+    .checkout-choice-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="checkout-choice-section">
+    <div class="container">
+        <h1 class="section-title">How would you like to checkout?</h1>
+
+        <div class="checkout-choice-grid">
+            <form method="post" class="checkout-choice">
+                {% csrf_token %}
+                <input type="hidden" name="checkout_mode" value="guest">
+                <h2>Continue as Guest</h2>
+                <p>Use the fastest checkout for physical product delivery.</p>
+                <ul>
+                    <li>Phone number for M-Pesa</li>
+                    <li>Delivery address</li>
+                    <li>No account created</li>
+                </ul>
+                <button type="submit" class="checkout-choice-button guest-button">
+                    Continue as Guest
+                </button>
+            </form>
+
+            <form method="post" class="checkout-choice">
+                {% csrf_token %}
+                <input type="hidden" name="checkout_mode" value="account">
+                <h2>Create Account</h2>
+                <p>Use account checkout if you want order history and easier tracking.</p>
+                <ul>
+                    <li>Name and email saved with the order</li>
+                    <li>Account can be created automatically</li>
+                    <li>Useful for recipes and repeat orders</li>
+                </ul>
+                <button type="submit" class="checkout-choice-button account-button">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

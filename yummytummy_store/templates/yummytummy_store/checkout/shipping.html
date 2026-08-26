@@ -271,7 +271,20 @@
                 <form method="post" class="checkout-form">
                     {% csrf_token %}
 
-                    {% if is_recipe_only %}
+                    {% if is_guest_checkout %}
+                    <div class="form-section">
+                        <h3 class="form-section-title">Guest Checkout</h3>
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">Phone Number</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.phone.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% elif is_recipe_only %}
                     <!-- Recipe-only checkout: Simplified form -->
                     <div class="form-section">
                         <h3 class="form-section-title">

@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from datetime import datetime, timedelta
 from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus, RecipeCategory, Recipe, RecipePurchase
-from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm
+from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm, GuestCheckoutForm
 from .mpesa_service import MPesaService
 from .services import OrderTrackingEmailService, OrderTrackingService
 
@@ -502,6 +502,46 @@ def coupon_remove(request):
     return redirect('yummytummy_store:cart_detail')
 
 
+def checkout_start(request):
+    """Let shoppers choose guest checkout or account checkout for physical-product carts."""
+    if 'cart' not in request.session or not request.session['cart']:
+        messages.warning(request, "Your cart is empty. Please add some products before proceeding to checkout.")
+        return redirect('yummytummy_store:product_list')
+
+    has_products = False
+    has_recipes = False
+    for item_data in request.session['cart'].values():
+        item_type = item_data.get('type', 'product')
+        if item_type == 'recipe':
+            has_recipes = True
+        else:
+            has_products = True
+
+    if request.user.is_authenticated:
+        request.session['checkout_mode'] = 'account'
+        request.session.modified = True
+        return redirect('yummytummy_store:checkout')
+
+    if has_recipes:
+        request.session['checkout_mode'] = 'account'
+        request.session.modified = True
+        return redirect('yummytummy_store:checkout')
+
+    if request.method == 'POST':
+        checkout_mode = request.POST.get('checkout_mode')
+        if checkout_mode in ['guest', 'account']:
+            request.session['checkout_mode'] = checkout_mode
+            request.session.modified = True
+            return redirect('yummytummy_store:checkout')
+
+        messages.error(request, "Please choose how you would like to checkout.")
+
+    return render(request, 'yummytummy_store/checkout/start.html', {
+        'has_products': has_products,
+        'has_recipes': has_recipes,
+    })
+
+
 def checkout(request):
     """Checkout page with conditional form based on cart contents"""
     # Check if cart is empty
@@ -547,6 +587,14 @@ def checkout(request):
     # Determine checkout type
     is_recipe_only = has_recipes and not has_products
     is_mixed_order = has_recipes and has_products
+    checkout_mode = request.session.get('checkout_mode')
+    if request.user.is_authenticated:
+        checkout_mode = 'account'
+        request.session['checkout_mode'] = checkout_mode
+    elif not checkout_mode and not is_recipe_only and not is_mixed_order:
+        return redirect('yummytummy_store:checkout_start')
+
+    is_guest_checkout = checkout_mode == 'guest' and not is_recipe_only and not is_mixed_order
 
     # Get coupon from session if exists
     coupon_id = request.session.get('coupon_id')
@@ -577,7 +625,9 @@ def checkout(request):
 
     if request.method == 'POST':
         # Use appropriate form based on cart contents
-        if is_recipe_only:
+        if is_guest_checkout:
+            form = GuestCheckoutForm(request.POST)
+        elif is_recipe_only:
             form = RecipeOnlyCheckoutForm(request.POST)
         else:
             form = CheckoutForm(request.POST)
@@ -588,9 +638,10 @@ def checkout(request):
 
             # Base checkout data
             session_data = {
-                'first_name': checkout_data['first_name'],
-                'last_name': checkout_data['last_name'],
-                'email': checkout_data['email'],
+                'first_name': checkout_data.get('first_name', 'Guest'),
+                'last_name': checkout_data.get('last_name', 'Customer'),
+                'email': checkout_data.get('email', ''),
+                'phone': checkout_data.get('phone', ''),
                 'order_notes': checkout_data.get('order_notes', ''),
                 'subtotal_amount': float(subtotal),
                 'discount_amount': float(discount),
@@ -598,6 +649,7 @@ def checkout(request):
                 'coupon_id': coupon_id,
                 'is_recipe_only': is_recipe_only,
                 'is_mixed_order': is_mixed_order,
+                'checkout_mode': checkout_mode,
             }
 
             # Add shipping fields only for product orders
@@ -616,7 +668,9 @@ def checkout(request):
             return redirect('yummytummy_store:payment')
     else:
         # Use appropriate form based on cart contents
-        if is_recipe_only:
+        if is_guest_checkout:
+            form = GuestCheckoutForm()
+        elif is_recipe_only:
             form = RecipeOnlyCheckoutForm()
         else:
             form = CheckoutForm()
@@ -632,6 +686,8 @@ def checkout(request):
         'is_mixed_order': is_mixed_order,
         'has_products': has_products,
         'has_recipes': has_recipes,
+        'checkout_mode': checkout_mode,
+        'is_guest_checkout': is_guest_checkout,
     }
     return render(request, 'yummytummy_store/checkout/shipping.html', context)
 
@@ -679,7 +735,8 @@ def payment(request):
             # Get order type from checkout data
             is_recipe_only = checkout_data.get('is_recipe_only', False)
             is_mixed_order = checkout_data.get('is_mixed_order', False)
-            requires_account = is_recipe_only or is_mixed_order
+            checkout_mode = checkout_data.get('checkout_mode')
+            requires_account = is_recipe_only or is_mixed_order or checkout_mode == 'account'
             user_account, temp_password = _resolve_checkout_user(
                 request,
                 checkout_data,
@@ -1084,14 +1141,17 @@ def guest_order_tracking(request):
 
     if request.method == 'POST':
         order_number = request.POST.get('order_number', '').strip()
-        email = request.POST.get('email', '').strip()
+        contact = request.POST.get('contact', '').strip()
 
-        if order_number and email:
+        if order_number and contact:
             try:
                 # Extract order ID from order number (format: MSL-000123)
                 if order_number.startswith('MSL-'):
                     order_id = int(order_number.split('-')[1])
-                    order = Order.objects.get(id=order_id, email__iexact=email)
+                    order = Order.objects.get(
+                        Q(email__iexact=contact) | Q(phone=contact) | Q(mpesa_phone=contact),
+                        id=order_id
+                    )
 
                     # Get tracking information
                     tracking_history = OrderTrackingService.get_order_tracking_history(order)
@@ -1121,9 +1181,9 @@ def guest_order_tracking(request):
                 else:
                     error_message = "Invalid order number format. Order numbers start with 'MSL-'"
             except (ValueError, Order.DoesNotExist):
-                error_message = "Order not found. Please check your order number and email address."
+                error_message = "Order not found. Please check your order number and phone or email."
         else:
-            error_message = "Please enter both order number and email address."
+            error_message = "Please enter both order number and phone or email."
 
     context = {
         'error_message': error_message,

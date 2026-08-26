@@ -35,6 +35,7 @@ urlpatterns = [
     path('coupon/remove/', views.coupon_remove, name='coupon_remove'),
 
     # Checkout URLs
+    path('checkout/start/', views.checkout_start, name='checkout_start'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/payment/', views.payment, name='payment'),
     path('checkout/confirmation/', views.order_confirmation, name='order_confirmation'),
