@@ -1424,3 +1424,196 @@ body.dashboard #content-main .module table td a.deletelink:hover,
     color: #ffffff !important;
     text-decoration: none !important;
 }
+
+/* =================================================================
+   FINAL ADMIN CHANGE/DETAIL PAGE POLISH
+   Changelist/detail pages use generic .button links inside #changelist,
+   so they need selectors stronger than #changelist *.
+   ================================================================= */
+
+#content {
+    padding: 28px 32px !important;
+}
+
+#content h1 {
+    margin: 0 0 22px !important;
+    padding-bottom: 12px !important;
+    color: var(--primary-color) !important;
+}
+
+.object-tools {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    margin: 0 0 18px !important;
+    padding: 0 !important;
+}
+
+.object-tools li {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#changelist {
+    border: 1px solid var(--border-light) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 14px rgba(89, 53, 0, 0.08) !important;
+    overflow: hidden !important;
+}
+
+#changelist #toolbar,
+#changelist .actions {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    padding: 14px 18px !important;
+}
+
+#changelist #toolbar form {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+#changelist #toolbar input[type="text"],
+#changelist .actions select {
+    min-height: 38px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    color: var(--primary-color) !important;
+    background: #ffffff !important;
+}
+
+#changelist .actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+#changelist .results {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+}
+
+#changelist .results table {
+    width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+#changelist .results table thead th,
+#changelist .results table tbody th,
+#changelist .results table tbody td {
+    padding: 14px 16px !important;
+    vertical-align: middle !important;
+}
+
+#changelist .results table tbody tr:hover th,
+#changelist .results table tbody tr:hover td {
+    background: #fbf8f3 !important;
+}
+
+#changelist .results table tbody th,
+#changelist .results table tbody td {
+    border-bottom: 1px solid var(--border-light) !important;
+}
+
+#changelist .results table tbody td.field-view_order_link {
+    min-width: 120px !important;
+}
+
+body #content .object-tools a,
+body #content .object-tools a:link,
+body #content .object-tools a:visited,
+body #changelist input[type="submit"],
+body #changelist input[type="button"],
+body #changelist button,
+body #changelist .actions button,
+body #changelist .results table td a.button,
+body #changelist .results table td a.button:link,
+body #changelist .results table td a.button:visited,
+body #changelist .results table td a.addlink,
+body #changelist .results table td a.addlink:link,
+body #changelist .results table td a.addlink:visited,
+body #changelist .results table td a.changelink,
+body #changelist .results table td a.changelink:link,
+body #changelist .results table td a.changelink:visited,
+body #changelist .results table td a.deletelink,
+body #changelist .results table td a.deletelink:link,
+body #changelist .results table td a.deletelink:visited,
+body .submit-row input,
+body .submit-row input[type="submit"],
+body .submit-row a.deletelink,
+body .submit-row a.deletelink:link,
+body .submit-row a.deletelink:visited {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 38px !important;
+    min-width: 82px !important;
+    padding: 9px 14px !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: var(--primary-color) !important;
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    box-shadow: 0 2px 6px rgba(89, 53, 0, 0.18) !important;
+    cursor: pointer !important;
+}
+
+body #content .object-tools a *,
+body #changelist button *,
+body #changelist .actions button *,
+body #changelist .results table td a.button *,
+body #changelist .results table td a.addlink *,
+body #changelist .results table td a.changelink *,
+body #changelist .results table td a.deletelink *,
+body .submit-row input *,
+body .submit-row a.deletelink * {
+    color: #ffffff !important;
+}
+
+body #content .object-tools a:hover,
+body #changelist input[type="submit"]:hover,
+body #changelist input[type="button"]:hover,
+body #changelist button:hover,
+body #changelist .actions button:hover,
+body #changelist .results table td a.button:hover,
+body #changelist .results table td a.addlink:hover,
+body #changelist .results table td a.changelink:hover,
+body #changelist .results table td a.deletelink:hover,
+body .submit-row input:hover,
+body .submit-row a.deletelink:hover {
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transform: translateY(-1px) !important;
+}
+
+body #changelist .results table th a,
+body #changelist .results table th a:link,
+body #changelist .results table th a:visited,
+body #changelist .results table tbody th a,
+body #changelist .results table tbody th a:link,
+body #changelist .results table tbody th a:visited,
+body #changelist .results table td:not(.field-view_order_link) a:not(.button):not(.addlink):not(.changelink):not(.deletelink),
+body #changelist .results table td:not(.field-view_order_link) a:not(.button):not(.addlink):not(.changelink):not(.deletelink):link,
+body #changelist .results table td:not(.field-view_order_link) a:not(.button):not(.addlink):not(.changelink):not(.deletelink):visited {
+    background: transparent !important;
+    color: var(--primary-color) !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: inline !important;
+}
