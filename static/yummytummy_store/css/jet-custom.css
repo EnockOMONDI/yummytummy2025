@@ -1185,3 +1185,180 @@ label,
         border: 1px solid #ccc !important;
     }
 }
+
+/* =================================================================
+   FINAL ADMIN READABILITY OVERRIDES
+   White admin surfaces, brown text, white button text only.
+   ================================================================= */
+
+body,
+#container,
+#content,
+#content-main,
+.dashboard,
+.module,
+.module table,
+.module tbody,
+.module tr,
+.module th,
+.module td,
+.dashboard .module,
+.dashboard .module table,
+.dashboard .module tbody,
+.dashboard .module tr,
+.dashboard .module th,
+.dashboard .module td,
+#changelist,
+#changelist .results,
+#changelist .results table,
+#changelist .results tbody,
+#changelist .results tbody tr,
+#changelist .results tbody th,
+#changelist .results tbody td,
+.breadcrumbs,
+.submit-row,
+.paginator,
+.form-row {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+}
+
+body,
+#content,
+#content-main,
+.module,
+.module table,
+.module th,
+.module td,
+.module p,
+.module span,
+.module label,
+.module li,
+.dashboard .module,
+.dashboard .module table,
+.dashboard .module th,
+.dashboard .module td,
+.breadcrumbs,
+.breadcrumbs *,
+#changelist,
+#changelist *,
+.form-row,
+.form-row *,
+.help,
+.helptext,
+.help-text {
+    color: var(--primary-color) !important;
+}
+
+.module caption,
+.module h2,
+.inline-group h2,
+.dashboard .module caption,
+.dashboard .module h2 {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+}
+
+.module caption a,
+.module h2 a,
+.dashboard .module caption a,
+.dashboard .module h2 a,
+.module th a,
+.module td a,
+.dashboard .module th a,
+.dashboard .module td a,
+#changelist .results th a,
+#changelist .results td a {
+    color: var(--primary-color) !important;
+}
+
+.module caption a:hover,
+.module h2 a:hover,
+.module th a:hover,
+.module td a:hover,
+.dashboard .module th a:hover,
+.dashboard .module td a:hover,
+#changelist .results th a:hover,
+#changelist .results td a:hover {
+    color: var(--primary-light) !important;
+}
+
+thead th,
+.module table thead th,
+.dashboard .module table thead th,
+.results table thead th,
+#changelist .results thead th {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+}
+
+#header {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: var(--primary-color) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+}
+
+#header *,
+#header a,
+#branding h1,
+#branding h1 a,
+#site-name,
+#site-name a,
+#user-tools,
+#user-tools *,
+#user-tools a,
+.top-user-tools-welcome-msg {
+    color: var(--primary-color) !important;
+}
+
+.button,
+input[type=submit],
+input[type=button],
+button,
+.object-tools a,
+.addlink,
+.changelink,
+.deletelink,
+.submit-row input,
+.btn,
+.actions button {
+    background: var(--primary-color) !important;
+    background-color: var(--primary-color) !important;
+    color: #ffffff !important;
+}
+
+.button *,
+input[type=submit] *,
+input[type=button] *,
+button *,
+.object-tools a *,
+.addlink *,
+.changelink *,
+.deletelink *,
+.submit-row input *,
+.btn *,
+.actions button * {
+    color: #ffffff !important;
+}
+
+.button:hover,
+input[type=submit]:hover,
+input[type=button]:hover,
+button:hover,
+.object-tools a:hover,
+.addlink:hover,
+.changelink:hover,
+.deletelink:hover,
+.submit-row input:hover,
+.btn:hover,
+.actions button:hover {
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+}
