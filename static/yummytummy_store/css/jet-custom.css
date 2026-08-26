@@ -903,10 +903,18 @@ label,
    ================================================================= */
 
 .branding-logo {
-    max-height: 50px;
+    height: 44px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
     margin-right: var(--spacing-md);
     transition: all 0.3s ease;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.login-branding-logo {
+    height: 64px;
+    max-width: 170px;
 }
 
 .branding-logo:hover {
