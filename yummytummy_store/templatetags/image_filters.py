@@ -4,6 +4,7 @@ import logging
 
 register = template.Library()
 logger = logging.getLogger(__name__)
+PRODUCT_IMAGE_FALLBACK = 'yummytummy_store/img/peanutmockup.webp'
 
 
 @register.filter
@@ -14,7 +15,7 @@ def product_image_url(product, size="400x400"):
     """
     if not product:
         logger.warning("product_image_url called with None product")
-        return static('yummytummy_store/img/product-1.png')
+        return static(PRODUCT_IMAGE_FALLBACK)
 
     # Try Uploadcare image first
     try:
@@ -36,7 +37,7 @@ def product_image_url(product, size="400x400"):
         logger.debug(f"Legacy image error for product {product.id}: {e}")
 
     # Final fallback to placeholder
-    return static('yummytummy_store/img/product-1.png')
+    return static(PRODUCT_IMAGE_FALLBACK)
 
 
 @register.filter
@@ -74,7 +75,7 @@ def get_product_image(product, transform="/-/preview/400x400/"):
     """
     if not product:
         logger.warning("get_product_image called with None product")
-        return static('yummytummy_store/img/product-1.png')
+        return static(PRODUCT_IMAGE_FALLBACK)
 
     # Try Uploadcare image first
     try:
@@ -95,7 +96,7 @@ def get_product_image(product, transform="/-/preview/400x400/"):
         logger.debug(f"Legacy image error for product {product.id}: {e}")
 
     # Final fallback to placeholder
-    return static('yummytummy_store/img/product-1.png')
+    return static(PRODUCT_IMAGE_FALLBACK)
 
 
 @register.filter
