@@ -1045,10 +1045,10 @@ def payment(request):
                         # For development, use a placeholder URL since localhost won't work with M-Pesa
                         callback_url = 'https://webhook.site/unique-id'
                     else:
-                        # For production, use the configured callback URL for www.livegreat.co.ke domain
+                        # For production, use the configured callback URL for the current domain
                         # This ensures Safaricom sends callbacks to the registered domain
                         callback_url = getattr(settings, 'MPESA_CALLBACK_URL',
-                                             f"{settings.SITE_URL}/mpesa/callback/")
+                                             f"{settings.SITE_URL}/payments/callback/")
 
                     # Initialize M-Pesa service
                     mpesa_service = MPesaService()

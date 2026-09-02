@@ -113,7 +113,7 @@ class OrderTrackingEmailService:
             protocol = 'https' if request.is_secure() else 'http'
         else:
             # Use SITE_URL from settings (configured for production domain)
-            site_url = getattr(settings, 'SITE_URL', 'https://livegreat.co.ke')
+            site_url = getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke')
             # Extract domain and protocol from SITE_URL
             if site_url.startswith('https://'):
                 protocol = 'https'
@@ -206,7 +206,7 @@ class OrderTrackingEmailService:
                 protocol = 'https' if request.is_secure() else 'http'
             else:
                 # Use SITE_URL from settings (configured for production domain)
-                site_url = getattr(settings, 'SITE_URL', 'https://livegreat.co.ke')
+                site_url = getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke')
                 # Extract domain and protocol from SITE_URL
                 if site_url.startswith('https://'):
                     protocol = 'https'
@@ -616,5 +616,4 @@ class OrderTrackingService:
         }
         
         return status_progress.get(latest_status.status, 0)
-
 

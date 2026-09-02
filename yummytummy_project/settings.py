@@ -39,8 +39,10 @@ print(f"🌍 YummyTummy running in {ENVIRONMENT} mode (DEBUG={DEBUG})")
 ALLOWED_HOSTS_LIST = [
     'localhost', '127.0.0.1',  # Development
     'testserver',  # Django test client
-    'livegreat.co.ke',  # Primary domain (apex domain)
-    'www.livegreat.co.ke',  # WWW subdomain (for compatibility)
+    'yummytummy.co.ke',  # Primary domain (apex domain)
+    'www.yummytummy.co.ke',  # WWW subdomain
+    'livegreat.co.ke',  # Previous domain kept during transition
+    'www.livegreat.co.ke',  # Previous WWW domain kept during transition
 ]
 
 # Add Render.com domains dynamically
@@ -49,7 +51,12 @@ RENDER_DOMAINS = [
     'yummytummy-store.onrender.com',  # Specific Render app
 ]
 
-ALLOWED_HOSTS = ALLOWED_HOSTS_LIST + RENDER_DOMAINS
+DEFAULT_ALLOWED_HOSTS = ALLOWED_HOSTS_LIST + RENDER_DOMAINS
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default=','.join(DEFAULT_ALLOWED_HOSTS),
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()]
+)
 
 # Production security settings
 if not DEBUG:
@@ -72,8 +79,8 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
 
     # CSRF settings for production
-    # Prioritize www subdomain in trusted origins for consistency
-    default_csrf_origins = 'https://www.livegreat.co.ke,https://livegreat.co.ke,https://*.onrender.com'
+    # Prioritize the current www subdomain in trusted origins for consistency
+    default_csrf_origins = 'https://www.yummytummy.co.ke,https://yummytummy.co.ke,https://www.livegreat.co.ke,https://livegreat.co.ke,https://*.onrender.com'
     CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default=default_csrf_origins, cast=lambda v: [s.strip() for s in v.split(',') if s.strip()])
 
 
@@ -306,7 +313,7 @@ UPLOADCARE = {
 
 # Site URL Configuration for M-Pesa Callbacks
 # This is the domain that Safaricom will send callbacks to
-SITE_URL = config('SITE_URL', default='https://livegreat.co.ke')
+SITE_URL = config('SITE_URL', default='https://www.yummytummy.co.ke')
 
 # M-Pesa Configuration
 MPESA_BUSINESS_SHORT_CODE = config('MPESA_BUSINESS_SHORT_CODE', default='6319470')

@@ -17,8 +17,8 @@ class WWWRedirectMiddleware:
     """
     Middleware to automatically redirect apex domain to www subdomain.
     
-    This middleware ensures that all requests to the apex domain (livegreat.co.ke)
-    are permanently redirected to the www subdomain (www.livegreat.co.ke) for
+    This middleware ensures that all requests to the apex domain (yummytummy.co.ke)
+    are permanently redirected to the www subdomain (www.yummytummy.co.ke) for
     consistent branding and SEO benefits.
     
     Features:
@@ -34,11 +34,12 @@ class WWWRedirectMiddleware:
         self.get_response = get_response
         
         # Configuration
-        self.apex_domain = 'livegreat.co.ke'
-        self.www_domain = 'www.livegreat.co.ke'
+        self.apex_domain = 'yummytummy.co.ke'
+        self.www_domain = 'www.yummytummy.co.ke'
         
         # Paths that should be exempted from redirection
         self.exempt_paths = [
+            '/payments/callback/',  # M-Pesa payment callbacks
             '/mpesa/callback/',  # M-Pesa payment callbacks
             '/admin/',  # Django admin (optional exemption)
         ]
