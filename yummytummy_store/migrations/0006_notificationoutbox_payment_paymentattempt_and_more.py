@@ -14,49 +14,72 @@ def clean_legacy_catalog_and_order_items(apps, schema_editor):
     ProductVariant = apps.get_model('yummytummy_store', 'ProductVariant')
     OrderItem = apps.get_model('yummytummy_store', 'OrderItem')
 
-    canonical_ingredients = {}
-    for ingredient in Ingredient.objects.order_by('pk').iterator():
-        key = (ingredient.name or '').casefold()
-        canonical = canonical_ingredients.get(key)
-        if canonical is None:
-            canonical_ingredients[key] = ingredient
-            continue
+    def unique_ingredient_name(base_name, exclude_pk=None):
+        base_name = (base_name or '').strip() or 'Unnamed ingredient'
+        if len(base_name) > 100:
+            base_name = base_name[:100]
+        candidate = base_name
+        suffix_number = 1
+        while Ingredient.objects.filter(name__iexact=candidate).exclude(pk=exclude_pk).exists():
+            suffix = f" (legacy {suffix_number})"
+            candidate = f"{base_name[:100 - len(suffix)]}{suffix}"
+            suffix_number += 1
+        return candidate
 
-        for relation in ProductIngredient.objects.filter(ingredient=ingredient).iterator():
-            existing = ProductIngredient.objects.filter(
-                product_id=relation.product_id,
-                ingredient=canonical,
-            ).first()
-            if existing:
-                if existing.percentage is None and relation.percentage is not None:
-                    existing.percentage = relation.percentage
-                    existing.save(update_fields=['percentage'])
-                relation.delete()
-            else:
-                relation.ingredient = canonical
-                relation.save(update_fields=['ingredient'])
-        ingredient.delete()
+    def unique_variant_name(product_id, base_name, exclude_pk=None):
+        base_name = (base_name or '').strip() or 'Variant'
+        if len(base_name) > 100:
+            base_name = base_name[:100]
+        candidate = base_name
+        suffix_number = 1
+        while ProductVariant.objects.filter(product_id=product_id, name=candidate).exclude(pk=exclude_pk).exists():
+            suffix = f" legacy {suffix_number}"
+            candidate = f"{base_name[:100 - len(suffix)]}{suffix}"
+            suffix_number += 1
+        return candidate
+
+    seen_ingredient_names = set()
+    for ingredient in Ingredient.objects.order_by('pk').iterator():
+        desired_name = (ingredient.name or '').strip() or f"Unnamed ingredient {ingredient.pk}"
+        if desired_name.casefold() in seen_ingredient_names:
+            desired_name = unique_ingredient_name(f"{desired_name} legacy {ingredient.pk}", exclude_pk=ingredient.pk)
+        elif desired_name != ingredient.name:
+            desired_name = unique_ingredient_name(desired_name, exclude_pk=ingredient.pk)
+
+        if desired_name != ingredient.name:
+            ingredient.name = desired_name
+            ingredient.save(update_fields=['name'])
+        seen_ingredient_names.add(ingredient.name.casefold())
 
     seen_product_ingredients = set()
     for relation in ProductIngredient.objects.order_by('pk').iterator():
         key = (relation.product_id, relation.ingredient_id)
         if key in seen_product_ingredients:
-            relation.delete()
-            continue
+            source = relation.ingredient
+            duplicate_ingredient = Ingredient.objects.create(
+                name=unique_ingredient_name(f"{source.name} relation {relation.pk}"),
+                description=source.description,
+            )
+            relation.ingredient = duplicate_ingredient
+            relation.save(update_fields=['ingredient'])
+            key = (relation.product_id, relation.ingredient_id)
         seen_product_ingredients.add(key)
         if relation.percentage is not None:
             relation.percentage = min(max(relation.percentage, Decimal('0.00')), Decimal('100.00'))
             relation.save(update_fields=['percentage'])
 
-    canonical_variants = {}
+    seen_variants = set()
     for variant in ProductVariant.objects.order_by('pk').iterator():
         key = (variant.product_id, variant.name)
-        canonical = canonical_variants.get(key)
-        if canonical is None:
-            canonical_variants[key] = variant
-        else:
-            OrderItem.objects.filter(variant=variant).update(variant=canonical)
-            variant.delete()
+        if key in seen_variants:
+            variant.name = unique_variant_name(
+                variant.product_id,
+                f"{(variant.name or '').strip() or 'Variant'} legacy {variant.pk}",
+                exclude_pk=variant.pk,
+            )
+            variant.save(update_fields=['name'])
+            key = (variant.product_id, variant.name)
+        seen_variants.add(key)
 
     for variant in ProductVariant.objects.filter(additional_price__lt=0).iterator():
         variant.additional_price = Decimal('0.00')
@@ -133,6 +156,7 @@ def backfill_payment_ledger(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ('yummytummy_store', '0005_add_whatsapp_payment_method'),
@@ -334,7 +358,7 @@ class Migration(migrations.Migration):
             name='price',
             field=models.DecimalField(decimal_places=2, default=100.0, help_text='Price in Kenyan Shillings (KES)', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))]),
         ),
-        migrations.RunPython(clean_legacy_catalog_and_order_items, migrations.RunPython.noop),
+        migrations.RunPython(clean_legacy_catalog_and_order_items, migrations.RunPython.noop, atomic=False),
         migrations.AddConstraint(
             model_name='ingredient',
             constraint=models.UniqueConstraint(django.db.models.functions.text.Lower('name'), name='unique_ingredient_name_ci'),
@@ -408,7 +432,7 @@ class Migration(migrations.Migration):
             name='requested_by',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requested_refunds', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.RunPython(backfill_payment_ledger, migrations.RunPython.noop),
+        migrations.RunPython(backfill_payment_ledger, migrations.RunPython.noop, atomic=False),
         migrations.AddIndex(
             model_name='notificationoutbox',
             index=models.Index(fields=['status', 'created_at'], name='yummytummy__status_e17cd4_idx'),

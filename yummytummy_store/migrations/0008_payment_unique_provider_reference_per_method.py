@@ -3,8 +3,21 @@
 from django.db import migrations, models
 
 
-def clear_duplicate_provider_references(apps, schema_editor):
+def preserve_duplicate_provider_references(apps, schema_editor):
     Payment = apps.get_model('yummytummy_store', 'Payment')
+
+    def unique_provider_reference(method, base_reference, exclude_pk=None):
+        base_reference = (base_reference or '').strip() or 'legacy-reference'
+        if len(base_reference) > 100:
+            base_reference = base_reference[:100]
+        suffix_number = 1
+        candidate = base_reference
+        while Payment.objects.filter(method=method, provider_reference=candidate).exclude(pk=exclude_pk).exists():
+            suffix = f"-legacy-{suffix_number}"
+            candidate = f"{base_reference[:100 - len(suffix)]}{suffix}"
+            suffix_number += 1
+        return candidate
+
     duplicates = (
         Payment.objects.exclude(provider_reference='')
         .values('method', 'provider_reference')
@@ -25,18 +38,23 @@ def clear_duplicate_provider_references(apps, schema_editor):
             'pk',
         )
         for payment in payments[1:]:
-            payment.provider_reference = ''
+            payment.provider_reference = unique_provider_reference(
+                payment.method,
+                f"{payment.provider_reference}-legacy-{payment.pk}",
+                exclude_pk=payment.pk,
+            )
             payment.save(update_fields=['provider_reference'])
 
 
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ('yummytummy_store', '0007_alter_product_image_alter_recipe_image'),
     ]
 
     operations = [
-        migrations.RunPython(clear_duplicate_provider_references, migrations.RunPython.noop),
+        migrations.RunPython(preserve_duplicate_provider_references, migrations.RunPython.noop, atomic=False),
         migrations.AddConstraint(
             model_name='payment',
             constraint=models.UniqueConstraint(condition=models.Q(('provider_reference', ''), _negated=True), fields=('method', 'provider_reference'), name='unique_provider_reference_per_method'),
