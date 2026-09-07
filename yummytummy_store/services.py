@@ -5,12 +5,12 @@ Handles automatic account creation and order tracking emails.
 
 import json
 import logging
-import secrets
-import string
+from urllib.parse import quote
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from django.core import signing
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
@@ -24,25 +24,8 @@ class OrderTrackingEmailService:
     """Service for handling order tracking emails and account creation"""
     
     @staticmethod
-    def generate_secure_password(length=12):
-        """Generate a secure random password"""
-        # Use a mix of letters, digits, and safe special characters
-        characters = string.ascii_letters + string.digits + "!@#$%^&*"
-        password = ''.join(secrets.choice(characters) for _ in range(length))
-        
-        # Ensure password has at least one uppercase, lowercase, digit, and special char
-        if (any(c.islower() for c in password) and 
-            any(c.isupper() for c in password) and 
-            any(c.isdigit() for c in password) and 
-            any(c in "!@#$%^&*" for c in password)):
-            return password
-        else:
-            # Regenerate if criteria not met
-            return OrderTrackingEmailService.generate_secure_password(length)
-    
-    @staticmethod
     def create_user_account(order_data):
-        """Create a user account from order data"""
+        """Create a passwordless account for digital purchases and tracking."""
         email = order_data['email']
         first_name = order_data['first_name']
         last_name = order_data['last_name']
@@ -50,25 +33,23 @@ class OrderTrackingEmailService:
         # Check if user already exists
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
-            return existing_user, None  # Return existing user, no password
-        
-        # Generate secure password
-        temp_password = OrderTrackingEmailService.generate_secure_password()
+            return existing_user, False
         
         # Create new user
-        user = User.objects.create_user(
+        user = User(
             username=email,  # Use email as username
             email=email,
             first_name=first_name,
             last_name=last_name,
-            password=temp_password
         )
-        
-        return user, temp_password
+        user.set_unusable_password()
+        user.save()
+
+        return user, True
     
     @staticmethod
-    def create_auto_account_record(user, order, temp_password):
-        """Create AutoCreatedAccount record for tracking"""
+    def create_auto_account_record(user, order):
+        """Create the one-time passwordless login record for an order."""
         auto_account = AutoCreatedAccount.objects.create(
             user=user,
             created_during_order=order,
@@ -85,9 +66,11 @@ class OrderTrackingEmailService:
         """Format order items with variant information for email display"""
         items = []
         for item in order.items.all():
+            product_name = item.product_name or item.product.name
+            variant_name = item.variant_name or (item.variant.name if item.variant else None)
             item_data = {
-                'name': item.product.name,
-                'variant_name': item.variant.name if item.variant else None,
+                'name': product_name,
+                'variant_name': variant_name,
                 'quantity': item.quantity,
                 'price': item.price,
                 'total': item.get_cost(),
@@ -96,12 +79,25 @@ class OrderTrackingEmailService:
             }
             
             # Create display name with variant
-            if item.variant:
-                item_data['display_name'] = f"{item.product.name} - {item.variant.name}"
+            if variant_name:
+                item_data['display_name'] = f"{product_name} - {variant_name}"
             else:
-                item_data['display_name'] = item.product.name
+                item_data['display_name'] = product_name
                 
             items.append(item_data)
+        for item in order.recipe_items.all():
+            recipe_title = item.recipe_title or item.recipe.title
+            items.append({
+                'name': recipe_title,
+                'variant_name': None,
+                'quantity': item.quantity,
+                'price': item.price,
+                'total': item.get_cost(),
+                'formatted_price': item.get_formatted_price(),
+                'formatted_total': item.get_formatted_cost(),
+                'display_name': recipe_title,
+                'is_digital': True,
+            })
         
         return items
     
@@ -127,59 +123,39 @@ class OrderTrackingEmailService:
 
         login_path = reverse('yummytummy_store:first_time_login', args=[auto_account.first_login_token])
         return f"{protocol}://{domain}{login_path}"
-    
+
     @staticmethod
-    def send_order_confirmation_with_account(order, user, temp_password, auto_account, request=None):
-        """Send order confirmation email with account creation details"""
-        
-        # Format order items
-        order_items = OrderTrackingEmailService.format_order_items_for_email(order)
-        
-        # Generate login URL
-        login_url = OrderTrackingEmailService.get_first_login_url(auto_account, request)
-        
-        # Prepare email context
-        context = {
-            'order': order,
-            'user': user,
-            'temp_password': temp_password,
-            'login_url': login_url,
-            'order_items': order_items,
-            'order_number': order.get_order_number(),
-            'customer_name': order.get_customer_name(),
-            'site_name': 'YummyTummy',
-            'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
-            'token_expires_days': 7,
-        }
-        
-        # Render email templates
-        subject = f'YummyTummy Order #{order.get_order_number()} - Order Confirmation & Tracking'
-        html_message = render_to_string('yummytummy_store/emails/order_confirmation_with_account.html', context)
-        plain_message = strip_tags(html_message)
-        
-        # Send email
+    def send_magic_login_link(user, request, next_url=''):
+        """Send a short-lived, single-use login link without exposing account existence."""
+        marker = user.last_login.isoformat() if user.last_login else ''
+        token = signing.dumps(
+            {
+                'user_id': user.pk,
+                'email': user.email.lower(),
+                'login_marker': marker,
+                'next': next_url,
+            },
+            salt='yummytummy.magic-login',
+            compress=True,
+        )
+        path = reverse('yummytummy_store:magic_link_login', args=[token])
+        login_url = request.build_absolute_uri(path)
+        message = (
+            f'Use this secure link to sign in to YummyTummy:\n\n{login_url}\n\n'
+            'The link expires in 15 minutes and can be used once. '
+            'If you did not request it, you can ignore this email.'
+        )
         try:
             send_mail(
-                subject=subject,
-                message=plain_message,
+                subject='Your secure YummyTummy sign-in link',
+                message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
-                html_message=html_message,
                 fail_silently=False,
             )
-            
-            # Mark email as sent
-            auto_account.initial_password_sent = True
-            auto_account.save()
-            
-            order.account_creation_email_sent = True
-            order.save()
-            
             return True
-            
-        except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Failed to send order confirmation email: {e}")
+        except Exception as exc:
+            logger.warning('Magic login email failed for user %s: %s', user.pk, exc.__class__.__name__)
             return False
     
     @staticmethod
@@ -245,8 +221,7 @@ class OrderTrackingEmailService:
             return True
             
         except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Failed to send order confirmation email: {e}")
+            logger.warning('Order confirmation email failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -292,8 +267,7 @@ class OrderTrackingEmailService:
             return True
 
         except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Failed to send payment confirmation email: {e}")
+            logger.warning('Payment confirmation email failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -331,8 +305,7 @@ class OrderTrackingEmailService:
             return True
 
         except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Failed to send status update email: {e}")
+            logger.warning('Status update email failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -343,13 +316,21 @@ class OrderTrackingEmailService:
             order_items = OrderTrackingEmailService.format_order_items_for_email(order)
 
             # Generate retry payment URL (preserve cart for retry)
+            retry_token = signing.dumps(
+                {'order_id': order.pk, 'email': order.email},
+                salt='yummytummy.payment-retry',
+                compress=True,
+            )
+            retry_path = reverse('yummytummy_store:payment_retry', kwargs={'order_id': order.id})
+            retry_path = f'{retry_path}?token={quote(retry_token)}'
             if request:
-                retry_payment_url = request.build_absolute_uri(reverse('yummytummy_store:payment_retry', kwargs={'order_id': order.id}))
+                retry_payment_url = request.build_absolute_uri(retry_path)
                 track_order_url = request.build_absolute_uri(reverse('yummytummy_store:guest_order_tracking'))
             else:
                 # Fallback URLs for callback context
-                retry_payment_url = f"https://yummytummy.com/payment/retry/{order.id}/"
-                track_order_url = "https://yummytummy.com/track-order/"
+                site_url = getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke').rstrip('/')
+                retry_payment_url = f'{site_url}{retry_path}'
+                track_order_url = f"{site_url}{reverse('yummytummy_store:guest_order_tracking')}"
 
             # Prepare email context
             context = {
@@ -381,8 +362,7 @@ class OrderTrackingEmailService:
             return True
 
         except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Failed to send payment failed notification: {e}")
+            logger.warning('Payment failure email failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -429,6 +409,7 @@ class OrderTrackingEmailService:
                 'related_products': related_products,
                 'current_time': current_time,
                 'request': None,  # Will be set by template context processor if available
+                'site_url': getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke').rstrip('/'),
             }
 
             # Render email templates
@@ -460,11 +441,11 @@ class OrderTrackingEmailService:
             # Send email
             email.send()
 
-            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id}")
+            logger.info('Recipe purchase confirmation email sent for order %s', order.id)
             return True
 
         except Exception as e:
-            logger.error(f"Failed to send recipe purchase confirmation email for order {order.id}: {str(e)}")
+            logger.warning('Recipe purchase confirmation failed for order %s: %s', order.id, e.__class__.__name__)
             return False
 
 
@@ -500,6 +481,15 @@ class CartPreservationService:
                     'variant_name': variant_name,
                 }
 
+            for item in order.recipe_items.all():
+                cart_data[f'recipe_{item.recipe_id}'] = {
+                    'recipe_id': item.recipe_id,
+                    'quantity': 1,
+                    'price': str(item.price),
+                    'name': item.recipe_title or item.recipe.title,
+                    'type': 'recipe',
+                }
+
             # Store cart data in order for later retrieval
             order.preserved_cart_data = json.dumps(cart_data)
             order.save()
@@ -507,7 +497,7 @@ class CartPreservationService:
             return True
 
         except Exception as e:
-            print(f"Failed to preserve cart for order {order.id}: {e}")
+            logger.warning('Cart preservation failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -528,7 +518,7 @@ class CartPreservationService:
                 return CartPreservationService.recreate_cart_from_order_items(request, order)
 
         except Exception as e:
-            print(f"Failed to restore cart from order {order.id}: {e}")
+            logger.warning('Cart restoration failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
     @staticmethod
@@ -558,13 +548,22 @@ class CartPreservationService:
                     'variant_name': variant_name,
                 }
 
+            for item in order.recipe_items.all():
+                cart_data[f'recipe_{item.recipe_id}'] = {
+                    'recipe_id': item.recipe_id,
+                    'quantity': 1,
+                    'price': str(item.price),
+                    'name': item.recipe_title or item.recipe.title,
+                    'type': 'recipe',
+                }
+
             request.session['cart'] = cart_data
             request.session.modified = True
 
             return True
 
         except Exception as e:
-            print(f"Failed to recreate cart from order {order.id}: {e}")
+            logger.warning('Cart recreation failed for order %s: %s', order.pk, e.__class__.__name__)
             return False
 
 
@@ -604,8 +603,9 @@ class OrderTrackingService:
             return 0
         
         status_progress = {
-            'order_received': 15,
+            'order_received': 10,
             'payment_confirmed': 30,
+            'payment_failed': 0,
             'processing': 50,
             'packaging': 70,
             'shipped': 85,
@@ -616,4 +616,3 @@ class OrderTrackingService:
         }
         
         return status_progress.get(latest_status.status, 0)
-

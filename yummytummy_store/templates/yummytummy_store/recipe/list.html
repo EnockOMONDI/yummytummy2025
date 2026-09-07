@@ -383,7 +383,7 @@
                     <div class="recipe-content">
                         <div class="recipe-category">{{ recipe.category.name }}</div>
                         <h3 class="recipe-title">{{ recipe.title }}</h3>
-                        <p class="recipe-description">{{ recipe.description|truncatewords:20 }}</p>
+                        <p class="recipe-description">{{ recipe.description|striptags|truncatewords:20 }}</p>
                         <div class="recipe-meta">
                             <div class="recipe-time">
                                 <i class="fas fa-clock"></i>
@@ -441,7 +441,7 @@
                         <div class="recipe-content">
                             <div class="recipe-category">{{ recipe.category.name }}</div>
                             <h3 class="recipe-title">{{ recipe.title }}</h3>
-                            <p class="recipe-description">{{ recipe.description|truncatewords:20 }}</p>
+                            <p class="recipe-description">{{ recipe.description|striptags|truncatewords:20 }}</p>
                             <div class="recipe-meta">
                                 <div class="recipe-time">
                                     <i class="fas fa-clock"></i>

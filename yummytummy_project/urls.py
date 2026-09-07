@@ -18,11 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('admin/css-debug/', TemplateView.as_view(template_name='admin/css_debug.html'), name='admin_css_debug'),
     path('accounts/', include('django.contrib.auth.urls')),  # Built-in auth views (login, logout, etc.)
     path('', include('yummytummy_store.urls', namespace='yummytummy_store')),
 ]

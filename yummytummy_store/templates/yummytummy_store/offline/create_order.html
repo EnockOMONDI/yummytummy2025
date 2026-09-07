@@ -22,6 +22,15 @@
 
 <form id="offline-order-form" method="post">
     {% csrf_token %}
+    {% if customer_form.errors or order_form.errors %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Review the order details:</strong>
+        {{ customer_form.non_field_errors }}
+        {{ order_form.non_field_errors }}
+        {% for field in customer_form %}{% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+        {% for field in order_form %}{% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+    </div>
+    {% endif %}
     
     <div class="row">
         <!-- Customer Information -->
@@ -84,6 +93,17 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-sticky-note"></i> Internal Order Note</h5>
+                </div>
+                <div class="card-body">
+                    <label for="order_notes" class="form-label">Note for fulfillment</label>
+                    <textarea class="form-control" id="order_notes" name="order_notes" rows="3" maxlength="2000" placeholder="Delivery instructions or context for the fulfillment team">{{ request.POST.order_notes }}</textarea>
+                    <div class="form-text">Do not enter payment credentials or unrelated customer information.</div>
                 </div>
             </div>
             
@@ -186,11 +206,11 @@
                     <div class="col-md-6 mb-3">
                         <div class="card product-card" data-product-id="{{ product.id }}">
                             <div class="card-body">
-                                {% if product.image %}
-                                    <img src="{{ product.image.cdn_url }}" class="card-img-top mb-2" style="height: 150px; object-fit: cover;">
+                                {% if product.get_image_url %}
+                                    <img src="{{ product.get_image_url }}" alt="{{ product.name }}" class="card-img-top mb-2" style="height: 150px; object-fit: cover;">
                                 {% endif %}
                                 <h6 class="card-title">{{ product.name }}</h6>
-                                <p class="card-text small text-muted">{{ product.description|truncatewords:10 }}</p>
+                                <p class="card-text small text-muted">{{ product.description|striptags|truncatewords:10 }}</p>
                                 <p class="card-text">
                                     <strong>Base Price: KSh {{ product.price }}</strong>
                                 </p>
@@ -244,14 +264,14 @@ $(document).ready(function() {
             .done(function(data) {
                 if (data.success && data.variants.length > 0) {
                     showVariantSelection(productId, productName, productPrice, data.variants);
-                } else {
-                    // No variants, add product directly
+                } else if (data.success) {
                     addProductToOrder(productId, productName, null, null, productPrice, 1);
+                } else {
+                    window.alert(data.error || 'Variants could not be loaded. Refresh and try again.');
                 }
             })
             .fail(function() {
-                // Fallback: add product without variants
-                addProductToOrder(productId, productName, null, null, productPrice, 1);
+                window.alert('Product variants could not be loaded. The product was not added.');
             });
 
         $('#productModal').modal('hide');

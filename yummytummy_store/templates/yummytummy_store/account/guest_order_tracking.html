@@ -354,6 +354,14 @@
                     <div class="progress-text">{{ progress_percentage }}% Complete</div>
                 </div>
 
+                {% if payment_retry_url %}
+                <div class="login-prompt">
+                    <h3>Payment was not completed</h3>
+                    <p>Retry payment on this order without creating a duplicate order.</p>
+                    <a href="{{ payment_retry_url }}" class="login-btn">Retry payment</a>
+                </div>
+                {% endif %}
+
                 <!-- Order Information -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
                     <div>

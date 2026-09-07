@@ -1,0 +1,18 @@
+<form method="get" class="period-form">
+<div><label for="{{ period_form.period.id_for_label }}">Period</label>{{ period_form.period }}</div>
+<div data-custom-date><label for="{{ period_form.start.id_for_label }}">From</label>{{ period_form.start }}{{ period_form.start.errors }}</div>
+<div data-custom-date><label for="{{ period_form.end.id_for_label }}">Through</label>{{ period_form.end }}{{ period_form.end.errors }}</div>
+<button class="quick-action-btn" type="submit"><i class="fas fa-sync" aria-hidden="true"></i> Apply / Refresh</button>
+{{ period_form.period.errors }}{{ period_form.non_field_errors }}
+</form>
+<script>
+(() => {
+    const period = document.getElementById('id_period');
+    const updateDates = () => document.querySelectorAll('[data-custom-date]').forEach(group => {
+        group.hidden = period.value !== 'custom';
+        group.querySelector('input').disabled = group.hidden;
+    });
+    period.addEventListener('change', updateDates);
+    updateDates();
+})();
+</script>

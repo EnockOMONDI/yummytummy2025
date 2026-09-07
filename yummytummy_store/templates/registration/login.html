@@ -306,6 +306,7 @@
             <!-- Form Links -->
             <div class="form-links">
                 <a href="{% url 'password_reset' %}">Forgot your password?</a>
+                <a href="{% url 'yummytummy_store:request_magic_link' %}">Email me a secure sign-in link</a>
             </div>
         </form>
 
@@ -317,7 +318,7 @@
         <!-- Guest Shopping Option -->
         <div class="guest-option">
             <h3>Continue as Guest</h3>
-            <p>You can shop without an account. We'll create one for you during checkout to track your orders.</p>
+            <p>You can shop physical products without creating an account.</p>
             <a href="{% url 'yummytummy_store:product_list' %}" class="guest-button">
                 <i class="fas fa-shopping-cart"></i> Continue Shopping
             </a>

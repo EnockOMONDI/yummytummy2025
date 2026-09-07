@@ -6,6 +6,8 @@ Tests end-to-end functionality from product selection to order completion.
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 from decimal import Decimal
 from yummytummy_store.models import Category, Product, ProductVariant, Order, OrderItem, Coupon
 
@@ -81,6 +83,8 @@ class CartVariantIntegrationTestCase(TestCase):
             code='TEST10',
             discount_type='percentage',
             discount_value=Decimal('10.00'),
+            valid_from=timezone.now() - timedelta(days=1),
+            valid_to=timezone.now() + timedelta(days=30),
             min_order_amount=Decimal('2000.00'),
             usage_limit=100,
             per_customer_limit=5,
@@ -155,6 +159,10 @@ class CartVariantIntegrationTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         
         # Step 9: Proceed to checkout
+        self.client.post(
+            reverse('yummytummy_store:checkout_start'),
+            {'checkout_mode': 'account'},
+        )
         response = self.client.get(reverse('yummytummy_store:checkout'))
         self.assertEqual(response.status_code, 200)
         
@@ -167,7 +175,6 @@ class CartVariantIntegrationTestCase(TestCase):
 
     def test_mixed_cart_checkout_process(self):
         """Test checkout process with mixed cart contents (base + variants)"""
-        
         # Add mixed items to cart
         self.client.post(reverse('yummytummy_store:cart_add', args=[self.product1.id]), {
             'quantity': 1,
@@ -180,6 +187,11 @@ class CartVariantIntegrationTestCase(TestCase):
             'update': False,
             'selected_variant': str(self.variant2_400g.id)
         })
+
+        self.client.post(
+            reverse('yummytummy_store:checkout_start'),
+            {'checkout_mode': 'account'},
+        )
         
         # Proceed to checkout
         response = self.client.get(reverse('yummytummy_store:checkout'))

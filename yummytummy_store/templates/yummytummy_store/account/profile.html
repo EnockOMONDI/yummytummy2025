@@ -293,25 +293,26 @@
             {% endif %}
 
             <div class="action-buttons">
+                {% if user.has_usable_password %}
                 <a href="{% url 'password_change' %}" class="btn btn-primary">
                     <i class="fas fa-key"></i>
                     Change Password
                 </a>
+                {% endif %}
                 <a href="{% url 'yummytummy_store:order_tracking_dashboard' %}" class="btn btn-secondary">
                     <i class="fas fa-box"></i>
                     View Orders
                 </a>
             </div>
 
-            {% if auto_account and not auto_account.first_login_completed %}
+            {% if auto_account and not user.has_usable_password %}
             <div class="security-note">
                 <h4>
                     <i class="fas fa-shield-alt"></i>
                     Security Recommendation
                 </h4>
                 <p>
-                    Your account was created automatically during checkout. 
-                    For security, we recommend changing your password to something memorable.
+                    Your account uses secure email sign-in. Request a fresh link from the sign-in page whenever you need access.
                 </p>
             </div>
             {% endif %}

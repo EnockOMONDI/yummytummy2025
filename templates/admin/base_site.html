@@ -1,18 +1,8 @@
-{% extends "admin/base.html" %}
-{% load static %}
+{% extends "admin/base_site.html" %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{% static 'yummytummy_store/css/jet-custom.css' %}">
-{% endblock %}
-
-{% block title %}{{ title }} | {{ site_title|default:_('YummyTummy Admin') }}{% endblock %}
-
-{% block branding %}
-<h1 id="site-name">
-    <a href="{% url 'admin:index' %}">
-        <img src="{% static 'yummytummy_store/img/yummytummylogo.png' %}" alt="YummyTummy" class="branding-logo">
-        YummyTummy Administration
-    </a>
-</h1>
+{% block header %}
+{{ block.super }}
+{% if perms.yummytummy_store.view_owner_dashboard and not is_popup %}
+<nav aria-label="Owner dashboard" class="px-4 pb-4 text-base-700 dark:text-base-200"><a href="{% url 'yummytummy_store:admin_dashboard' %}" class="underline hover:text-primary-600 dark:hover:text-primary-400">Back to owner dashboard</a></nav>
+{% endif %}
 {% endblock %}

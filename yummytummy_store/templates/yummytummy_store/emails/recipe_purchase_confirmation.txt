@@ -19,7 +19,7 @@ YOUR PURCHASED RECIPES
    Prep: {{ purchase.recipe.prep_time_minutes }} min | Cook: {{ purchase.recipe.cook_time_minutes }} min | Serves: {{ purchase.recipe.servings }}
    Price: KSh {{ purchase.recipe.price|floatformat:2 }}
 
-   Download Link: {{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}
+   Download Link: {{ site_url }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}
 
 {% endfor %}
 
@@ -28,7 +28,7 @@ DOWNLOAD INSTRUCTIONS
 1. Click on the download links above to get your recipe PDFs
 2. Save the PDFs to your device for offline cooking
 3. You can also access your recipes anytime from your account dashboard at:
-   {{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:my_recipes' %}
+   {{ site_url }}{% url 'yummytummy_store:my_recipes' %}
 
 {% if related_products %}
 COMPLETE YOUR KITCHEN
@@ -39,7 +39,7 @@ Enhance your cooking experience with our premium peanut products used in these r
 • {{ product.name }} - From KSh {{ product.get_min_price|floatformat:2 }}
 {% endfor %}
 
-Shop now: {{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:product_list' %}
+Shop now: {{ site_url }}{% url 'yummytummy_store:product_list' %}
 {% endif %}
 
 Happy cooking! We can't wait to see what delicious creations you make with these recipes. 
@@ -48,8 +48,8 @@ Don't forget to tag us @yummytummygoodies_ke when you share your cooking adventu
 NEED HELP?
 ----------
 Contact us at: livegreatagrilife@gmail.com
-Visit our website: {{ request.scheme }}://{{ request.get_host }}
-Browse more recipes: {{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_list' %}
+Visit our website: {{ site_url }}
+Browse more recipes: {{ site_url }}{% url 'yummytummy_store:recipe_list' %}
 
 ---
 © 2025 YummyTummy - Healthy Living Made Delicious

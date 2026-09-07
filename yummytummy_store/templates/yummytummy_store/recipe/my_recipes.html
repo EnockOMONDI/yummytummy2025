@@ -362,7 +362,7 @@
                         <div class="recipe-content">
                             <div class="recipe-category">{{ purchase.recipe.category.name }}</div>
                             <h3 class="recipe-title">{{ purchase.recipe.title }}</h3>
-                            <p class="recipe-description">{{ purchase.recipe.description|truncatewords:20 }}</p>
+                            <p class="recipe-description">{{ purchase.recipe.description|striptags|truncatewords:20 }}</p>
                             
                             <div class="purchase-info">
                                 <div class="purchase-date">

@@ -2,21 +2,33 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from decimal import Decimal
 import json
+import logging
 
 from .models import Product, ProductVariant, Order, OrderItem, OrderTrackingStatus
 from .services import OrderTrackingEmailService
 from .forms import OfflineOrderForm, OfflineCustomerForm
+from .payment_services import PaymentService
+
+logger = logging.getLogger(__name__)
 
 
 def is_sales_team_member(user):
-    """Check if user is a member of Sales Team group"""
-    return user.groups.filter(name='Sales Team').exists() or user.is_superuser
+    """Require the explicit operational permissions assigned to sales staff."""
+    return user.is_active and (
+        user.is_superuser
+        or (
+            user.has_perm('yummytummy_store.add_order')
+            and user.has_perm('yummytummy_store.view_product')
+        )
+    )
 
 
 @login_required
@@ -31,129 +43,128 @@ def offline_orders_dashboard(request):
     return render(request, 'yummytummy_store/offline/dashboard.html', context)
 
 
+
+
 @login_required
 @user_passes_test(is_sales_team_member)
 def create_offline_order(request):
-    """Create a new offline order"""
-    if request.method == 'POST':
+    """Create a validated manual order using current database prices and stock."""
+    customer_form = OfflineCustomerForm(request.POST or None)
+    order_form = OfflineOrderForm(request.POST or None, initial={'order_items': []})
+
+    if request.method == 'POST' and customer_form.is_valid() and order_form.is_valid():
+        customer = customer_form.cleaned_data
+        order_data = order_form.cleaned_data
         try:
             with transaction.atomic():
-                # Parse form data
-                customer_type = request.POST.get('customer_type', 'individual')
-                
-                # Customer information
-                first_name = request.POST.get('first_name', '').strip()
-                last_name = request.POST.get('last_name', '').strip()
-                email = request.POST.get('email', '').strip()
-                phone = request.POST.get('phone', '').strip()
-                business_name = request.POST.get('business_name', '').strip() if customer_type == 'business' else ''
-                
-                # Delivery information
-                delivery_address = request.POST.get('delivery_address', '').strip()
-                delivery_city = request.POST.get('delivery_city', '').strip()
-                delivery_county = request.POST.get('delivery_county', '').strip()
-                
-                # Order items
-                order_items_data = json.loads(request.POST.get('order_items', '[]'))
-                
-                if not order_items_data:
-                    messages.error(request, 'Please add at least one product to the order.')
-                    return redirect('yummytummy_store:create_offline_order')
-                
-                # Calculate total
-                total_amount = Decimal('0.00')
-                order_items = []
-                
-                for item_data in order_items_data:
-                    product_id = item_data.get('product_id')
-                    variant_id = item_data.get('variant_id')
-                    quantity = int(item_data.get('quantity', 1))
-                    
-                    product = get_object_or_404(Product, id=product_id)
+                resolved_items = []
+                subtotal = Decimal('0.00')
+
+                for submitted in order_data['order_items']:
+                    product = Product.objects.select_for_update().get(
+                        pk=submitted['product_id'],
+                        is_available=True,
+                    )
+                    quantity = submitted['quantity']
                     variant = None
-                    
-                    if variant_id:
-                        variant = get_object_or_404(ProductVariant, id=variant_id, product=product)
-                        price = variant.price
+                    if submitted['variant_id']:
+                        variant = ProductVariant.objects.select_for_update().get(
+                            pk=submitted['variant_id'],
+                            product=product,
+                        )
+                        unit_price = variant.calculated_price
+                        available = variant.stock_quantity
                     else:
-                        price = product.price
-                    
-                    item_total = price * quantity
-                    total_amount += item_total
-                    
-                    order_items.append({
-                        'product': product,
-                        'variant': variant,
-                        'quantity': quantity,
-                        'price': price,
-                        'total': item_total
-                    })
-                
-                # Create order
+                        unit_price = product.price
+                        available = product.stock_quantity
+
+                    if product.track_inventory and available < quantity:
+                        label = f'{product.name} - {variant.name}' if variant else product.name
+                        raise ValueError(f'Only {available} units of {label} are available.')
+
+                    resolved_items.append((product, variant, quantity, unit_price))
+                    subtotal += unit_price * quantity
+
                 order = Order.objects.create(
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    phone=phone,
-                    address=delivery_address,
-                    city=delivery_city,
-                    county=delivery_county,
+                    first_name=customer['first_name'],
+                    last_name=customer['last_name'],
+                    email=customer['email'],
+                    phone=customer['phone'],
+                    address=customer['delivery_address'],
+                    city=customer['delivery_city'],
+                    county=customer['delivery_county'],
                     payment_method='offline',
                     payment_status='pending',
-                    total_amount=total_amount,
-                    subtotal_amount=total_amount,  # Set subtotal to avoid calculation error
+                    total_amount=subtotal,
+                    subtotal_amount=subtotal,
                     created_by=request.user,
-                    customer_type=customer_type,
-                    business_name=business_name,
-                    order_notes=f'Offline order created by {request.user.get_full_name() or request.user.username}'
+                    customer_type=customer['customer_type'],
+                    business_name=customer.get('business_name') or '',
+                    order_notes=order_data.get('order_notes', ''),
                 )
-                
-                # Create order items
-                for item_data in order_items:
+
+                for product, variant, quantity, unit_price in resolved_items:
                     OrderItem.objects.create(
                         order=order,
-                        product=item_data['product'],
-                        variant=item_data['variant'],
-                        quantity=item_data['quantity'],
-                        price=item_data['price']
+                        product=product,
+                        variant=variant,
+                        product_name=product.name,
+                        variant_name=variant.name if variant else '',
+                        quantity=quantity,
+                        price=unit_price,
                     )
-                
-                # Create initial tracking status
+                    if product.track_inventory:
+                        if variant:
+                            ProductVariant.objects.filter(pk=variant.pk).update(
+                                stock_quantity=F('stock_quantity') - quantity
+                            )
+                        else:
+                            Product.objects.filter(pk=product.pk).update(
+                                stock_quantity=F('stock_quantity') - quantity
+                            )
+
+                PaymentService.ensure_payment(order, 'offline')
                 tracking_status = OrderTrackingStatus.objects.create(
                     order=order,
                     status='offline_order_created',
-                    message=f'Offline order created by {request.user.get_full_name() or request.user.username}',
-                    created_by=request.user
+                    message='Manual order captured by the sales team.',
+                    created_by=request.user,
                 )
-                
-                # Send email notifications
-                try:
-                    # Send business notification
-                    send_business_notification(order, request.user)
-                    
-                    # Send customer confirmation
-                    OrderTrackingEmailService.send_status_update_email(order, tracking_status)
-                    
-                except Exception as e:
-                    messages.warning(request, f'Order created successfully but email notification failed: {str(e)}')
-                
-                messages.success(request, f'Offline order {order.get_order_number()} created successfully!')
-                return redirect('yummytummy_store:offline_order_success', order_id=order.id)
-                
-        except Exception as e:
-            import traceback
-            print(f"Order creation error: {str(e)}")
-            print(f"Traceback: {traceback.format_exc()}")
-            messages.error(request, f'Error creating order: {str(e)}')
-            return redirect('yummytummy_store:create_offline_order')
-    
-    # GET request - show form
+
+                transaction.on_commit(lambda: _send_offline_notifications(order, request.user, tracking_status))
+
+            messages.success(request, f'Offline order {order.get_order_number()} created successfully.')
+            return redirect('yummytummy_store:offline_order_success', order_id=order.pk)
+        except (Product.DoesNotExist, ProductVariant.DoesNotExist):
+            messages.error(request, 'A selected product or variant is no longer available. Refresh and try again.')
+        except ValueError as exc:
+            messages.error(request, str(exc))
+        except Exception as exc:
+            logger.exception('Offline order creation failed with %s', exc.__class__.__name__)
+            messages.error(request, 'The order could not be created. No changes were saved.')
+    elif request.method == 'POST':
+        messages.error(request, 'Review the highlighted customer and order details.')
+
     products = Product.objects.filter(is_available=True).prefetch_related('variants')
-    context = {
+    return render(request, 'yummytummy_store/offline/create_order.html', {
         'products': products,
         'user': request.user,
-    }
-    return render(request, 'yummytummy_store/offline/create_order.html', context)
+        'customer_form': customer_form,
+        'order_form': order_form,
+    })
+
+
+def _send_offline_notifications(order, sales_person, tracking_status):
+    try:
+        send_business_notification(order, sales_person)
+    except Exception as exc:
+        logger.warning('Business notification failed for order %s: %s', order.pk, exc.__class__.__name__)
+
+    try:
+        from .notifications import NotificationService
+        NotificationService.enqueue_tracking_update(tracking_status)
+    except Exception as exc:
+        logger.warning('Customer notification queue failed for order %s: %s', order.pk, exc.__class__.__name__)
 
 
 @login_required
@@ -181,8 +192,9 @@ def get_product_variants(request, product_id):
         for variant in variants:
             variants_data.append({
                 'id': variant.id,
-                'size': variant.size,
-                'price': str(variant.price),
+                'name': variant.name,
+                'size': variant.name,
+                'price': str(variant.calculated_price),
                 'stock_quantity': variant.stock_quantity,
             })
         
@@ -191,11 +203,12 @@ def get_product_variants(request, product_id):
             'variants': variants_data,
             'base_price': str(product.price)
         })
-    except Exception as e:
+    except Exception as exc:
+        logger.warning('Variant lookup failed for product %s: %s', product_id, exc.__class__.__name__)
         return JsonResponse({
             'success': False,
-            'error': str(e)
-        })
+            'error': 'Variants are temporarily unavailable.'
+        }, status=400)
 
 
 def send_business_notification(order, sales_person):
@@ -222,7 +235,7 @@ def send_business_notification(order, sales_person):
         subject=subject,
         message=plain_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=['livegreatagrilife@gmail.com'],
+        recipient_list=[settings.BUSINESS_NOTIFICATION_EMAIL],
         html_message=html_message,
         fail_silently=False,
     )

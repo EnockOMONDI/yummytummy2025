@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import offline_views
+from . import owner_dashboard
 
 app_name = 'yummytummy_store'
 
@@ -44,6 +45,8 @@ urlpatterns = [
     path('track-order/', views.guest_order_tracking, name='guest_order_tracking'),
     path('payment/retry/<int:order_id>/', views.payment_retry, name='payment_retry'),
     path('first-login/<str:token>/', views.first_time_login, name='first_time_login'),
+    path('account/email-sign-in/', views.request_magic_link, name='request_magic_link'),
+    path('account/email-sign-in/<str:token>/', views.magic_link_login, name='magic_link_login'),
     path('account/dashboard/', views.order_tracking_dashboard, name='order_tracking_dashboard'),
     path('account/order/<int:order_id>/', views.order_detail_tracking, name='order_detail_tracking'),
     path('account/profile/', views.account_profile, name='account_profile'),
@@ -54,8 +57,9 @@ urlpatterns = [
     path('mpesa/test-auth/', views.test_mpesa_auth, name='test_mpesa_auth'),
 
     # Admin Documentation URLs
-    path('how-it-works/', views.how_it_works, name='how_it_works'),
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('how-it-works/', owner_dashboard.guide, name='how_it_works'),
+    path('admin-dashboard/', owner_dashboard.dashboard, name='admin_dashboard'),
+    path('admin-dashboard/records/<slug:section>/', owner_dashboard.dashboard, name='owner_records'),
 
     # Offline Order Management
     path('offline-orders/', offline_views.offline_orders_dashboard, name='offline_orders_dashboard'),

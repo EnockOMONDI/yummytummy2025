@@ -5,20 +5,26 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Q, Sum, Count, Avg
+from django.core.exceptions import ValidationError
+from django.core import signing
+from django.db import IntegrityError, connection, transaction
+from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import TruncDate
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
-from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, OrderTrackingStatus, RecipeCategory, Recipe, RecipePurchase
-from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm, GuestCheckoutForm
+from .models import Category, Product, ProductVariant, Ingredient, Order, OrderItem, Coupon, CouponUsage, AutoCreatedAccount, NotificationOutbox, OrderTrackingStatus, Payment, PaymentAttempt, PaymentProviderEvent, RecipeCategory, Recipe, RecipeOrderItem, RecipePurchase
+from .forms import CartAddProductForm, ProductSearchForm, ContactForm, CheckoutForm, PaymentForm, CouponApplyForm, CartAddRecipeForm, RecipeOnlyCheckoutForm, GuestCheckoutForm, MagicLinkRequestForm
 from .mpesa_service import MPesaService
 from .services import OrderTrackingEmailService, OrderTrackingService
+from .payment_services import PaymentService
 
 WHATSAPP_ORDER_PHONE = '254700061030'
 
@@ -305,13 +311,12 @@ def cart_detail(request):
 
     cart = request.session['cart']
     cart_items = []
-    subtotal = 0
+    subtotal = Decimal('0.00')
 
     # Process cart items
     for cart_key, item_data in cart.items():
         try:
-            # Convert price to float safely
-            price = float(item_data['price'])
+            price = Decimal(str(item_data['price']))
             quantity = int(item_data['quantity'])
             item_subtotal = price * quantity
             subtotal += item_subtotal
@@ -363,7 +368,7 @@ def cart_detail(request):
                     'subtotal': item_subtotal,
                     'type': 'product',
                 })
-        except (ValueError, KeyError) as e:
+        except (InvalidOperation, ValueError, KeyError) as e:
             # Handle any corrupted cart data
             messages.error(request, f"Error processing cart item: {e}")
             continue
@@ -371,7 +376,7 @@ def cart_detail(request):
     # Get coupon from session if exists
     coupon_id = request.session.get('coupon_id')
     coupon = None
-    discount = 0
+    discount = Decimal('0.00')
 
     if coupon_id:
         try:
@@ -420,13 +425,13 @@ def coupon_apply(request):
 
     # Get cart total for validation
     cart = request.session.get('cart', {})
-    cart_total = 0
+    cart_total = Decimal('0.00')
     for item_data in cart.values():
         try:
-            price = float(item_data['price'])
+            price = Decimal(str(item_data['price']))
             quantity = int(item_data['quantity'])
             cart_total += price * quantity
-        except (ValueError, KeyError):
+        except (InvalidOperation, ValueError, KeyError):
             continue
 
     if form.is_valid():
@@ -507,6 +512,7 @@ def coupon_remove(request):
 
 def checkout_start(request):
     """Let shoppers choose guest checkout or account checkout for physical-product carts."""
+    request.session.pop('retry_order_id', None)
     if 'cart' not in request.session or not request.session['cart']:
         messages.warning(request, "Your cart is empty. Please add some products before proceeding to checkout.")
         return redirect('yummytummy_store:product_list')
@@ -555,13 +561,13 @@ def checkout(request):
     # Process cart items and analyze cart contents
     cart = request.session['cart']
     cart_items = []
-    subtotal = 0
+    subtotal = Decimal('0.00')
     has_products = False
     has_recipes = False
 
     for cart_key, item_data in cart.items():
         try:
-            price = float(item_data['price'])
+            price = Decimal(str(item_data['price']))
             quantity = int(item_data['quantity'])
             item_subtotal = price * quantity
             subtotal += item_subtotal
@@ -583,7 +589,7 @@ def checkout(request):
                 'subtotal': item_subtotal,
                 'type': item_type,
             })
-        except (ValueError, KeyError) as e:
+        except (InvalidOperation, ValueError, KeyError) as e:
             messages.error(request, f"Error processing cart item: {e}")
             continue
 
@@ -603,7 +609,7 @@ def checkout(request):
     # Get coupon from session if exists
     coupon_id = request.session.get('coupon_id')
     coupon = None
-    discount = 0
+    discount = Decimal('0.00')
 
     if coupon_id:
         try:
@@ -711,33 +717,88 @@ def checkout(request):
 
 
 def _resolve_checkout_user(request, checkout_data, requires_account):
-    """Return the user for this order, creating one only when account access is required."""
+    """Return the user and whether a passwordless account was created."""
     if request.user.is_authenticated:
-        return request.user, None
+        return request.user, False
 
     if not requires_account:
-        return None, None
+        return None, False
 
     existing_user = User.objects.filter(email=checkout_data['email']).first()
     if existing_user:
-        return existing_user, None
+        return existing_user, False
 
     return OrderTrackingEmailService.create_user_account(checkout_data)
 
 
+@transaction.atomic
 def _create_checkout_order(request, checkout_data, payment_method, payment_status='pending', requires_account=False, mpesa_phone=''):
-    """Create and store an order from checkout session data."""
-    user_account, temp_password = _resolve_checkout_user(
-        request,
-        checkout_data,
-        requires_account
-    )
+    """Create an order from authoritative database prices in one transaction."""
+    user_account, account_created = _resolve_checkout_user(request, checkout_data, requires_account)
+    cart = request.session.get('cart') or {}
+    if not cart:
+        raise ValidationError('Your cart is empty.')
 
-    order = Order(
+    product_items = []
+    recipe_items = []
+    subtotal = Decimal('0.00')
+
+    for item_data in cart.values():
+        try:
+            quantity = int(item_data.get('quantity', 1))
+        except (TypeError, ValueError):
+            raise ValidationError('A cart item has an invalid quantity.')
+        if quantity < 1 or quantity > 1000:
+            raise ValidationError('Cart item quantities must be between 1 and 1,000.')
+
+        if item_data.get('type') == 'recipe':
+            quantity = 1
+            if not user_account:
+                raise ValidationError('Sign-in access is required for digital recipe purchases.')
+            recipe = Recipe.objects.select_for_update().get(
+                pk=item_data.get('recipe_id'),
+                is_published=True,
+            )
+            unit_price = recipe.price
+            recipe_items.append((recipe, quantity, unit_price))
+        else:
+            product = Product.objects.select_for_update().get(
+                pk=item_data.get('product_id'),
+                is_available=True,
+            )
+            variant = None
+            variant_id = item_data.get('variant_id')
+            if variant_id:
+                variant = ProductVariant.objects.select_for_update().get(
+                    pk=variant_id,
+                    product=product,
+                )
+                unit_price = variant.calculated_price
+                if product.track_inventory and variant.stock_quantity < quantity:
+                    raise ValidationError(f'Only {variant.stock_quantity} units of {product.name} - {variant.name} are available.')
+            else:
+                unit_price = product.price
+                if product.track_inventory and product.stock_quantity < quantity:
+                    raise ValidationError(f'Only {product.stock_quantity} units of {product.name} are available.')
+            product_items.append((product, variant, quantity, unit_price))
+
+        subtotal += unit_price * quantity
+
+    coupon = None
+    discount = Decimal('0.00')
+    coupon_id = checkout_data.get('coupon_id')
+    if coupon_id:
+        coupon = Coupon.objects.select_for_update().filter(pk=coupon_id, is_active=True).first()
+        if coupon and coupon.is_valid(order_total=subtotal, user=user_account):
+            discount = coupon.calculate_discount(subtotal).quantize(Decimal('0.01'))
+        else:
+            coupon = None
+
+    order = Order.objects.create(
         user=user_account,
-        first_name=checkout_data['first_name'],
-        last_name=checkout_data['last_name'],
-        email=checkout_data['email'],
+        first_name=checkout_data.get('first_name', 'Guest'),
+        last_name=checkout_data.get('last_name', 'Customer'),
+        email=checkout_data.get('email', ''),
         phone=checkout_data.get('phone', ''),
         address=checkout_data.get('address', ''),
         area=checkout_data.get('area', ''),
@@ -747,96 +808,59 @@ def _create_checkout_order(request, checkout_data, payment_method, payment_statu
         order_notes=checkout_data.get('order_notes', ''),
         payment_method=payment_method,
         payment_status=payment_status,
-        subtotal_amount=checkout_data.get('subtotal_amount', 0),
-        discount_amount=checkout_data.get('discount_amount', 0),
-        total_amount=checkout_data.get('total_amount', 0),
-        auto_created_account=bool(temp_password),
+        mpesa_phone=mpesa_phone or '',
+        subtotal_amount=subtotal,
+        discount_amount=discount,
+        total_amount=subtotal - discount,
+        coupon=coupon,
+        auto_created_account=account_created,
     )
 
-    if mpesa_phone:
-        order.mpesa_phone = mpesa_phone
-
-    coupon_id = checkout_data.get('coupon_id')
-    if coupon_id:
-        try:
-            coupon = Coupon.objects.get(id=coupon_id, is_active=True)
-            order.coupon = coupon
-        except Coupon.DoesNotExist:
-            pass
-
-    order.save()
-
-    cart = request.session['cart']
-    for cart_key, item_data in cart.items():
-        try:
-            price = float(item_data['price'])
-            quantity = int(item_data['quantity'])
-            item_type = item_data.get('type', 'product')
-
-            if item_type == 'recipe':
-                recipe_id = item_data.get('recipe_id')
-                recipe = Recipe.objects.get(id=recipe_id, is_published=True)
-                recipe_purchase, created = RecipePurchase.objects.get_or_create(
-                    user=user_account,
-                    recipe=recipe,
-                    defaults={'order': order}
-                )
-
-                if not created:
-                    recipe_purchase.order = order
-                    recipe_purchase.save()
+    for product, variant, quantity, unit_price in product_items:
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            variant=variant,
+            product_name=product.name,
+            variant_name=variant.name if variant else '',
+            price=unit_price,
+            quantity=quantity,
+        )
+        if product.track_inventory:
+            if variant:
+                ProductVariant.objects.filter(pk=variant.pk).update(stock_quantity=F('stock_quantity') - quantity)
             else:
-                product_id = item_data.get('product_id')
-                product = Product.objects.get(id=product_id)
-                variant_id = item_data.get('variant_id')
+                Product.objects.filter(pk=product.pk).update(stock_quantity=F('stock_quantity') - quantity)
 
-                variant = None
-                if variant_id:
-                    try:
-                        variant = ProductVariant.objects.get(id=variant_id)
-                    except ProductVariant.DoesNotExist:
-                        pass
-
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    variant=variant,
-                    price=price,
-                    quantity=quantity
-                )
-        except (Product.DoesNotExist, Recipe.DoesNotExist, ValueError, KeyError) as e:
-            messages.error(request, f"Error processing order item: {e}")
-            continue
-
-    if coupon_id and order.coupon:
-        coupon = order.coupon
-        coupon.usage_count += 1
-        coupon.save()
-
+    for recipe, quantity, unit_price in recipe_items:
+        RecipeOrderItem.objects.create(
+            order=order,
+            recipe=recipe,
+            recipe_title=recipe.title,
+            price=unit_price,
+            quantity=quantity,
+        )
+    if coupon:
+        Coupon.objects.filter(pk=coupon.pk).update(usage_count=F('usage_count') + 1)
         CouponUsage.objects.create(
             coupon=coupon,
             order=order,
             user=user_account,
-            discount_amount=checkout_data.get('discount_amount', 0)
+            discount_amount=discount,
         )
 
-    if temp_password:
-        auto_account = OrderTrackingEmailService.create_auto_account_record(
-            user_account, order, temp_password
-        )
+    if account_created:
+        auto_account = OrderTrackingEmailService.create_auto_account_record(user_account, order)
         request.session['pending_account_email'] = {
             'order_id': order.id,
             'user_id': user_account.id,
-            'temp_password': temp_password,
-            'auto_account_id': auto_account.id if auto_account else None
+            'auto_account_id': auto_account.id,
         }
-    elif checkout_data.get('email'):
-        request.session['pending_order_email'] = {
-            'order_id': order.id
-        }
+    elif order.email:
+        request.session['pending_order_email'] = {'order_id': order.id}
 
+    PaymentService.ensure_payment(order, payment_method)
     OrderTrackingService.create_initial_tracking_status(order)
-
     request.session['order_id'] = order.id
 
     from .services import CartPreservationService
@@ -849,7 +873,7 @@ def _create_checkout_order(request, checkout_data, payment_method, payment_statu
 def _clear_checkout_session(request):
     """Clear cart and checkout state after an order is stored."""
     request.session['cart'] = {}
-    for key in ['checkout_data', 'coupon_id', 'checkout_mode']:
+    for key in ['checkout_data', 'coupon_id', 'checkout_mode', 'retry_order_id']:
         if key in request.session:
             del request.session[key]
     request.session.modified = True
@@ -892,293 +916,113 @@ def _build_whatsapp_order_url(order):
     return f"https://api.whatsapp.com/send?phone={WHATSAPP_ORDER_PHONE}&text={quote(message)}"
 
 
+
+
 def payment(request):
-    """Payment page with payment method selection"""
-    # Check if checkout data exists in session
-    if 'checkout_data' not in request.session:
-        messages.warning(request, "Please complete the shipping information first.")
+    """Create an order from server-side prices and initiate its selected payment."""
+    checkout_data = request.session.get('checkout_data')
+    cart = request.session.get('cart')
+    if not checkout_data:
+        messages.warning(request, 'Please complete the shipping information first.')
         return redirect('yummytummy_store:checkout')
-
-    # Check if cart is empty
-    if 'cart' not in request.session or not request.session['cart']:
-        messages.warning(request, "Your cart is empty. Please add some products before proceeding to checkout.")
+    if not cart:
+        messages.warning(request, 'Your cart is empty.')
         return redirect('yummytummy_store:product_list')
-
-    checkout_data = request.session['checkout_data']
-    subtotal_amount = checkout_data.get('subtotal_amount', 0)
-    discount_amount = checkout_data.get('discount_amount', 0)
-    total_amount = checkout_data['total_amount']
-    coupon_id = checkout_data.get('coupon_id')
 
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
-            payment_method = form.cleaned_data['payment_method']
-
-            auto_account = None
-
-            # Get order type from checkout data
-            is_recipe_only = checkout_data.get('is_recipe_only', False)
-            is_mixed_order = checkout_data.get('is_mixed_order', False)
-            checkout_mode = checkout_data.get('checkout_mode')
-            requires_account = is_recipe_only or is_mixed_order or checkout_mode == 'account'
-            user_account, temp_password = _resolve_checkout_user(
-                request,
-                checkout_data,
-                requires_account
-            )
-
-            # Create the order
-            order = Order(
-                user=user_account,
-                first_name=checkout_data['first_name'],
-                last_name=checkout_data['last_name'],
-                email=checkout_data['email'],
-                phone=checkout_data.get('phone', ''),  # Optional for recipe-only orders
-                address=checkout_data.get('address', ''),  # Optional for recipe-only orders
-                area=checkout_data.get('area', ''),
-                estate=checkout_data.get('estate', ''),
-                building=checkout_data.get('building', ''),
-                landmark=checkout_data.get('landmark', ''),
-                order_notes=checkout_data.get('order_notes', ''),
-                payment_method=payment_method,
-                payment_status='pending',
-                subtotal_amount=subtotal_amount,
-                discount_amount=discount_amount,
-                total_amount=total_amount,
-                auto_created_account=bool(temp_password),  # Mark if account was auto-created
-            )
-
-            # Add M-Pesa phone number if applicable
-            if payment_method == 'mpesa':
-                order.mpesa_phone = form.cleaned_data['mpesa_phone']
-
-            # Add coupon if applicable
-            if coupon_id:
+            method = form.cleaned_data['payment_method']
+            payment_record = None
+            retry_order_id = request.session.get('retry_order_id')
+            if retry_order_id:
                 try:
-                    coupon = Coupon.objects.get(id=coupon_id, is_active=True)
-                    order.coupon = coupon
-                except Coupon.DoesNotExist:
-                    pass
-
-            # Save the order
-            order.save()
-
-            # Create order items and recipe purchases
-            cart = request.session['cart']
-            for cart_key, item_data in cart.items():
-                try:
-                    price = float(item_data['price'])
-                    quantity = int(item_data['quantity'])
-                    item_type = item_data.get('type', 'product')  # Default to product for backward compatibility
-
-                    if item_type == 'recipe':
-                        # Handle recipe items
-                        recipe_id = item_data.get('recipe_id')
-                        recipe = Recipe.objects.get(id=recipe_id, is_published=True)
-
-                        # Create or get existing RecipePurchase record (handle duplicates)
-                        recipe_purchase, created = RecipePurchase.objects.get_or_create(
-                            user=user_account,
-                            recipe=recipe,
-                            defaults={
-                                'order': order,
-                                # purchased_at is auto-set by auto_now_add
-                            }
-                        )
-
-                        # If recipe purchase already exists, update the order reference
-                        if not created:
-                            recipe_purchase.order = order
-                            recipe_purchase.save()
-                    else:
-                        # Handle product items (existing logic)
-                        product_id = item_data.get('product_id')
-                        product = Product.objects.get(id=product_id)
-                        variant_id = item_data.get('variant_id')
-
-                        # Get variant if specified
-                        variant = None
-                        if variant_id:
-                            try:
-                                variant = ProductVariant.objects.get(id=variant_id)
-                            except ProductVariant.DoesNotExist:
-                                pass
-
-                        OrderItem.objects.create(
-                            order=order,
-                            product=product,
-                            variant=variant,
-                            price=price,
-                            quantity=quantity
-                        )
-                except (Product.DoesNotExist, Recipe.DoesNotExist, ValueError, KeyError) as e:
-                    messages.error(request, f"Error processing order item: {e}")
-                    continue
-
-            # Record coupon usage if applicable
-            if coupon_id and order.coupon:
-                # Increment coupon usage count
-                coupon = order.coupon
-                coupon.usage_count += 1
-                coupon.save()
-
-                # Create coupon usage record
-                CouponUsage.objects.create(
-                    coupon=coupon,
-                    order=order,
-                    user=user_account,
-                    discount_amount=discount_amount
-                )
-
-            # Create AutoCreatedAccount record if account was auto-created
-            if temp_password:
-                auto_account = OrderTrackingEmailService.create_auto_account_record(
-                    user_account, order, temp_password
-                )
-
-            # Process M-Pesa payment if applicable
-            if payment_method == 'mpesa':
-                try:
-                    # Generate callback URL for M-Pesa
-                    if settings.DEBUG:
-                        # For development, use a placeholder URL since localhost won't work with M-Pesa
-                        callback_url = 'https://webhook.site/unique-id'
-                    else:
-                        # For production, use the configured callback URL for the current domain
-                        # This ensures Safaricom sends callbacks to the registered domain
-                        callback_url = getattr(settings, 'MPESA_CALLBACK_URL',
-                                             f"{settings.SITE_URL}/payments/callback/")
-
-                    # Initialize M-Pesa service
-                    mpesa_service = MPesaService()
-
-                    # Initiate STK Push
-                    mpesa_response = mpesa_service.initiate_stk_push(
-                        phone_number=order.mpesa_phone,
-                        amount=float(order.total_amount),
-                        order_id=order.id,
-                        callback_url=callback_url
-                    )
-
-                    if mpesa_response['success']:
-                        # Update order with M-Pesa details
-                        order.mpesa_checkout_request_id = mpesa_response.get('checkout_request_id')
-                        order.mpesa_merchant_request_id = mpesa_response.get('merchant_request_id')
-                        order.payment_status = 'processing'
-                        order.save()
-
-                        messages.success(request,
-                            "M-Pesa payment initiated! Please check your phone for the payment prompt.")
-                    else:
-                        # M-Pesa initiation failed
-                        order.payment_status = 'failed'
-                        order.save()
-
-                        # Create failed payment tracking status
-                        OrderTrackingStatus.objects.create(
-                            order=order,
-                            status='cancelled',
-                            message=f'M-Pesa payment initiation failed: {mpesa_response.get("error", "Unknown error")}'
-                        )
-
-                        # Send failed payment notification email
-                        try:
-                            OrderTrackingEmailService.send_payment_failed_notification(
-                                order=order,
-                                failure_reason=f"Payment initiation failed: {mpesa_response.get('error', 'Unknown error')}",
-                                request=request
-                            )
-                        except Exception as e:
-                            print(f"Failed to send payment failure notification for order {order.id}: {str(e)}")
-
-                        # Provide user-friendly error messages based on error type
-                        error_msg = mpesa_response.get('error', 'Unknown error')
-                        error_code = mpesa_response.get('error_code', '')
-
-                        # Map technical errors to user-friendly messages
-                        if '404.001.03' in str(error_code):
-                            user_message = "M-Pesa service is temporarily unavailable. Please try again in a few minutes or contact our support team."
-                        elif 'authentication' in error_msg.lower() or 'access token' in error_msg.lower():
-                            user_message = "Payment service is experiencing technical difficulties. Please contact our support team or try again later."
-                        elif 'invalid' in error_msg.lower() and 'shortcode' in error_msg.lower():
-                            user_message = "Payment configuration issue detected. Please contact our support team."
-                        elif 'network error' in error_msg.lower():
-                            user_message = "Network connectivity issue. Please check your internet connection and try again."
-                        else:
-                            user_message = f"M-Pesa payment failed: {error_msg}"
-
-                        messages.error(request, user_message)
-
-                except Exception as e:
-                    # Handle M-Pesa errors gracefully
-                    order.payment_status = 'failed'
-                    order.save()
-
-                    # Create failed payment tracking status
-                    OrderTrackingStatus.objects.create(
-                        order=order,
-                        status='cancelled',
-                        message=f'M-Pesa payment error: {str(e)}'
-                    )
-
-                    # Send failed payment notification email
-                    try:
-                        OrderTrackingEmailService.send_payment_failed_notification(
-                            order=order,
-                            failure_reason=f"Payment processing error: {str(e)}",
-                            request=request
-                        )
-                    except Exception as email_error:
-                        print(f"Failed to send payment failure notification for order {order.id}: {str(email_error)}")
-
-                    messages.error(request,
-                        "There was an error processing your M-Pesa payment. Please try again or contact support.")
-
-            # Create initial order tracking status
-            OrderTrackingService.create_initial_tracking_status(order)
-
-            # Store email data in session for later sending (after payment confirmation)
-            if temp_password and auto_account:
-                request.session['pending_account_email'] = {
-                    'order_id': order.id,
-                    'user_id': user_account.id,
-                    'temp_password': temp_password,
-                    'auto_account_id': auto_account.id if auto_account else None
-                }
+                    order = Order.objects.get(pk=retry_order_id, payment_status='failed')
+                except Order.DoesNotExist:
+                    request.session.pop('retry_order_id', None)
+                    form.add_error(None, 'This order is no longer eligible for payment retry.')
+                else:
+                    order.mpesa_phone = form.cleaned_data.get('mpesa_phone', '')
+                    order.save(update_fields=['mpesa_phone', 'updated'])
+                    payment_record = PaymentService.ensure_payment(order, method)
             else:
-                request.session['pending_order_email'] = {
-                    'order_id': order.id
-                }
-            request.session.modified = True
+                requires_account = (
+                    checkout_data.get('is_recipe_only')
+                    or checkout_data.get('is_mixed_order')
+                    or checkout_data.get('checkout_mode') == 'account'
+                )
+                try:
+                    order = _create_checkout_order(
+                        request=request,
+                        checkout_data=checkout_data,
+                        payment_method=method,
+                        requires_account=requires_account,
+                        mpesa_phone=form.cleaned_data.get('mpesa_phone', ''),
+                    )
+                except (ValidationError, Product.DoesNotExist, ProductVariant.DoesNotExist, Recipe.DoesNotExist) as exc:
+                    message = exc.messages[0] if isinstance(exc, ValidationError) else 'A cart item is no longer available.'
+                    form.add_error(None, message)
+                except IntegrityError:
+                    form.add_error(None, 'The order could not be created safely. Please review your cart and try again.')
+                else:
+                    payment_record = order.payments.get(is_current=True)
 
-            # Store order ID in session for confirmation page
-            request.session['order_id'] = order.id
+            if payment_record and not form.errors:
+                if method == 'mpesa':
+                    attempt = PaymentService.create_attempt(payment_record)
+                    if (
+                        (settings.DEBUG or getattr(settings, 'TESTING', False))
+                        and not getattr(settings, 'MPESA_ALLOW_LIVE_IN_DEBUG', False)
+                    ):
+                        PaymentService.mark_failed(attempt, 'debug_live_disabled', 'Live M-Pesa calls are disabled in development.')
+                        messages.error(request, 'Live M-Pesa requests are disabled in local development.')
+                    else:
+                        try:
+                            mpesa_response = MPesaService().initiate_stk_push(
+                                phone_number=order.mpesa_phone,
+                                amount=float(order.total_amount),
+                                order_id=order.id,
+                                callback_url=settings.MPESA_CALLBACK_URL,
+                            )
+                        except Exception as exc:
+                            mpesa_response = {
+                                'success': False,
+                                'error': 'The payment provider could not be reached.',
+                                'error_code': exc.__class__.__name__,
+                            }
 
-            # Preserve cart data for potential payment retry before clearing
-            from .services import CartPreservationService
-            CartPreservationService.preserve_cart_for_order(order)
+                        if mpesa_response.get('success'):
+                            PaymentService.mark_submitted(
+                                attempt,
+                                mpesa_response.get('checkout_request_id'),
+                                mpesa_response.get('merchant_request_id', ''),
+                            )
+                            messages.success(request, 'M-Pesa payment initiated. Check your phone for the prompt.')
+                        else:
+                            PaymentService.mark_failed(
+                                attempt,
+                                mpesa_response.get('error_code', ''),
+                                mpesa_response.get('error', 'Payment initiation failed.'),
+                            )
+                            OrderTrackingStatus.objects.create(
+                                order=order,
+                                status='payment_failed',
+                                message='M-Pesa payment could not be initiated. The customer can retry payment.',
+                            )
+                            messages.error(request, 'M-Pesa could not be initiated. Please retry or choose another payment method.')
 
-            # Clear cart, checkout data, and coupon
-            request.session['cart'] = {}
-            if 'checkout_data' in request.session:
-                del request.session['checkout_data']
-            if 'coupon_id' in request.session:
-                del request.session['coupon_id']
-
-            request.session.modified = True
-
-            # Redirect to confirmation page
-            return redirect('yummytummy_store:order_confirmation')
+                request.session['order_id'] = order.id
+                _clear_checkout_session(request)
+                return redirect('yummytummy_store:order_confirmation')
     else:
         form = PaymentForm()
 
     context = {
         'form': form,
         'checkout_data': checkout_data,
-        'subtotal_amount': subtotal_amount,
-        'discount_amount': discount_amount,
-        'total_amount': total_amount,
+        'subtotal_amount': checkout_data.get('subtotal_amount', 0),
+        'discount_amount': checkout_data.get('discount_amount', 0),
+        'total_amount': checkout_data.get('total_amount', 0),
     }
     return render(request, 'yummytummy_store/checkout/payment.html', context)
 
@@ -1193,6 +1037,7 @@ def order_confirmation(request):
     try:
         order = Order.objects.get(id=request.session['order_id'])
         order_items = order.items.all()
+        recipe_order_items = order.recipe_items.all()
     except Order.DoesNotExist:
         messages.error(request, "Order not found.")
         return redirect('yummytummy_store:product_list')
@@ -1204,6 +1049,7 @@ def order_confirmation(request):
     context = {
         'order': order,
         'order_items': order_items,
+        'recipe_order_items': recipe_order_items,
     }
     return render(request, 'yummytummy_store/checkout/confirmation.html', context)
 
@@ -1229,8 +1075,7 @@ def first_time_login(request, token):
         # Mark first login as completed
         auto_account.mark_first_login_completed()
 
-        messages.success(request, f"Welcome to YummyTummy, {auto_account.user.first_name}! Your account has been activated.")
-        messages.info(request, "For security, please consider changing your password in your account settings.")
+        messages.success(request, f"Welcome to YummyTummy, {auto_account.user.first_name}! You are signed in securely.")
 
         # Redirect to order tracking dashboard
         return redirect('yummytummy_store:order_tracking_dashboard')
@@ -1238,6 +1083,65 @@ def first_time_login(request, token):
     except AutoCreatedAccount.DoesNotExist:
         messages.error(request, "Invalid or expired login link. Please contact support for assistance.")
         return redirect('yummytummy_store:home')
+
+
+def request_magic_link(request):
+    """Send a passwordless sign-in link without revealing whether an account exists."""
+    initial_email = request.GET.get('email', '')
+    form = MagicLinkRequestForm(request.POST or None, initial={'email': initial_email})
+    next_url = request.POST.get('next', request.GET.get('next', ''))
+
+    if request.method == 'POST' and form.is_valid():
+        now_timestamp = int(timezone.now().timestamp())
+        last_request = request.session.get('magic_link_requested_at', 0)
+        if now_timestamp - last_request >= 60:
+            user = User.objects.filter(
+                email__iexact=form.cleaned_data['email'],
+                is_active=True,
+            ).order_by('pk').first()
+            if user:
+                OrderTrackingEmailService.send_magic_login_link(user, request, next_url=next_url)
+            request.session['magic_link_requested_at'] = now_timestamp
+            request.session.modified = True
+
+        messages.success(request, 'If that email belongs to an active account, a secure sign-in link has been sent.')
+        return redirect('yummytummy_store:request_magic_link')
+
+    return render(request, 'registration/magic_link_request.html', {
+        'form': form,
+        'next': next_url,
+    })
+
+
+def magic_link_login(request, token):
+    """Consume a timestamped magic link and log the account in once."""
+    try:
+        payload = signing.loads(token, salt='yummytummy.magic-login', max_age=900)
+    except signing.BadSignature:
+        messages.error(request, 'This sign-in link is invalid or has expired. Request a new link.')
+        return redirect('yummytummy_store:request_magic_link')
+
+    with transaction.atomic():
+        user = User.objects.select_for_update().filter(
+            pk=payload.get('user_id'),
+            email__iexact=payload.get('email', ''),
+            is_active=True,
+        ).first()
+        marker = user.last_login.isoformat() if user and user.last_login else ''
+        if not user or marker != payload.get('login_marker', ''):
+            messages.error(request, 'This sign-in link has already been used or is no longer valid.')
+            return redirect('yummytummy_store:request_magic_link')
+        login(request, user)
+
+    next_url = payload.get('next', '')
+    if not url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse('yummytummy_store:order_tracking_dashboard')
+    messages.success(request, 'You are now signed in.')
+    return redirect(next_url)
 
 
 @login_required
@@ -1248,19 +1152,27 @@ def order_tracking_dashboard(request):
 
     # Get order tracking information
     orders_with_tracking = []
+    processing_orders = 0
+    delivered_orders = 0
     for order in orders:
         latest_status = order.get_latest_tracking_status()
         progress_percentage = OrderTrackingService.get_order_progress_percentage(order)
+        status = latest_status.status if latest_status else 'processing'
+        processing_orders += status == 'processing'
+        delivered_orders += status == 'delivered'
 
         orders_with_tracking.append({
             'order': order,
             'latest_status': latest_status,
             'progress_percentage': progress_percentage,
             'tracking_history': order.tracking_statuses.all()[:3],  # Show last 3 updates
+            'item_count': order.items.count() + order.recipe_items.count(),
         })
 
     context = {
         'orders_with_tracking': orders_with_tracking,
+        'processing_orders': processing_orders,
+        'delivered_orders': delivered_orders,
         'user': request.user,
     }
     return render(request, 'yummytummy_store/account/dashboard.html', context)
@@ -1287,6 +1199,16 @@ def order_detail_tracking(request, order_id):
             'display_name': f"{item.product.name} - {item.variant.name}" if item.variant else item.product.name,
         }
         order_items.append(item_data)
+    for item in order.recipe_items.all():
+        order_items.append({
+            'recipe': item.recipe,
+            'variant': None,
+            'quantity': item.quantity,
+            'price': item.price,
+            'total': item.get_cost(),
+            'display_name': item.recipe_title or item.recipe.title,
+            'is_digital': True,
+        })
 
     context = {
         'order': order,
@@ -1354,6 +1276,16 @@ def guest_order_tracking(request):
                             'display_name': f"{item.product.name} - {item.variant.name}" if item.variant else item.product.name,
                         }
                         order_items.append(item_data)
+                    for item in order.recipe_items.all():
+                        order_items.append({
+                            'recipe': item.recipe,
+                            'variant': None,
+                            'quantity': item.quantity,
+                            'price': item.price,
+                            'total': item.get_cost(),
+                            'display_name': item.recipe_title or item.recipe.title,
+                            'is_digital': True,
+                        })
 
                     context = {
                         'order': order,
@@ -1362,6 +1294,14 @@ def guest_order_tracking(request):
                         'progress_percentage': progress_percentage,
                         'is_guest_tracking': True,
                     }
+                    if order.payment_status == 'failed':
+                        retry_token = signing.dumps(
+                            {'order_id': order.pk, 'email': order.email},
+                            salt='yummytummy.payment-retry',
+                            compress=True,
+                        )
+                        retry_path = reverse('yummytummy_store:payment_retry', args=[order.pk])
+                        context['payment_retry_url'] = f'{retry_path}?token={quote(retry_token)}'
                     return render(request, 'yummytummy_store/account/guest_order_tracking.html', context)
                 else:
                     error_message = "Invalid order number format. Order numbers start with 'MSL-'"
@@ -1371,6 +1311,7 @@ def guest_order_tracking(request):
             error_message = "Please enter both order number and phone or email."
 
     context = {
+        'order': order,
         'error_message': error_message,
     }
     return render(request, 'yummytummy_store/account/guest_order_tracking.html', context)
@@ -1380,6 +1321,28 @@ def payment_retry(request, order_id):
     """Allow customers to retry payment for failed orders"""
     try:
         order = get_object_or_404(Order, id=order_id, payment_status='failed')
+
+        authorized_user = (
+            request.user.is_authenticated
+            and (request.user.is_staff or order.user_id == request.user.id)
+        )
+        if not authorized_user:
+            try:
+                token_data = signing.loads(
+                    request.GET.get('token', ''),
+                    salt='yummytummy.payment-retry',
+                    max_age=7 * 24 * 60 * 60,
+                )
+                authorized_user = (
+                    token_data.get('order_id') == order.pk
+                    and token_data.get('email', '').casefold() == order.email.casefold()
+                )
+            except (signing.BadSignature, signing.SignatureExpired, AttributeError):
+                authorized_user = False
+
+        if not authorized_user:
+            messages.error(request, 'Use the secure retry link from your payment email or track your order first.')
+            return redirect('yummytummy_store:guest_order_tracking')
 
         # Restore cart contents from order
         from .services import CartPreservationService
@@ -1402,7 +1365,9 @@ def payment_retry(request, order_id):
                 'discount_amount': float(order.discount_amount),
                 'total_amount': float(order.total_amount),
                 'coupon_id': order.coupon.id if order.coupon else None,
+                'checkout_mode': 'account' if order.user_id else 'guest',
             }
+            request.session['retry_order_id'] = order.id
             request.session.modified = True
 
             messages.success(request,
@@ -1425,527 +1390,143 @@ def payment_retry(request, order_id):
 
 # M-Pesa Integration Views
 
-@csrf_exempt
-def mpesa_callback(request):
-    """
-    Handle M-Pesa payment callback from Safaricom
 
-    Production-ready implementation with:
-    - Database transaction protection
-    - Duplicate callback prevention
-    - Enhanced error handling and validation
-    - Background email processing
-    - Comprehensive logging
-    """
+
+@csrf_exempt
+@require_POST
+def mpesa_callback(request):
+    """Process an M-Pesa callback with event idempotency and strict correlation."""
     import json
     import logging
-    import time
-    from django.db import transaction
-    from django.utils import timezone
+    from zoneinfo import ZoneInfo
 
     logger = logging.getLogger(__name__)
-    start_time = time.time()
-
-    # Log request details for debugging
-    logger.info(f"M-Pesa callback received - Method: {request.method}, "
-               f"Content-Type: {request.META.get('CONTENT_TYPE', 'Unknown')}, "
-               f"User-Agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
-
-    # Validate HTTP method
-    if request.method != 'POST':
-        logger.warning(f"Invalid HTTP method for M-Pesa callback: {request.method}")
-        return JsonResponse({
-            'ResultCode': 1,
-            'ResultDesc': 'Invalid HTTP method. Only POST requests are accepted.'
-        }, status=405)
+    if len(request.body) > 64 * 1024:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Payload too large'}, status=413)
 
     try:
-        # Parse JSON payload with specific error handling
-        try:
-            if not request.body:
-                raise ValueError("Empty request body")
-            callback_data = json.loads(request.body.decode('utf-8'))
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in M-Pesa callback: {str(e)}")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Invalid JSON payload'
-            })
-        except UnicodeDecodeError as e:
-            logger.error(f"Unicode decode error in M-Pesa callback: {str(e)}")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Invalid request encoding'
-            })
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid JSON payload'}, status=400)
 
-        logger.info(f"M-Pesa callback payload: {callback_data}")
+    callback = payload.get('Body', {}).get('stkCallback', {}) if isinstance(payload, dict) else {}
+    checkout_request_id = callback.get('CheckoutRequestID')
+    merchant_request_id = callback.get('MerchantRequestID')
+    result_code = callback.get('ResultCode')
+    result_desc = str(callback.get('ResultDesc', 'Payment failed'))[:160]
+    if not checkout_request_id or result_code is None:
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Missing callback identifiers'}, status=400)
+    try:
+        result_code = int(result_code)
+    except (TypeError, ValueError):
+        return JsonResponse({'ResultCode': 1, 'ResultDesc': 'Invalid result code'}, status=400)
 
-        # Validate callback structure
-        if 'Body' not in callback_data:
-            logger.error("Missing 'Body' in M-Pesa callback payload")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Invalid callback structure: missing Body'
-            })
+    metadata = {}
+    callback_metadata = callback.get('CallbackMetadata') or {}
+    for item in callback_metadata.get('Item', []) if isinstance(callback_metadata, dict) else []:
+        if isinstance(item, dict) and item.get('Name'):
+            metadata[item['Name']] = item.get('Value')
+    receipt_number = str(metadata.get('MpesaReceiptNumber', ''))
 
-        stk_callback = callback_data.get('Body', {}).get('stkCallback', {})
-        if not stk_callback:
-            logger.error("Missing 'stkCallback' in M-Pesa callback payload")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Invalid callback structure: missing stkCallback'
-            })
+    event, created = PaymentService.record_provider_event(
+        payload,
+        checkout_request_id,
+        result_code,
+        receipt_number,
+    )
+    with transaction.atomic():
+        event = PaymentProviderEvent.objects.select_for_update().get(pk=event.pk)
+        # A persisted event may still need processing after a previous transaction failed.
+        if event.processing_status != 'received':
+            return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Callback already processed'})
+        attempt = (
+            PaymentAttempt.objects.select_for_update()
+            .select_related('payment__order')
+            .filter(checkout_request_id=checkout_request_id)
+            .first()
+        )
+        if not attempt:
+            event.processing_status = 'ignored'
+            event.failure_reason = 'No matching payment attempt.'
+            event.processed_at = timezone.now()
+            event.save(update_fields=['processing_status', 'failure_reason', 'processed_at'])
+            logger.warning('Ignored unmatched M-Pesa callback %s', event.pk)
+            return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Callback acknowledged'})
 
-        # Extract and validate required callback fields
-        merchant_request_id = stk_callback.get('MerchantRequestID')
-        checkout_request_id = stk_callback.get('CheckoutRequestID')
-        result_code = stk_callback.get('ResultCode')
-        result_desc = stk_callback.get('ResultDesc')
-        account_reference = stk_callback.get('AccountReference')  # Extract AccountReference
+        payment_record = attempt.payment
+        order = payment_record.order
+        event.payment = payment_record
+        event.attempt = attempt
 
-        # Validate required fields
-        if not checkout_request_id:
-            logger.error("Missing CheckoutRequestID in M-Pesa callback")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Missing CheckoutRequestID'
-            })
-
-        if result_code is None:
-            logger.error("Missing ResultCode in M-Pesa callback")
-            return JsonResponse({
-                'ResultCode': 1,
-                'ResultDesc': 'Missing ResultCode'
-            })
-
-        logger.info(f"Processing M-Pesa callback - CheckoutRequestID: {checkout_request_id}, "
-                   f"ResultCode: {result_code}, AccountReference: {account_reference}")
-
-        # Use database transaction for atomic operations
-        with transaction.atomic():
-            # Find the order using checkout request ID with fallback to account reference
-            order = None
-            try:
-                order = Order.objects.select_for_update().get(
-                    mpesa_checkout_request_id=checkout_request_id
-                )
-            except Order.DoesNotExist:
-                # Fallback: try to find order using account reference (order ID)
-                if account_reference:
+        if payment_record.method != 'mpesa':
+            event.processing_status = 'failed'
+            event.failure_reason = 'Payment method mismatch.'
+        elif payment_record.status in {'succeeded', 'partially_refunded', 'refunded'}:
+            event.processing_status = 'ignored'
+            event.failure_reason = 'Payment was already finalized.'
+        elif attempt.merchant_request_id and merchant_request_id != attempt.merchant_request_id:
+            event.processing_status = 'failed'
+            event.failure_reason = 'Merchant request ID mismatch.'
+        elif result_code == 0:
+            amount = PaymentService.parse_amount(metadata.get('Amount'))
+            duplicate_receipt = Payment.objects.exclude(pk=payment_record.pk).filter(
+                method='mpesa',
+                provider_reference=receipt_number,
+            ).exists()
+            if not receipt_number:
+                event.processing_status = 'failed'
+                event.failure_reason = 'Successful callback did not include a receipt number.'
+            elif amount != payment_record.amount:
+                event.processing_status = 'failed'
+                event.failure_reason = 'Callback amount does not match the payment amount.'
+            elif duplicate_receipt:
+                event.processing_status = 'failed'
+                event.failure_reason = 'Receipt number is already assigned to another payment.'
+            else:
+                completed_at = timezone.now()
+                transaction_date = metadata.get('TransactionDate')
+                if transaction_date:
                     try:
-                        order_id = int(account_reference)
-                        order = Order.objects.select_for_update().get(id=order_id)
-                        logger.info(f"Order found using AccountReference fallback: {order_id}")
-                    except (ValueError, Order.DoesNotExist):
+                        completed_at = datetime.strptime(str(transaction_date), '%Y%m%d%H%M%S').replace(
+                            tzinfo=ZoneInfo('Africa/Nairobi')
+                        )
+                    except (TypeError, ValueError):
                         pass
 
-                if not order:
-                    logger.error(f"Order not found for M-Pesa callback - "
-                               f"CheckoutRequestID: {checkout_request_id}, "
-                               f"AccountReference: {account_reference}")
-                    return JsonResponse({
-                        'ResultCode': 0,
-                        'ResultDesc': 'Order not found but callback acknowledged'
-                    })
-
-            # Check for duplicate callback processing
-            if order.payment_status in ['completed', 'failed'] and order.transaction_id:
-                logger.warning(f"Duplicate M-Pesa callback for already processed order {order.id} - "
-                             f"Status: {order.payment_status}, TransactionID: {order.transaction_id}")
-                return JsonResponse({
-                    'ResultCode': 0,
-                    'ResultDesc': 'Callback already processed'
-                })
-
-            # Validate order state before processing
-            if order.payment_method != 'mpesa':
-                logger.error(f"Order {order.id} payment method is not M-Pesa: {order.payment_method}")
-                return JsonResponse({
-                    'ResultCode': 0,
-                    'ResultDesc': 'Order payment method mismatch'
-                })
-
-            # Process payment based on result code
-            if result_code == 0:
-                # Payment successful - extract callback metadata
-                callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
-
-                # Extract payment details from metadata
-                amount = None
-                receipt_number = None
-                transaction_date = None
-                phone_number = None
-
-                for item in callback_metadata:
-                    name = item.get('Name')
-                    value = item.get('Value')
-
-                    if name == 'Amount':
-                        amount = value
-                    elif name == 'MpesaReceiptNumber':
-                        receipt_number = value
-                    elif name == 'TransactionDate':
-                        transaction_date = value
-                    elif name == 'PhoneNumber':
-                        phone_number = value
-
-                # Validate that we have essential payment details
-                if not receipt_number:
-                    logger.error(f"Missing MpesaReceiptNumber in successful callback for order {order.id}")
-                    return JsonResponse({
-                        'ResultCode': 1,
-                        'ResultDesc': 'Missing receipt number in successful payment'
-                    })
-
-                # Update order with payment details
-                order.payment_status = 'completed'
-                order.transaction_id = receipt_number
+                PaymentService.mark_succeeded(attempt, receipt_number, completed_at)
                 order.mpesa_receipt_number = receipt_number
-
-                # Parse and set transaction date with timezone handling
-                if transaction_date:
-                    from datetime import datetime
-                    import pytz
-                    try:
-                        # Parse M-Pesa date format (YYYYMMDDHHMMSS)
-                        # M-Pesa timestamps are in Kenya time (EAT)
-                        naive_datetime = datetime.strptime(str(transaction_date), '%Y%m%d%H%M%S')
-
-                        # Make timezone-aware in Kenya timezone
-                        kenya_tz = pytz.timezone('Africa/Nairobi')
-                        order.mpesa_transaction_date = kenya_tz.localize(naive_datetime)
-                    except (ValueError, TypeError) as e:
-                        logger.warning(f"Failed to parse transaction date {transaction_date} for order {order.id}: {str(e)}")
-
-                # Save order updates
-                order.save()
-
-                # Create payment confirmed tracking status
-                tracking_status = OrderTrackingStatus.objects.create(
+                order.mpesa_transaction_date = completed_at
+                order.save(update_fields=['mpesa_receipt_number', 'mpesa_transaction_date', 'updated'])
+                OrderTrackingStatus.objects.create(
                     order=order,
                     status='payment_confirmed',
-                    message=f'M-Pesa payment confirmed. Receipt: {receipt_number}'
+                    message='M-Pesa payment confirmed.',
                 )
+                from .notifications import NotificationService
+                NotificationService.enqueue_payment_result(order, succeeded=True)
+                event.processing_status = 'processed'
+        else:
+            PaymentService.mark_failed(attempt, result_code, result_desc)
+            OrderTrackingStatus.objects.create(
+                order=order,
+                status='payment_failed',
+                message='M-Pesa payment was not completed. The customer can retry payment.',
+            )
+            from .notifications import NotificationService
+            NotificationService.enqueue_payment_result(order, succeeded=False, failure_reason=result_desc)
+            event.processing_status = 'processed'
 
-                # Schedule background email sending (immediate fallback if no background task system)
-                try:
-                    # TODO: Replace with background task (Celery/Django-RQ) for production
-                    # For now, send email immediately with optimized error handling
-                    from django.core.mail import mail_admins
+        event.processed_at = timezone.now()
+        event.save(update_fields=[
+            'payment', 'attempt', 'processing_status', 'failure_reason', 'processed_at'
+        ])
 
-                    # Send confirmation email based on account type with minimal processing
-                    if hasattr(order, 'auto_created_account') and order.auto_created_account:
-                        # Send payment confirmation with account details
-                        OrderTrackingEmailService.send_payment_confirmation_email(order, None)
-                    else:
-                        # Send regular order confirmation
-                        OrderTrackingEmailService.send_regular_order_confirmation(order, None)
-
-                except Exception as e:
-                    # Log email failure but don't fail the callback
-                    logger.error(f"Failed to send confirmation email for order {order.id}: {str(e)}")
-                    # Optionally notify admins about email failure
-                    try:
-                        mail_admins(
-                            subject=f'Email Failure - Order {order.get_order_number()}',
-                            message=f'Failed to send confirmation email for order {order.id}: {str(e)}',
-                            fail_silently=True
-                        )
-                    except:
-                        pass  # Don't let admin email failure affect callback
-
-                # Send recipe purchase emails if order contains recipes (optimized for performance)
-                try:
-                    # Quick check for recipe purchases with minimal database queries
-                    recipe_count = RecipePurchase.objects.filter(order=order).count()
-                    if recipe_count > 0:
-                        # Only fetch full data if recipes exist
-                        recipe_purchases = RecipePurchase.objects.filter(order=order).select_related('recipe', 'recipe__category')
-                        success = OrderTrackingEmailService.send_recipe_purchase_confirmation(order, recipe_purchases)
-                        if success:
-                            logger.info(f"Recipe purchase confirmation email sent successfully for order {order.id} with {recipe_count} recipes")
-                        else:
-                            logger.warning(f"Failed to send recipe purchase confirmation email for order {order.id}")
-                except Exception as e:
-                    # Log recipe email failure but don't fail the callback
-                    logger.error(f"Failed to process recipe emails for order {order.id}: {str(e)}")
-
-                logger.info(f"M-Pesa payment successful for order {order.id} - "
-                           f"Receipt: {receipt_number}, Amount: {amount}")
-
-            else:
-                # Payment failed
-                order.payment_status = 'failed'
-                order.save()
-
-                # Create failed payment tracking status
-                tracking_status = OrderTrackingStatus.objects.create(
-                    order=order,
-                    status='cancelled',
-                    message=f'M-Pesa payment failed: {result_desc}'
-                )
-
-                # Schedule background email sending for failure notification
-                try:
-                    # TODO: Replace with background task (Celery/Django-RQ) for production
-                    OrderTrackingEmailService.send_payment_failed_notification(
-                        order=order,
-                        failure_reason=result_desc,
-                        request=None  # No request context in callback
-                    )
-                    logger.info(f"Failed payment notification sent for order {order.id}")
-                except Exception as e:
-                    # Log email failure but don't fail the callback
-                    logger.error(f"Failed to send payment failure notification for order {order.id}: {str(e)}")
-
-                logger.warning(f"M-Pesa payment failed for order {order.id} - "
-                             f"ResultCode: {result_code}, ResultDesc: {result_desc}")
-
-    except Exception as e:
-        # Catch-all exception handler with detailed logging
-        import traceback
-        logger.error(f"Unexpected error processing M-Pesa callback: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-
-        # Return success to prevent Safaricom retries for system errors
-        return JsonResponse({
-            'ResultCode': 0,
-            'ResultDesc': 'Callback received but processing failed'
-        })
-
-    finally:
-        # Log processing time for performance monitoring
-        processing_time = time.time() - start_time
-        logger.info(f"M-Pesa callback processing completed in {processing_time:.3f} seconds")
-
-    # Return success response to M-Pesa (always return success to prevent retries)
-    return JsonResponse({
-        'ResultCode': 0,
-        'ResultDesc': 'Success'
-    })
+    return JsonResponse({'ResultCode': 0, 'ResultDesc': 'Success'})
 
 
-def how_it_works(request):
-    """
-    Interactive 'How It Works' page for administrators and app owners.
-    Provides a comprehensive guide to the YummyTummy e-commerce system.
-    """
-    # Get some sample data for demonstration
-    sample_products = Product.objects.filter(is_available=True)[:3]
-    recent_orders = Order.objects.all().order_by('-created')[:5]
-
-    # Calculate some basic statistics
-    total_orders = Order.objects.count()
-    completed_orders = Order.objects.filter(payment_status='completed').count()
-    total_products = Product.objects.filter(is_available=True).count()
-
-    context = {
-        'sample_products': sample_products,
-        'recent_orders': recent_orders,
-        'stats': {
-            'total_orders': total_orders,
-            'completed_orders': completed_orders,
-            'total_products': total_products,
-            'conversion_rate': round((completed_orders / total_orders * 100) if total_orders > 0 else 0, 1)
-        }
-    }
-
-    return render(request, 'yummytummy_store/admin/how_it_works.html', context)
 
 
 @staff_member_required
-def admin_dashboard(request):
-    """
-    Comprehensive admin dashboard with business insights and key metrics.
-    Provides real-time data for store management and decision making.
-    """
-    # Get current date and time ranges for analytics
-    now = timezone.now()
-    today = now.date()
-    week_start = today - timedelta(days=today.weekday())
-    month_start = today.replace(day=1)
-
-    # === SALES OVERVIEW ===
-    # Total revenue calculations
-    total_revenue = Order.objects.filter(payment_status='completed').aggregate(
-        total=Sum('total_amount')
-    )['total'] or 0
-
-    revenue_today = Order.objects.filter(
-        payment_status='completed',
-        created__date=today
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    revenue_this_week = Order.objects.filter(
-        payment_status='completed',
-        created__date__gte=week_start
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    revenue_this_month = Order.objects.filter(
-        payment_status='completed',
-        created__date__gte=month_start
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-
-    # === ORDER MANAGEMENT ===
-    # Order counts by status
-    total_orders = Order.objects.count()
-    completed_orders = Order.objects.filter(payment_status='completed').count()
-    pending_orders = Order.objects.filter(payment_status='pending').count()
-    processing_orders = Order.objects.filter(payment_status='processing').count()
-    failed_orders = Order.objects.filter(payment_status='failed').count()
-
-    # Orders requiring attention (pending or failed)
-    orders_needing_attention = Order.objects.filter(
-        payment_status__in=['pending', 'failed']
-    ).count()
-
-    # Recent orders (last 10)
-    recent_orders = Order.objects.select_related('user').order_by('-created')[:10]
-
-    # Orders today
-    orders_today = Order.objects.filter(created__date=today).count()
-    orders_this_week = Order.objects.filter(created__date__gte=week_start).count()
-    orders_this_month = Order.objects.filter(created__date__gte=month_start).count()
-
-    # === PRODUCT PERFORMANCE ===
-    # Total active products
-    total_products = Product.objects.filter(is_available=True).count()
-    featured_products = Product.objects.filter(is_featured=True, is_available=True).count()
-
-    # Best-selling products (by order item count)
-    best_selling_products = OrderItem.objects.values(
-        'product__name', 'product__id'
-    ).annotate(
-        total_sold=Sum('quantity'),
-        total_revenue=Sum('price')
-    ).order_by('-total_sold')[:5]
-
-    # === CUSTOMER INSIGHTS ===
-    # Customer statistics
-    total_customers = User.objects.count()
-    new_customers_today = User.objects.filter(date_joined__date=today).count()
-    new_customers_this_week = User.objects.filter(date_joined__date__gte=week_start).count()
-    new_customers_this_month = User.objects.filter(date_joined__date__gte=month_start).count()
-
-    # Repeat customers (customers with more than one order)
-    repeat_customers = User.objects.annotate(
-        order_count=Count('orders')
-    ).filter(order_count__gt=1).count()
-
-    repeat_customer_rate = (repeat_customers / total_customers * 100) if total_customers > 0 else 0
-
-    # === PAYMENT ANALYTICS ===
-    # M-Pesa transaction success rate
-    total_mpesa_attempts = Order.objects.filter(payment_method='mpesa').count()
-    successful_mpesa = Order.objects.filter(
-        payment_method='mpesa',
-        payment_status='completed'
-    ).count()
-
-    mpesa_success_rate = (successful_mpesa / total_mpesa_attempts * 100) if total_mpesa_attempts > 0 else 0
-
-    # Failed payments requiring follow-up
-    failed_payments = Order.objects.filter(
-        payment_status='failed',
-        created__date__gte=today - timedelta(days=7)  # Last 7 days
-    ).order_by('-created')[:5]
-
-    # === BUSINESS METRICS ===
-    # Average order value
-    avg_order_value = Order.objects.filter(payment_status='completed').aggregate(
-        avg=Avg('total_amount')
-    )['avg'] or 0
-
-    # Conversion rate (completed orders / total orders)
-    conversion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
-
-    # === RECENT ACTIVITY ===
-    # Recent order tracking updates
-    recent_tracking_updates = OrderTrackingStatus.objects.select_related(
-        'order'
-    ).order_by('-created_at')[:5]
-
-    # === ALERTS & NOTIFICATIONS ===
-    alerts = []
-
-    # Low stock alerts (if you have inventory tracking)
-    # alerts.append({'type': 'warning', 'message': 'Some products are running low on stock'})
-
-    # Failed payments alert
-    if failed_orders > 0:
-        alerts.append({
-            'type': 'danger',
-            'message': f'{failed_orders} failed payments need attention'
-        })
-
-    # Pending orders alert
-    if pending_orders > 5:
-        alerts.append({
-            'type': 'warning',
-            'message': f'{pending_orders} orders are pending payment'
-        })
-
-    # New customers celebration
-    if new_customers_today > 0:
-        alerts.append({
-            'type': 'success',
-            'message': f'{new_customers_today} new customers joined today!'
-        })
-
-    context = {
-        # Sales data
-        'total_revenue': total_revenue,
-        'revenue_today': revenue_today,
-        'revenue_this_week': revenue_this_week,
-        'revenue_this_month': revenue_this_month,
-
-        # Order data
-        'total_orders': total_orders,
-        'completed_orders': completed_orders,
-        'pending_orders': pending_orders,
-        'processing_orders': processing_orders,
-        'failed_orders': failed_orders,
-        'orders_needing_attention': orders_needing_attention,
-        'recent_orders': recent_orders,
-        'orders_today': orders_today,
-        'orders_this_week': orders_this_week,
-        'orders_this_month': orders_this_month,
-
-        # Product data
-        'total_products': total_products,
-        'featured_products': featured_products,
-        'best_selling_products': best_selling_products,
-
-        # Customer data
-        'total_customers': total_customers,
-        'new_customers_today': new_customers_today,
-        'new_customers_this_week': new_customers_this_week,
-        'new_customers_this_month': new_customers_this_month,
-        'repeat_customers': repeat_customers,
-        'repeat_customer_rate': round(repeat_customer_rate, 1),
-
-        # Payment data
-        'mpesa_success_rate': round(mpesa_success_rate, 1),
-        'failed_payments': failed_payments,
-
-        # Business metrics
-        'avg_order_value': avg_order_value,
-        'conversion_rate': round(conversion_rate, 1),
-
-        # Recent activity
-        'recent_tracking_updates': recent_tracking_updates,
-
-        # Alerts
-        'alerts': alerts,
-
-        # Date context
-        'today': today,
-        'current_time': now,
-    }
-
-    return render(request, 'yummytummy_store/admin/dashboard.html', context)
-
-
 def test_mpesa_auth(request):
     """
     Test M-Pesa authentication (for debugging only)
@@ -1968,10 +1549,10 @@ def test_mpesa_auth(request):
                 'success': False,
                 'message': 'M-Pesa authentication failed'
             })
-    except Exception as e:
+    except Exception:
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': 'M-Pesa authentication check failed.'
         })
 
 

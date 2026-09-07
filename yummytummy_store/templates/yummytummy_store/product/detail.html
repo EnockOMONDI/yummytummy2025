@@ -2,6 +2,7 @@
 {% load static %}
 {% load humanize %}
 {% load image_filters %}
+{% load content_filters %}
 
 {% block title %}{{ product.name }} | YummyTummy Shop{% endblock %}
 
@@ -44,7 +45,7 @@
                 </div>
 
                 <div class="product-description">
-                    {{ product.description|linebreaks }}
+                    {{ product.description|safe_richtext }}
                 </div>
 
                 <div class="product-purchase">

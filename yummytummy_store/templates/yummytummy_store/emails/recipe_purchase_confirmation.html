@@ -228,7 +228,7 @@
                 {% endif %}
                 <div class="recipe-details">
                     <h4>{{ purchase.recipe.title }}</h4>
-                    <p>{{ purchase.recipe.description|truncatewords:15 }}</p>
+                    <p>{{ purchase.recipe.description|striptags|truncatewords:15 }}</p>
                     <p><strong>Prep:</strong> {{ purchase.recipe.prep_time_minutes }} min | <strong>Cook:</strong> {{ purchase.recipe.cook_time_minutes }} min | <strong>Serves:</strong> {{ purchase.recipe.servings }}</p>
                 </div>
                 <div class="recipe-price">
@@ -242,7 +242,7 @@
                 <h3>📥 Download Your Recipes</h3>
                 <p>Click the buttons below to download your recipe PDFs. You can access them anytime from your account dashboard.</p>
                 {% for purchase in recipe_purchases %}
-                <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}" class="download-btn">
+                <a href="{{ site_url }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}" class="download-btn">
                     📖 Download {{ purchase.recipe.title }}
                 </a>
                 {% endfor %}
@@ -268,7 +268,7 @@
                     {% endfor %}
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:product_list' %}" class="download-btn">
+                    <a href="{{ site_url }}{% url 'yummytummy_store:product_list' %}" class="download-btn">
                         🛍️ Shop Now
                     </a>
                 </div>
@@ -282,7 +282,7 @@
 
             <p style="color: #666666; font-size: 14px; margin-top: 20px;">
                 Need help? Contact us at <a href="mailto:livegreatagrilife@gmail.com" style="color: #593500;">livegreatagrilife@gmail.com</a> 
-                or visit our website at <a href="{{ request.scheme }}://{{ request.get_host }}" style="color: #593500;">www.yummytummy.co.ke</a>
+                or visit our website at <a href="{{ site_url }}" style="color: #593500;">www.yummytummy.co.ke</a>
             </p>
         </div>
 
@@ -290,8 +290,8 @@
         <div class="footer">
             <p>&copy; 2025 YummyTummy - Healthy Living Made Delicious</p>
             <p>
-                <a href="{{ request.scheme }}://{{ request.get_host }}">Visit Our Website</a> | 
-                <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'yummytummy_store:recipe_list' %}">Browse More Recipes</a>
+                <a href="{{ site_url }}">Visit Our Website</a> |
+                <a href="{{ site_url }}{% url 'yummytummy_store:recipe_list' %}">Browse More Recipes</a>
             </p>
             <div class="timestamp">
                 Email sent on {{ current_time|date:"F d, Y \a\t g:i A T" }}

@@ -279,17 +279,13 @@
         </div>
         <div class="stat-card">
             <div class="stat-number">
-                {% for order_data in orders_with_tracking %}
-                    {% if order_data.latest_status.status == 'processing' %}{{ forloop.counter0|add:1 }}{% endif %}
-                {% empty %}0{% endfor %}
+                {{ processing_orders }}
             </div>
             <div class="stat-label">Processing</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">
-                {% for order_data in orders_with_tracking %}
-                    {% if order_data.latest_status.status == 'delivered' %}{{ forloop.counter0|add:1 }}{% endif %}
-                {% empty %}0{% endfor %}
+                {{ delivered_orders }}
             </div>
             <div class="stat-label">Delivered</div>
         </div>
@@ -310,13 +306,13 @@
                         <div class="order-number">Order #{{ order_data.order.get_order_number }}</div>
                         <div class="order-date">{% timezone "Africa/Nairobi" %}{{ order_data.order.created|date:"F d, Y \a\t H:i" }} EAT{% endtimezone %}</div>
                     </div>
-                    <div class="order-status status-{{ order_data.latest_status.status|default:'processing' }}">
-                        {% if order_data.latest_status %}
+                    {% if order_data.latest_status %}
+                    <div class="order-status status-{{ order_data.latest_status.status }}">
                             {{ order_data.latest_status.get_status_display }}
-                        {% else %}
-                            Processing
-                        {% endif %}
                     </div>
+                    {% else %}
+                    <div class="order-status status-processing">Processing</div>
+                    {% endif %}
                 </div>
 
                 <!-- Progress Bar -->
@@ -328,7 +324,7 @@
                     <div class="order-info">
                         <div class="order-total">{{ order_data.order.get_formatted_total }}</div>
                         <div class="order-items">
-                            {{ order_data.order.items.count }} item{{ order_data.order.items.count|pluralize }}
+                            {{ order_data.item_count }} item{{ order_data.item_count|pluralize }}
                         </div>
                         {% if order_data.latest_status %}
                         <div class="order-items">

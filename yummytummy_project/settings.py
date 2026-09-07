@@ -11,9 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import sys
 import dj_database_url
 from pathlib import Path
 from decouple import config
+from django.urls import reverse_lazy
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,10 +31,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-*vzt0ewazs4fk@4n^_jaq
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
-
-# Environment indicator
-ENVIRONMENT = "DEVELOPMENT" if DEBUG else "PRODUCTION"
-print(f"🌍 YummyTummy running in {ENVIRONMENT} mode (DEBUG={DEBUG})")
+TESTING = 'test' in sys.argv
 
 # ALLOWED_HOSTS configuration for development and production
 # Using specific domains for security instead of wildcard
@@ -87,7 +86,11 @@ if not DEBUG:
 # Application definition
 
 INSTALLED_APPS = [
-    # Custom apps (must be before Django auth to override templates)
+    # Unfold must be loaded before django.contrib.admin.
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+
     'yummytummy_store.apps.YummytummyStoreConfig',
 
     # Django default apps
@@ -135,6 +138,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'yummytummy_store.context_processors.cart_processor',
@@ -153,9 +157,17 @@ WSGI_APPLICATION = 'yummytummy_project.wsgi.application'
 DATABASE_URL = config('DATABASE_URL', default=None)
 
 if DATABASE_URL:
-    # Production database (Supabase PostgreSQL)
+    database_config = dj_database_url.parse(DATABASE_URL)
+    using_transaction_pooler = ':6543/' in DATABASE_URL
+    database_config['DISABLE_SERVER_SIDE_CURSORS'] = config(
+        'DISABLE_SERVER_SIDE_CURSORS',
+        default=using_transaction_pooler,
+        cast=bool,
+    )
+    if using_transaction_pooler:
+        database_config['CONN_MAX_AGE'] = 0
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
+        'default': database_config
     }
 else:
     # Development database (SQLite)
@@ -215,8 +227,17 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# WhiteNoise configuration for production static file serving
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Avoid manifest-only failures during local development and tests.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': (
+            'django.contrib.staticfiles.storage.StaticFilesStorage'
+            if DEBUG or TESTING
+            else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        )
+    },
+}
 
 # Media files
 MEDIA_URL = '/media/'
@@ -230,7 +251,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Session settings
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store sessions in the database
 SESSION_COOKIE_AGE = 86400 * 7  # 7 days session cookie age
-SESSION_SAVE_EVERY_REQUEST = True  # Save the session on every request
+SESSION_SAVE_EVERY_REQUEST = False
 
 # YummyTummy branding colors for admin (kept for reference only)
 # Primary color: #593500 (brown)
@@ -258,7 +279,7 @@ LOGGING = {
         },
         'yummytummy_store.mpesa_service': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': config('MPESA_LOG_LEVEL', default='INFO'),
             'propagate': False,
         },
     },
@@ -272,6 +293,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='YummyTummy Store <noreply@yummytummy.com>')
+BUSINESS_NOTIFICATION_EMAIL = config('BUSINESS_NOTIFICATION_EMAIL', default='livegreatagrilife@gmail.com')
 
 # Email timeout settings
 EMAIL_TIMEOUT = 30
@@ -293,7 +315,14 @@ if DEBUG:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-    print("🔧 Development mode: HTTPS security features disabled, using console email backend")
+if TESTING:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+TEST_RUNNER = 'yummytummy_store.test_runner.StoreDiscoverRunner'
 
 # Uploadcare settings for image management
 UPLOADCARE = {
@@ -330,8 +359,70 @@ MPESA_TRANSACTION_TYPE = config('MPESA_TRANSACTION_TYPE', default='CustomerBuyGo
 
 # M-Pesa API URLs (Sandbox for testing, Production for live)
 MPESA_ENVIRONMENT = config('MPESA_ENVIRONMENT', default='production')  # 'sandbox' or 'production'
+MPESA_ALLOW_LIVE_IN_DEBUG = config('MPESA_ALLOW_LIVE_IN_DEBUG', default=False, cast=bool)
 MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke' if MPESA_ENVIRONMENT == 'sandbox' else 'https://api.safaricom.co.ke'
 
 # M-Pesa Callback URL Configuration
 # Safaricom requires HTTPS and recommends avoiding M-Pesa keywords in callback URLs.
 MPESA_CALLBACK_URL = config('MPESA_CALLBACK_URL', default=f"{SITE_URL}/payments/callback/")
+
+
+UNFOLD = {
+    'SITE_TITLE': 'YummyTummy Operations',
+    'SITE_HEADER': 'YummyTummy Operations',
+    'SITE_SUBHEADER': 'Orders, catalog, content, and payments',
+    'SITE_URL': '/',
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': True,
+    'SHOW_BACK_BUTTON': True,
+    'ENVIRONMENT': 'yummytummy_store.admin_config.environment_callback',
+    'COLORS': {
+        'primary': {
+            '50': '255 249 235',
+            '100': '255 240 196',
+            '200': '255 220 120',
+            '300': '255 195 55',
+            '400': '247 166 0',
+            '500': '214 126 0',
+            '600': '166 88 0',
+            '700': '121 61 3',
+            '800': '89 53 0',
+            '900': '70 43 4',
+            '950': '39 22 0',
+        }
+    },
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': 'Operations',
+                'items': [
+                    {'title': 'Owner dashboard', 'icon': 'dashboard', 'link': reverse_lazy('yummytummy_store:admin_dashboard'), 'permission': 'yummytummy_store.admin_config.owner_dashboard_permission'},
+                    {'title': 'Orders', 'icon': 'receipt_long', 'link': reverse_lazy('admin:yummytummy_store_order_changelist')},
+                    {'title': 'Offline orders', 'icon': 'point_of_sale', 'link': reverse_lazy('yummytummy_store:offline_orders_dashboard')},
+                    {'title': 'Payments', 'icon': 'payments', 'link': reverse_lazy('admin:yummytummy_store_payment_changelist')},
+                    {'title': 'Refunds', 'icon': 'currency_exchange', 'link': reverse_lazy('admin:yummytummy_store_refund_changelist')},
+                    {'title': 'Provider events', 'icon': 'webhook', 'link': reverse_lazy('admin:yummytummy_store_paymentproviderevent_changelist')},
+                    {'title': 'Notifications', 'icon': 'outbox', 'link': reverse_lazy('admin:yummytummy_store_notificationoutbox_changelist')},
+                ],
+            },
+            {
+                'title': 'Catalog and content',
+                'items': [
+                    {'title': 'Products', 'icon': 'inventory_2', 'link': reverse_lazy('admin:yummytummy_store_product_changelist')},
+                    {'title': 'Recipes', 'icon': 'menu_book', 'link': reverse_lazy('admin:yummytummy_store_recipe_changelist')},
+                    {'title': 'Recipe sales', 'icon': 'download', 'link': reverse_lazy('admin:yummytummy_store_recipepurchase_changelist')},
+                    {'title': 'Coupons', 'icon': 'sell', 'link': reverse_lazy('admin:yummytummy_store_coupon_changelist')},
+                ],
+            },
+            {
+                'title': 'Access',
+                'items': [
+                    {'title': 'Users', 'icon': 'group', 'link': reverse_lazy('admin:auth_user_changelist')},
+                    {'title': 'Roles', 'icon': 'admin_panel_settings', 'link': reverse_lazy('admin:auth_group_changelist')},
+                ],
+            },
+        ],
+    },
+}

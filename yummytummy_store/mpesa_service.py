@@ -150,8 +150,13 @@ class MPesaService:
                 'TransactionDesc': f'Payment for YummyTummy Order #{order_id}'
             }
             
-            logger.info(f"Initiating M-Pesa STK Push for order {order_id}, amount {amount}")
-            logger.debug(f"M-Pesa payload: {payload}")
+            logger.info('Initiating M-Pesa STK Push for order %s', order_id)
+            logger.debug(
+                'M-Pesa request metadata order=%s amount=%s transaction_type=%s',
+                order_id,
+                payload['Amount'],
+                payload['TransactionType'],
+            )
 
             # Make STK Push request
             response = requests.post(
@@ -161,8 +166,7 @@ class MPesaService:
                 timeout=30
             )
 
-            logger.debug(f"M-Pesa response status: {response.status_code}")
-            logger.debug(f"M-Pesa response text: {response.text}")
+            logger.debug('M-Pesa response status for order %s: %s', order_id, response.status_code)
 
             response.raise_for_status()
             result = response.json()
@@ -179,7 +183,11 @@ class MPesaService:
                     'customer_message': result.get('CustomerMessage')
                 }
             else:
-                logger.error(f"M-Pesa STK Push failed for order {order_id}: {result}")
+                logger.warning(
+                    'M-Pesa STK Push rejected for order %s with response code %s',
+                    order_id,
+                    result.get('ResponseCode', 'unknown'),
+                )
                 return {
                     'success': False,
                     'error': result.get('ResponseDescription', 'STK Push failed'),
@@ -187,16 +195,16 @@ class MPesaService:
                 }
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"M-Pesa STK Push request failed for order {order_id}: {str(e)}")
+            logger.warning('M-Pesa STK Push request failed for order %s', order_id)
 
             # Parse M-Pesa specific errors for better diagnostics
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_code = error_data.get('errorCode', 'Unknown')
-                    error_message = error_data.get('errorMessage', str(e))
+                    error_message = error_data.get('errorMessage', 'M-Pesa rejected the request')
 
-                    logger.error(f"M-Pesa API Error for order {order_id}: {error_code} - {error_message}")
+                    logger.warning('M-Pesa API error for order %s: %s', order_id, error_code)
 
                     # Return specific M-Pesa error with code for better handling
                     return {
@@ -214,8 +222,8 @@ class MPesaService:
                 'success': False,
                 'error': 'Network error occurred while processing payment'
             }
-        except Exception as e:
-            logger.error(f"M-Pesa STK Push error for order {order_id}: {str(e)}")
+        except Exception:
+            logger.exception('Unexpected M-Pesa STK Push error for order %s', order_id)
             return {
                 'success': False,
                 'error': 'An error occurred while processing payment'
@@ -276,8 +284,8 @@ class MPesaService:
                 'response_code': result.get('ResponseCode')
             }
             
-        except Exception as e:
-            logger.error(f"M-Pesa transaction verification failed: {str(e)}")
+        except Exception:
+            logger.warning('M-Pesa transaction verification failed')
             return {
                 'success': False,
                 'error': 'Failed to verify transaction'

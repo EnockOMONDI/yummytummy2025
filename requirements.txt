@@ -1,5 +1,5 @@
 # Core Django Framework
-Django==4.2
+Django>=5.2,<5.3
 asgiref==3.8.1  # Required by Django
 sqlparse==0.4.4  # Required by Django
 
@@ -27,8 +27,11 @@ defusedxml==0.7.1  # Secure XML processing
 # Utilities
 six==1.16.0  # Python 2 and 3 compatibility utilities
 requests==2.31.0  # HTTP library for M-Pesa API integration
+anyio==3.7.1  # Compatible async runtime for pyuploadcare/httpx 0.24
 pytz==2022.7.1  # Timezone support for Kenya (EAT) - Compatible with pyuploadcare 4.1.0
 reportlab==4.4.4  # PDF generation for recipe downloads
 
 # Production Dependencies
 dj-database-url==2.1.0  # Database URL parsing
+django-unfold==0.104.1  # Modern Django admin UI
+bleach==6.2.0  # Allowlist sanitization for rich-text content

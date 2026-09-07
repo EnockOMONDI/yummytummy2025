@@ -9,6 +9,7 @@ class CartAddProductForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control', 'value': 1})
     )
     update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+    selected_variant = forms.CharField(required=False, widget=forms.HiddenInput)
 
 
 class CartAddRecipeForm(forms.Form):
@@ -18,7 +19,6 @@ class CartAddRecipeForm(forms.Form):
         widget=forms.HiddenInput()  # Hidden since recipes are always quantity 1
     )
     update = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
-    selected_variant = forms.CharField(required=False, widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,6 +35,20 @@ class ContactForm(forms.Form):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
     subject = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
     message = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}))
+
+
+class MagicLinkRequestForm(forms.Form):
+    email = forms.EmailField(
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'email',
+            'placeholder': 'Email Address',
+        }),
+    )
+
+    def clean_email(self):
+        return self.cleaned_data['email'].strip().lower()
 
 
 class CheckoutForm(forms.ModelForm):
@@ -115,8 +129,6 @@ class RecipeOnlyCheckoutForm(forms.Form):
 class PaymentForm(forms.Form):
     PAYMENT_CHOICES = [
         ('mpesa', 'M-Pesa'),
-        ('card', 'Credit/Debit Card'),
-        ('bank', 'Bank Transfer'),
     ]
 
     payment_method = forms.ChoiceField(
@@ -263,6 +275,7 @@ class OfflineCustomerForm(forms.Form):
 
 class OfflineOrderForm(forms.Form):
     """Form for creating offline orders"""
+    order_items = forms.JSONField(widget=forms.HiddenInput)
     order_notes = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -271,3 +284,27 @@ class OfflineOrderForm(forms.Form):
             'placeholder': 'Additional order notes (optional)'
         })
     )
+
+    def clean_order_items(self):
+        items = self.cleaned_data['order_items']
+        if not isinstance(items, list) or not items:
+            raise forms.ValidationError('Add at least one product to the order.')
+
+        cleaned_items = []
+        for item in items:
+            if not isinstance(item, dict):
+                raise forms.ValidationError('Each order item must be a structured product entry.')
+            try:
+                product_id = int(item['product_id'])
+                variant_id = int(item['variant_id']) if item.get('variant_id') else None
+                quantity = int(item.get('quantity', 1))
+            except (KeyError, TypeError, ValueError):
+                raise forms.ValidationError('One or more order items are malformed.')
+            if quantity < 1 or quantity > 1000:
+                raise forms.ValidationError('Item quantities must be between 1 and 1,000.')
+            cleaned_items.append({
+                'product_id': product_id,
+                'variant_id': variant_id,
+                'quantity': quantity,
+            })
+        return cleaned_items

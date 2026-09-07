@@ -229,7 +229,7 @@
                 <div class="col-md-6 text-md-end">
                     <p>
                         <i class="fas fa-clock"></i> 
-                        Current Time: {% timezone "Africa/Nairobi" %}{{ current_time|date:"M d, Y H:i" }} EAT{% endtimezone %}
+                        Current Time: {% timezone "Africa/Nairobi" %}{% now "M d, Y H:i" %} EAT{% endtimezone %}
                     </p>
                 </div>
             </div>

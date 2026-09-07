@@ -1,0 +1,33 @@
+{% extends "yummytummy_store/base.html" %}
+
+{% block title %}Email Sign In - YummyTummy{% endblock %}
+
+{% block extra_css %}
+<style>
+    .access-section { min-height: 70vh; display: grid; place-items: center; padding: 48px 20px; background: #faf8f3; }
+    .access-panel { width: min(100%, 440px); background: #fff; border: 1px solid #e8e1d6; padding: 32px; border-radius: 8px; }
+    .access-panel h1 { margin: 0 0 10px; color: #3b240b; font-size: 28px; }
+    .access-panel p { margin: 0 0 24px; color: #5f574d; line-height: 1.6; }
+    .access-panel label { display: block; margin-bottom: 8px; color: #3b240b; font-weight: 700; }
+    .access-panel .form-control { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #b9b0a4; border-radius: 4px; }
+    .access-panel button { width: 100%; margin-top: 18px; padding: 13px; border: 0; border-radius: 4px; background: #f5b400; color: #2d1a05; font-weight: 800; cursor: pointer; }
+    .access-panel .errorlist { color: #a21414; padding-left: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="access-section">
+    <div class="access-panel">
+        <h1>Email sign in</h1>
+        <p>Enter the email used for your YummyTummy account.</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {{ form.email.errors }}
+            <label for="{{ form.email.id_for_label }}">Email address</label>
+            {{ form.email }}
+            <button type="submit">Send secure sign-in link</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

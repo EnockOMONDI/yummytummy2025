@@ -1,0 +1,13 @@
+{% extends 'yummytummy_store/admin/owner_base.html' %}{% load humanize tz %}
+{% block title %}{{ record_title }}{% endblock %}
+{% block content %}
+<a href="{% url 'yummytummy_store:admin_dashboard' %}?{{ period_query }}">&larr; Business Overview</a>
+<h2 class="section-heading">{{ record_title }} <small>({{ page.paginator.count|intcomma }})</small></h2>
+{% if manage_url %}<a class="quick-action-btn" href="{{ manage_url }}">Manage records &rarr;</a>{% endif %}
+{% include 'yummytummy_store/admin/owner_period.html' %}
+<p class="section-note">Dates filter captured payments, successful refunds and created orders. Other lists show current records.</p>
+{% if records %}<div class="table-wrap"><table class="data-table"><thead><tr><th>Record</th><th>Status</th><th>Amount / Stock</th><th>Timestamp (EAT)</th><th>Age</th></tr></thead><tbody>
+{% for row in records %}<tr><td>{% if row.url %}<a href="{{ row.url }}">{{ row.label }}</a>{% else %}{{ row.label }}{% endif %}</td><td>{{ row.status|default:'-' }}</td><td>{% if row.amount != None %}KSh {{ row.amount|floatformat:2|intcomma }}{% elif row.stock != None %}{{ row.stock }} units{% else %}-{% endif %}</td><td>{% if row.date %}{% timezone 'Africa/Nairobi' %}{{ row.date|date:'d M Y, H:i' }}{% endtimezone %}{% else %}Undated{% endif %}</td><td>{% if row.date %}{{ row.date|timesince }}{% else %}-{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<p class="empty">No matching records.</p>{% endif %}
+<nav class="period-form" aria-label="Pagination">{% if page.has_previous %}<a href="?{{ period_query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?{{ period_query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</nav>
+{% endblock %}

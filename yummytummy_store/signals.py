@@ -6,6 +6,9 @@ when recipes are created or updated.
 """
 
 import logging
+from pathlib import Path
+
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Recipe
@@ -14,42 +17,37 @@ from .pdf_utils import generate_recipe_pdf
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Recipe)
-def auto_generate_recipe_pdf(sender, instance, created, **kwargs):
-    """
-    Automatically generate PDF when a Recipe is created or updated
-    
-    Args:
-        sender: The Recipe model class
-        instance: The Recipe instance being saved
-        created: Boolean indicating if this is a new instance
-        **kwargs: Additional keyword arguments
-    """
+def _generate_and_attach_recipe_pdf(recipe_id):
+    """Generate a PDF after commit while preserving explicitly uploaded PDFs."""
     try:
-        # Only generate PDF for published recipes with content
+        instance = Recipe.objects.get(pk=recipe_id)
         if not instance.is_published:
-            logger.info(f"Skipping PDF generation for unpublished recipe: {instance.title}")
             return
-            
         if not instance.ingredients or not instance.instructions:
-            logger.info(f"Skipping PDF generation for incomplete recipe: {instance.title}")
             return
-        
-        # Generate the PDF
-        logger.info(f"Generating PDF for recipe: {instance.title}")
+
+        previous_name = instance.pdf_file.name if instance.pdf_file else ''
+        if previous_name and '_recipe' not in Path(previous_name).stem:
+            return
+
         pdf_file = generate_recipe_pdf(instance)
-        
-        # Save the PDF to the recipe's pdf_file field
-        # Use update() to avoid triggering the signal again
-        Recipe.objects.filter(pk=instance.pk).update(
-            pdf_file=pdf_file.name
-        )
-        
-        # Manually save the file content
-        instance.pdf_file.save(pdf_file.name, pdf_file, save=False)
-        
-        logger.info(f"Successfully generated PDF for recipe: {instance.title}")
-        
-    except Exception as e:
-        logger.error(f"Failed to generate PDF for recipe {instance.title}: {str(e)}")
-        # Don't raise the exception to avoid breaking the recipe save operation
+        storage = instance.pdf_file.storage
+        target_name = instance.pdf_file.field.generate_filename(instance, pdf_file.name)
+        if target_name != previous_name and storage.exists(target_name):
+            storage.delete(target_name)
+        stored_name = storage.save(target_name, pdf_file)
+        Recipe.objects.filter(pk=instance.pk).update(pdf_file=stored_name)
+
+        if previous_name and previous_name != stored_name:
+            storage.delete(previous_name)
+    except Recipe.DoesNotExist:
+        return
+    except Exception as exc:
+        logger.error('Failed to generate PDF for recipe %s: %s', recipe_id, exc.__class__.__name__)
+
+
+@receiver(post_save, sender=Recipe)
+def auto_generate_recipe_pdf(sender, instance, **kwargs):
+    transaction.on_commit(
+        lambda recipe_id=instance.pk: _generate_and_attach_recipe_pdf(recipe_id)
+    )

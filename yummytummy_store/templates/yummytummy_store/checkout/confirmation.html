@@ -608,6 +608,15 @@
                             <div class="item-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
                         </div>
                         {% endfor %}
+                        {% for item in recipe_order_items %}
+                        <div class="order-item">
+                            <div class="item-details">
+                                <div class="item-quantity">{{ item.quantity }}</div>
+                                <div class="item-name">{{ item.recipe_title }}</div>
+                            </div>
+                            <div class="item-price">KSh {{ item.price|floatformat:"2"|intcomma }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
 
                     <div class="order-summary">

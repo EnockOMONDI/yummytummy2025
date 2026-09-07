@@ -68,9 +68,10 @@ class GuestCheckoutTestCase(TestCase):
             'order_notes': '',
         })
 
-    def submit_bank_payment(self):
+    def submit_mpesa_payment(self):
         return self.client.post(reverse('yummytummy_store:payment'), {
-            'payment_method': 'bank',
+            'payment_method': 'mpesa',
+            'mpesa_phone': '0712345678',
             'terms_accepted': 'on',
         })
 
@@ -91,7 +92,7 @@ class GuestCheckoutTestCase(TestCase):
         response = self.submit_guest_checkout()
         self.assertRedirects(response, reverse('yummytummy_store:payment'))
 
-        response = self.submit_bank_payment()
+        response = self.submit_mpesa_payment()
         self.assertRedirects(response, reverse('yummytummy_store:order_confirmation'))
 
         order = Order.objects.get(phone='0712345678')
@@ -119,7 +120,7 @@ class GuestCheckoutTestCase(TestCase):
         response = self.submit_account_checkout(email='buyer@example.com')
         self.assertRedirects(response, reverse('yummytummy_store:payment'))
 
-        response = self.submit_bank_payment()
+        response = self.submit_mpesa_payment()
         self.assertRedirects(response, reverse('yummytummy_store:order_confirmation'))
 
         order = Order.objects.get(email='buyer@example.com')

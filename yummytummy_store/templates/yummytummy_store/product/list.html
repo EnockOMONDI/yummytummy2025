@@ -50,7 +50,7 @@
                         </a>
                     </li>
                     {% for c in categories %}
-                    <li {% if category.id == c.id %}class="active"{% endif %}>
+                    <li {% if category and category.id == c.id %}class="active"{% endif %}>
                         <a href="{{ c.get_absolute_url }}" class="category-link">
                             <span class="category-text">{{ c.name }}</span>
                         </a>

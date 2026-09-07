@@ -1,3 +1,6 @@
+import re
+
+from django.core import mail
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -60,6 +63,11 @@ class OrderTrackingTestCase(TestCase):
             }
         }
         session.save()
+
+        self.client.post(
+            reverse('yummytummy_store:checkout_start'),
+            {'checkout_mode': 'account'},
+        )
         
         # Test checkout data
         checkout_data = {
@@ -81,7 +89,9 @@ class OrderTrackingTestCase(TestCase):
         
         # Submit payment form
         payment_data = {
-            'payment_method': 'cash_on_delivery'
+            'payment_method': 'mpesa',
+            'mpesa_phone': '254700000000',
+            'terms_accepted': 'on',
         }
         response = self.client.post(reverse('yummytummy_store:payment'), payment_data)
         self.assertEqual(response.status_code, 302)  # Redirect to confirmation
@@ -95,8 +105,8 @@ class OrderTrackingTestCase(TestCase):
         # Check that AutoCreatedAccount was created
         auto_account = AutoCreatedAccount.objects.filter(user=new_user).first()
         self.assertIsNotNone(auto_account)
-        self.assertIsNotNone(auto_account.temp_password)
         self.assertIsNotNone(auto_account.first_login_token)
+        self.assertFalse(new_user.has_usable_password())
         
         # Check that order was created and linked to user
         order = Order.objects.filter(email='newcustomer@example.com').first()
@@ -124,6 +134,11 @@ class OrderTrackingTestCase(TestCase):
             }
         }
         session.save()
+
+        self.client.post(
+            reverse('yummytummy_store:checkout_start'),
+            {'checkout_mode': 'account'},
+        )
         
         # Test checkout data with existing user email
         checkout_data = {
@@ -146,7 +161,8 @@ class OrderTrackingTestCase(TestCase):
         # Submit payment form
         payment_data = {
             'payment_method': 'mpesa',
-            'mpesa_phone': '+254700000000'
+            'mpesa_phone': '254700000000',
+            'terms_accepted': 'on',
         }
         response = self.client.post(reverse('yummytummy_store:payment'), payment_data)
         self.assertEqual(response.status_code, 302)
@@ -276,3 +292,31 @@ class OrderTrackingTestCase(TestCase):
             reverse('yummytummy_store:first_time_login', args=['invalid-token'])
         )
         self.assertEqual(response.status_code, 302)  # Redirect to home with error
+
+    def test_magic_link_login_is_single_use(self):
+        self.client.post(
+            reverse('yummytummy_store:request_magic_link'),
+            {'email': self.user.email},
+        )
+        self.assertEqual(len(mail.outbox), 1)
+        match = re.search(r'https?://[^/]+(/account/email-sign-in/[^\s]+/)', mail.outbox[0].body)
+        self.assertIsNotNone(match)
+
+        login_path = match.group(1)
+        response = self.client.get(login_path)
+        self.assertRedirects(response, reverse('yummytummy_store:order_tracking_dashboard'))
+
+        self.client.logout()
+        replay = self.client.get(login_path)
+        self.assertRedirects(replay, reverse('yummytummy_store:request_magic_link'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_magic_link_request_does_not_disclose_unknown_email(self):
+        response = self.client.post(
+            reverse('yummytummy_store:request_magic_link'),
+            {'email': 'unknown@example.com'},
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'If that email belongs to an active account')
+        self.assertEqual(len(mail.outbox), 0)

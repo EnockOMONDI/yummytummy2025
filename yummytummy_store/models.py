@@ -1,4 +1,11 @@
+from decimal import Decimal
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Lower
 from django.urls import reverse
 from django.utils.text import slugify
 from django.utils import timezone
@@ -35,6 +42,12 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(Lower('name'), name='unique_ingredient_name_ci'),
+        ]
+
 
 class Product(models.Model):
     FEATURE_TYPE_CHOICES = [
@@ -50,9 +63,26 @@ class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in Kenyan Shillings (KES)")
-    size = models.CharField(max_length=50, blank=True)
-    image = ImageField(blank=True, manual_crop="", help_text="Upload product image")
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Selling price in Kenyan Shillings (KES).",
+    )
+    size = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Include the unit, for example 800 g or 500 ml.",
+    )
+    track_inventory = models.BooleanField(
+        default=False,
+        help_text="Prevent ordering when the available stock reaches zero.",
+    )
+    stock_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text="Available base-product units. Variant stock is managed per variant.",
+    )
+    image = ImageField(blank=True, null=True, manual_crop="", help_text="Upload product image")
     legacy_image = models.ImageField(upload_to='products/%Y/%m/%d', blank=True, null=True, editable=False)
     slug = models.SlugField(max_length=200, unique=True)
     is_available = models.BooleanField(default=True)
@@ -82,6 +112,10 @@ class Product(models.Model):
 
         return None
 
+    @property
+    def is_in_stock(self):
+        return not self.track_inventory or self.stock_quantity > 0 or self.variants.filter(stock_quantity__gt=0).exists()
+
     class Meta:
         ordering = ['name']
         indexes = [
@@ -110,7 +144,25 @@ class Product(models.Model):
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    additional_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    sku = models.CharField(max_length=64, blank=True, help_text="Optional internal stock code.")
+    additional_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Amount added to the base product price.",
+    )
+    stock_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text="Available units when inventory tracking is enabled on the product.",
+    )
+
+    class Meta:
+        ordering = ['product__name', 'name']
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'name'], name='unique_variant_name_per_product'),
+            models.CheckConstraint(check=Q(additional_price__gte=0), name='variant_additional_price_nonnegative'),
+        ]
 
     def __str__(self):
         return f"{self.product.name} - {self.name}"
@@ -128,7 +180,22 @@ class ProductVariant(models.Model):
 class ProductIngredient(models.Model):
     product = models.ForeignKey(Product, related_name='ingredients', on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, related_name='products', on_delete=models.CASCADE)
-    percentage = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(Decimal('0.00')), MaxValueValidator(Decimal('100.00'))],
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'ingredient'], name='unique_ingredient_per_product'),
+            models.CheckConstraint(
+                check=Q(percentage__isnull=True) | Q(percentage__gte=0, percentage__lte=100),
+                name='ingredient_percentage_range',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.product.name} - {self.ingredient.name} ({self.percentage}%)"
@@ -148,6 +215,8 @@ class Order(models.Model):
         ('card', 'Credit/Debit Card'),
         ('bank', 'Bank Transfer'),
         ('whatsapp', 'WhatsApp Order'),
+        ('offline', 'Offline / Manual Order'),
+        ('cash_on_delivery', 'Cash on Delivery'),
     ]
 
     # Customer Information
@@ -230,6 +299,7 @@ class Order(models.Model):
 
     class Meta:
         ordering = ['-created']
+        permissions = [('view_owner_dashboard', 'Can view owner business dashboard')]
         indexes = [
             models.Index(fields=['-created']),
         ]
@@ -238,7 +308,9 @@ class Order(models.Model):
         return f'Order {self.id}'
 
     def get_total_cost(self):
-        return sum(item.get_cost() for item in self.items.all())
+        product_total = sum((item.get_cost() for item in self.items.all()), Decimal('0.00'))
+        recipe_total = sum((item.get_cost() for item in self.recipe_items.all()), Decimal('0.00'))
+        return product_total + recipe_total
 
     def get_subtotal(self):
         """Get subtotal before discount"""
@@ -287,26 +359,56 @@ class Order(models.Model):
         return self.user is None
 
     def save(self, *args, **kwargs):
-        # Calculate subtotal if not already set
-        if self.subtotal_amount == 0:
-            self.subtotal_amount = self.get_subtotal()
-
-        # Ensure total amount reflects any discount
-        if self.discount_amount > 0:
-            self.total_amount = self.subtotal_amount - self.discount_amount
-
         super().save(*args, **kwargs)
+
+    def recalculate_totals(self, save=True):
+        """Recalculate stored totals from immutable order-item prices."""
+        subtotal = self.get_subtotal()
+        discount = min(self.discount_amount or Decimal('0.00'), subtotal)
+        self.subtotal_amount = subtotal
+        self.discount_amount = discount
+        self.total_amount = subtotal - discount
+        if save:
+            self.save(update_fields=['subtotal_amount', 'discount_amount', 'total_amount', 'updated'])
+        return self.total_amount
 
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
-    variant = models.ForeignKey(ProductVariant, related_name='order_items', on_delete=models.CASCADE, null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Price in Kenyan Shillings (KES)")
-    quantity = models.PositiveIntegerField(default=1)
+    product = models.ForeignKey(Product, related_name='order_items', on_delete=models.PROTECT)
+    variant = models.ForeignKey(ProductVariant, related_name='order_items', on_delete=models.PROTECT, null=True, blank=True)
+    product_name = models.CharField(max_length=200, blank=True, help_text="Product name captured when the order was placed.")
+    variant_name = models.CharField(max_length=100, blank=True, help_text="Variant name captured when the order was placed.")
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Unit price captured when the order was placed, in KES.",
+    )
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=Q(price__gte=0), name='order_item_price_nonnegative'),
+            models.CheckConstraint(check=Q(quantity__gte=1), name='order_item_quantity_positive'),
+        ]
 
     def __str__(self):
-        return f'{self.quantity}x {self.product.name}'
+        return f'{self.quantity}x {self.product_name or self.product.name}'
+
+    def clean(self):
+        if self.variant_id and self.product_id and self.variant.product_id != self.product_id:
+            raise ValidationError({'variant': 'The selected variant does not belong to this product.'})
+
+    def save(self, *args, **kwargs):
+        if self.product_id and not self.product_name:
+            self.product_name = self.product.name
+        if self.variant_id:
+            if self.variant.product_id != self.product_id:
+                raise ValidationError({'variant': 'The selected variant does not belong to this product.'})
+            if not self.variant_name:
+                self.variant_name = self.variant.name
+        super().save(*args, **kwargs)
 
     def get_cost(self):
         return self.price * self.quantity
@@ -329,11 +431,13 @@ class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
     discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES, default='percentage')
     discount_value = models.DecimalField(max_digits=10, decimal_places=2,
+                                        validators=[MinValueValidator(Decimal('0.01'))],
                                         help_text="For percentage type: enter percentage value (e.g., 10 for 10%). "
                                                  "For fixed amount type: enter amount in Kenyan Shillings (KES)")
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                          validators=[MinValueValidator(Decimal('0.00'))],
                                           help_text="Minimum order amount in Kenyan Shillings (KES)")
     is_active = models.BooleanField(default=True)
     usage_limit = models.PositiveIntegerField(default=1, help_text="Maximum number of times this coupon can be used")
@@ -380,6 +484,7 @@ class Coupon(models.Model):
 
     def calculate_discount(self, order_total):
         """Calculate the discount amount based on the coupon type and value"""
+        order_total = Decimal(str(order_total)).quantize(Decimal('0.01'))
         if self.discount_type == 'percentage':
             # Percentage discount
             discount = order_total * (self.discount_value / 100)
@@ -401,8 +506,6 @@ class Coupon(models.Model):
         return f"KSh {self.min_order_amount:,.2f}"
 
     def clean(self):
-        from django.core.exceptions import ValidationError
-
         # Convert code to uppercase for validation
         if self.code:
             self.code = self.code.upper()
@@ -416,6 +519,20 @@ class Coupon(models.Model):
                 raise ValidationError({
                     'code': f'A coupon with code "{self.code}" already exists. Please use a different code.'
                 })
+
+        errors = {}
+        if self.valid_from and self.valid_to and self.valid_to <= self.valid_from:
+            errors['valid_to'] = 'The expiry date must be later than the start date.'
+        if self.discount_value is not None and self.discount_value <= 0:
+            errors['discount_value'] = 'Discount value must be greater than zero.'
+        if self.discount_type == 'percentage' and self.discount_value and self.discount_value > 100:
+            errors['discount_value'] = 'Percentage discounts cannot exceed 100%.'
+        if self.usage_count > self.usage_limit:
+            errors['usage_limit'] = 'Usage limit cannot be lower than the number already used.'
+        if self.per_customer_limit > self.usage_limit:
+            errors['per_customer_limit'] = 'Per-customer limit cannot exceed the overall usage limit.'
+        if errors:
+            raise ValidationError(errors)
 
         super().clean()
 
@@ -501,6 +618,7 @@ class OrderTrackingStatus(models.Model):
     STATUS_CHOICES = [
         ('order_received', 'Order Received'),
         ('payment_confirmed', 'Payment Confirmed'),
+        ('payment_failed', 'Payment Failed'),
         ('offline_order_created', 'Offline Order Created'),
         ('processing', 'Processing'),
         ('packaging', 'Packaging'),
@@ -534,6 +652,7 @@ class OrderTrackingStatus(models.Model):
         status_icons = {
             'order_received': 'fas fa-check-circle',
             'payment_confirmed': 'fas fa-credit-card',
+            'payment_failed': 'fas fa-exclamation-circle',
             'processing': 'fas fa-cogs',
             'packaging': 'fas fa-box',
             'shipped': 'fas fa-truck',
@@ -549,6 +668,7 @@ class OrderTrackingStatus(models.Model):
         status_colors = {
             'order_received': 'text-info',
             'payment_confirmed': 'text-success',
+            'payment_failed': 'text-danger',
             'processing': 'text-warning',
             'packaging': 'text-warning',
             'shipped': 'text-primary',
@@ -558,6 +678,203 @@ class OrderTrackingStatus(models.Model):
             'refunded': 'text-secondary',
         }
         return status_colors.get(self.status, 'text-muted')
+
+
+class Payment(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('partially_refunded', 'Partially Refunded'),
+        ('refunded', 'Refunded'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    order = models.ForeignKey(Order, related_name='payments', on_delete=models.PROTECT)
+    method = models.CharField(max_length=20, choices=Order.PAYMENT_METHOD_CHOICES)
+    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default='pending')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    currency = models.CharField(max_length=3, default='KES')
+    provider_reference = models.CharField(max_length=100, blank=True, db_index=True)
+    is_current = models.BooleanField(default=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(check=Q(amount__gte=0), name='payment_amount_nonnegative'),
+            models.UniqueConstraint(fields=['order'], condition=Q(is_current=True), name='one_current_payment_per_order'),
+            models.UniqueConstraint(
+                fields=['method', 'provider_reference'],
+                condition=~Q(provider_reference=''),
+                name='unique_provider_reference_per_method',
+            ),
+        ]
+        indexes = [models.Index(fields=['method', 'status', '-created_at'])]
+
+    def __str__(self):
+        return f'{self.order.get_order_number()} - {self.get_method_display()} - {self.get_status_display()}'
+
+    def sync_legacy_order(self):
+        legacy_status = {
+            'succeeded': 'completed',
+            'partially_refunded': 'completed',
+            'refunded': 'refunded',
+            'cancelled': 'failed',
+        }.get(self.status, self.status)
+        updates = {
+            'payment_method': self.method,
+            'payment_status': legacy_status,
+            'transaction_id': self.provider_reference,
+        }
+        Order.objects.filter(pk=self.order_id).update(**updates)
+
+
+class PaymentAttempt(models.Model):
+    STATUS_CHOICES = [
+        ('created', 'Created'),
+        ('submitted', 'Submitted'),
+        ('processing', 'Processing'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    payment = models.ForeignKey(Payment, related_name='attempts', on_delete=models.CASCADE)
+    sequence = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')
+    checkout_request_id = models.CharField(max_length=120, null=True, blank=True, unique=True)
+    merchant_request_id = models.CharField(max_length=120, blank=True, db_index=True)
+    failure_code = models.CharField(max_length=64, blank=True)
+    failure_message = models.CharField(max_length=255, blank=True)
+    initiated_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-initiated_at']
+        constraints = [models.UniqueConstraint(fields=['payment', 'sequence'], name='unique_payment_attempt_sequence')]
+
+    def __str__(self):
+        return f'{self.payment} attempt {self.sequence}'
+
+
+class PaymentProviderEvent(models.Model):
+    PROCESSING_STATUS_CHOICES = [
+        ('received', 'Received'),
+        ('processed', 'Processed'),
+        ('ignored', 'Ignored'),
+        ('failed', 'Failed'),
+    ]
+
+    payment = models.ForeignKey(Payment, related_name='provider_events', on_delete=models.PROTECT, null=True, blank=True)
+    attempt = models.ForeignKey(PaymentAttempt, related_name='provider_events', on_delete=models.PROTECT, null=True, blank=True)
+    provider = models.CharField(max_length=32, default='mpesa')
+    event_key = models.CharField(max_length=180, unique=True)
+    event_type = models.CharField(max_length=64, default='stk_callback')
+    checkout_request_id = models.CharField(max_length=120, blank=True, db_index=True)
+    payload_hash = models.CharField(max_length=64)
+    redacted_payload = models.JSONField(default=dict, blank=True)
+    processing_status = models.CharField(max_length=16, choices=PROCESSING_STATUS_CHOICES, default='received')
+    failure_reason = models.CharField(max_length=255, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-received_at']
+        indexes = [models.Index(fields=['provider', 'processing_status', '-received_at'])]
+
+    def __str__(self):
+        return f'{self.provider}: {self.event_key}'
+
+
+class Refund(models.Model):
+    STATUS_CHOICES = [
+        ('requested', 'Requested'),
+        ('processing', 'Processing'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    payment = models.ForeignKey(Payment, related_name='refunds', on_delete=models.PROTECT)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    reason = models.TextField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='requested')
+    provider_reference = models.CharField(max_length=120, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True, help_text='When this refund was recorded as successful. Legacy refunds may be undated.')
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='requested_refunds', on_delete=models.PROTECT)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='approved_refunds',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [models.CheckConstraint(check=Q(amount__gt=0), name='refund_amount_positive')]
+
+    def clean(self):
+        if self.payment_id and self.amount:
+            successful_refunds = self.payment.refunds.filter(status='succeeded').exclude(pk=self.pk)
+            refunded = sum((refund.amount for refund in successful_refunds), Decimal('0.00'))
+            if refunded + self.amount > self.payment.amount:
+                raise ValidationError({'amount': 'Refunds cannot exceed the captured payment amount.'})
+
+    def __str__(self):
+        return f'Refund {self.amount} {self.payment.currency} for {self.payment.order.get_order_number()}'
+
+    def save(self, *args, **kwargs):
+        if self.status == 'succeeded' and not self.completed_at:
+            previous_status = type(self).objects.filter(pk=self.pk).values_list('status', flat=True).first() if self.pk else None
+            if previous_status != 'succeeded':
+                self.completed_at = timezone.now()
+        elif self.status != 'succeeded':
+            self.completed_at = None
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'completed_at'}
+        super().save(*args, **kwargs)
+
+
+class NotificationOutbox(models.Model):
+    STATUS_CHOICES = [
+        ('queued', 'Queued'),
+        ('processing', 'Processing'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+    ]
+
+    event_type = models.CharField(max_length=64)
+    order = models.ForeignKey(Order, related_name='notifications', on_delete=models.CASCADE)
+    tracking_status = models.ForeignKey(
+        OrderTrackingStatus,
+        related_name='notifications',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    recipient = models.EmailField(blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='queued')
+    attempts = models.PositiveIntegerField(default=0)
+    last_error = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['status', 'created_at'])]
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+
+    def __str__(self):
+        return f'{self.event_type} to {self.recipient or "no recipient"} ({self.status})'
 
 
 class RecipeCategory(models.Model):
@@ -614,11 +931,12 @@ class Recipe(models.Model):
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
 
     # Media and Pricing
-    image = ImageField(blank=True, manual_crop="", help_text="Upload recipe image")
+    image = ImageField(blank=True, null=True, manual_crop="", help_text="Upload recipe image")
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=100.00,
+        validators=[MinValueValidator(Decimal('0.00'))],
         help_text="Price in Kenyan Shillings (KES)"
     )
 
@@ -645,7 +963,7 @@ class Recipe(models.Model):
     )
 
     # Publishing and Status
-    is_published = models.BooleanField(default=True, help_text="Recipe visibility status")
+    is_published = models.BooleanField(default=False, help_text="Recipe visibility status")
     is_featured = models.BooleanField(default=False, help_text="Featured recipe")
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -711,6 +1029,46 @@ class Recipe(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+
+class RecipeOrderItem(models.Model):
+    """Immutable digital line item captured when an order is created."""
+
+    order = models.ForeignKey(Order, related_name='recipe_items', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, related_name='order_items', on_delete=models.PROTECT)
+    recipe_title = models.CharField(max_length=200, blank=True)
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['order', 'recipe'], name='unique_recipe_per_order'),
+            models.CheckConstraint(check=Q(price__gte=0), name='recipe_order_item_price_nonnegative'),
+            models.CheckConstraint(check=Q(quantity__gte=1), name='recipe_order_item_quantity_positive'),
+        ]
+        verbose_name = 'Recipe order line'
+        verbose_name_plural = 'Recipe order lines'
+
+    def save(self, *args, **kwargs):
+        if self.recipe_id and not self.recipe_title:
+            self.recipe_title = self.recipe.title
+        super().save(*args, **kwargs)
+
+    def get_cost(self):
+        return self.price * self.quantity
+
+    def get_formatted_price(self):
+        return f'KSh {self.price:,.2f}'
+
+    def get_formatted_cost(self):
+        return f'KSh {self.get_cost():,.2f}'
+
+    def __str__(self):
+        return f'{self.quantity}x {self.recipe_title or self.recipe.title}'
 
 
 class RecipePurchase(models.Model):

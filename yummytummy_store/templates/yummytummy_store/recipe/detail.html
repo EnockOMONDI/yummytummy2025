@@ -2,6 +2,7 @@
 {% load static %}
 {% load humanize %}
 {% load recipe_filters %}
+{% load content_filters %}
 
 {% block title %}{{ recipe.title }} - YummyTummy Recipes{% endblock %}
 
@@ -523,7 +524,7 @@
             <div class="recipe-info-section">
                 <div class="recipe-category-badge">{{ recipe.category.name }}</div>
                 <h1 class="recipe-title">{{ recipe.title }}</h1>
-                <p class="recipe-description">{{ recipe.description }}</p>
+                <div class="recipe-description">{{ recipe.description|safe_richtext }}</div>
 
                 <!-- Recipe Meta Information -->
                 <div class="recipe-meta-grid">
@@ -680,7 +681,7 @@
             <div class="recipe-content-section">
                 <h2 class="section-title">About This Recipe</h2>
                 <div class="preview-content">
-                    {{ recipe.preview_content|linebreaks }}
+                    {{ recipe.preview_content|safe_richtext }}
                 </div>
             </div>
             {% endif %}
@@ -731,7 +732,7 @@
                     <div class="recipe-content">
                         <div class="recipe-category">{{ related_recipe.category.name }}</div>
                         <h3 class="recipe-title">{{ related_recipe.title }}</h3>
-                        <p class="recipe-description">{{ related_recipe.description|truncatewords:15 }}</p>
+                        <p class="recipe-description">{{ related_recipe.description|striptags|truncatewords:15 }}</p>
                         <div class="recipe-meta">
                             <div class="recipe-time">
                                 <i class="fas fa-clock"></i>
