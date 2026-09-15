@@ -31,21 +31,17 @@ services:
         value: "True"
       - key: CSRF_COOKIE_SECURE
         value: "True"
-      # Email Configuration
+      # Email Configuration - Resend API
       - key: EMAIL_BACKEND
-        value: "django.core.mail.backends.smtp.EmailBackend"
-      - key: EMAIL_HOST
-        value: "smtp.gmail.com"
-      - key: EMAIL_PORT
-        value: "587"
-      - key: EMAIL_USE_TLS
-        value: "True"
-      - key: EMAIL_HOST_USER
-        value: "dedeexpeditions@gmail.com"
-      - key: EMAIL_HOST_PASSWORD
-        value: "roqu frlt wvof rqxk"
+        value: "anymail.backends.resend.EmailBackend"
+      - key: RESEND_API_KEY
+        sync: false
       - key: DEFAULT_FROM_EMAIL
-        value: "YummyTummy Goodies"
+        value: "YummyTummy <info@yummytummy.co.ke>"
+      - key: ADMIN_EMAIL
+        value: "info@yummytummy.co.ke"
+      - key: ORDERS_EMAIL
+        value: "orders@yummytummy.co.ke"
       # Uploadcare Configuration
       - key: UPLOADCARE_PUBLIC_KEY
         value: "1528b06f591935e6491d"

@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',  # For currency formatting with commas
 
     # Third-party apps
+    'anymail',
     'crispy_forms',
     'crispy_bootstrap4',
     'pyuploadcare.dj',
@@ -286,14 +287,24 @@ LOGGING = {
 }
 
 # Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+RESEND_API_KEY = config('RESEND_API_KEY', default='')
+ANYMAIL = {
+    'RESEND_API_KEY': RESEND_API_KEY,
+}
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='anymail.backends.resend.EmailBackend')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='YummyTummy <info@yummytummy.co.ke>')
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='info@yummytummy.co.ke')
+ORDERS_EMAIL = config('ORDERS_EMAIL', default='orders@yummytummy.co.ke')
+BUSINESS_NOTIFICATION_EMAIL = config('BUSINESS_NOTIFICATION_EMAIL', default=ORDERS_EMAIL)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_SUBJECT_PREFIX = '[YummyTummy] '
+
+# SMTP settings are retained as a fallback if EMAIL_BACKEND is explicitly set to SMTP.
+EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='YummyTummy Store <noreply@yummytummy.com>')
-BUSINESS_NOTIFICATION_EMAIL = config('BUSINESS_NOTIFICATION_EMAIL', default='livegreatagrilife@gmail.com')
 
 # Email timeout settings
 EMAIL_TIMEOUT = 30

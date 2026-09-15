@@ -223,6 +223,10 @@ def send_business_notification(order, sales_person):
         'sales_person': sales_person,
         'order_items': order.items.all(),
         'current_time': timezone.now(),
+        'site_name': 'YummyTummy',
+        'support_email': getattr(settings, 'ADMIN_EMAIL', 'info@yummytummy.co.ke'),
+        'admin_email': getattr(settings, 'ADMIN_EMAIL', 'info@yummytummy.co.ke'),
+        'orders_email': getattr(settings, 'ORDERS_EMAIL', 'orders@yummytummy.co.ke'),
     }
     
     # Render email content
@@ -235,7 +239,7 @@ def send_business_notification(order, sales_person):
         subject=subject,
         message=plain_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.BUSINESS_NOTIFICATION_EMAIL],
+        recipient_list=[getattr(settings, 'ORDERS_EMAIL', settings.BUSINESS_NOTIFICATION_EMAIL)],
         html_message=html_message,
         fail_silently=False,
     )

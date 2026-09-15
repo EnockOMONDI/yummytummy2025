@@ -1,56 +1,24 @@
-YummyTummy - Recipe Purchase Confirmation
-==========================================
+Your recipes are ready - YummyTummy
 
-Hello {{ order.first_name }}!
+Hi {{ order.first_name }},
 
-Thank you for purchasing our delicious recipes! Your order has been confirmed and your digital recipes are ready for download.
+Thank you for your recipe purchase. Your digital recipe files are ready to download.
 
-ORDER DETAILS
--------------
-Order Number: #{{ order.id }}
-Order Date: {{ order.created|date:"F d, Y \a\t g:i A T" }}
-Total Amount: KSh {{ order.total_amount|floatformat:2 }}
+Order number: {{ order.get_order_number }}
+Order date: {{ order.created|date:"F d, Y, g:i A" }}
+Total: KSh {{ order.total_amount|floatformat:2 }}
 
-YOUR PURCHASED RECIPES
-----------------------
-{% for purchase in recipe_purchases %}
-📖 {{ purchase.recipe.title }}
-   {{ purchase.recipe.description|truncatewords:20 }}
-   Prep: {{ purchase.recipe.prep_time_minutes }} min | Cook: {{ purchase.recipe.cook_time_minutes }} min | Serves: {{ purchase.recipe.servings }}
-   Price: KSh {{ purchase.recipe.price|floatformat:2 }}
-
-   Download Link: {{ site_url }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}
-
+Purchased recipes:
+{% for purchase in recipe_purchases %}- {{ purchase.recipe.title }}: KSh {{ purchase.recipe.price|floatformat:2 }}
+  Download: {{ site_url }}{% url 'yummytummy_store:recipe_download' purchase.recipe.slug %}
 {% endfor %}
 
-DOWNLOAD INSTRUCTIONS
---------------------
-1. Click on the download links above to get your recipe PDFs
-2. Save the PDFs to your device for offline cooking
-3. You can also access your recipes anytime from your account dashboard at:
-   {{ site_url }}{% url 'yummytummy_store:my_recipes' %}
+Access your recipes anytime:
+{{ site_url }}{% url 'yummytummy_store:my_recipes' %}
 
-{% if related_products %}
-COMPLETE YOUR KITCHEN
---------------------
-Enhance your cooking experience with our premium peanut products used in these recipes:
-
-{% for product in related_products %}
-• {{ product.name }} - From KSh {{ product.get_min_price|floatformat:2 }}
+{% if related_products %}Useful pantry pairings:
+{% for product in related_products %}- {{ product.name }}: {{ product.get_formatted_price }}
 {% endfor %}
+Shop: {{ site_url }}{% url 'yummytummy_store:product_list' %}
 
-Shop now: {{ site_url }}{% url 'yummytummy_store:product_list' %}
-{% endif %}
-
-Happy cooking! We can't wait to see what delicious creations you make with these recipes. 
-Don't forget to tag us @yummytummygoodies_ke when you share your cooking adventures!
-
-NEED HELP?
-----------
-Contact us at: livegreatagrilife@gmail.com
-Visit our website: {{ site_url }}
-Browse more recipes: {{ site_url }}{% url 'yummytummy_store:recipe_list' %}
-
----
-© 2025 YummyTummy - Healthy Living Made Delicious
-Email sent on {{ current_time|date:"F d, Y \a\t g:i A T" }}
+{% endif %}Need help? Email {{ support_email }}.

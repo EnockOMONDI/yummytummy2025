@@ -32,6 +32,7 @@ from yummytummy_store.models import (
 )
 from yummytummy_store.services import CartPreservationService, OrderTrackingEmailService
 from yummytummy_store.notifications import NotificationService
+from yummytummy_store.offline_views import send_business_notification
 from yummytummy_store.payment_services import PaymentService
 
 
@@ -259,6 +260,55 @@ class AdminAccessTests(StoreFixtureMixin, TestCase):
         self.assertEqual(refund.provider_reference, 'REFUND-LOCKED')
         self.assertEqual(refund.approved_by, self.superuser)
         self.assertEqual(payment.status, 'partially_refunded')
+
+
+class EmailConfigurationTests(StoreFixtureMixin, TestCase):
+    def setUp(self):
+        self.create_catalog()
+        self.order = self.create_order(payment_method='offline', payment_status='pending')
+        OrderItem.objects.create(
+            order=self.order,
+            product=self.product,
+            price=Decimal('500.00'),
+            quantity=1,
+        )
+        self.sales_user = User.objects.create_user(
+            username='sales@example.com',
+            email='sales@example.com',
+            password='test-sales-password',
+            first_name='Sales',
+            last_name='User',
+        )
+
+    @override_settings(
+        EMAIL_BACKEND='anymail.backends.resend.EmailBackend',
+        RESEND_API_KEY='test-key',
+        DEFAULT_FROM_EMAIL='YummyTummy <info@yummytummy.co.ke>',
+        ADMIN_EMAIL='info@yummytummy.co.ke',
+        ORDERS_EMAIL='orders@yummytummy.co.ke',
+        BUSINESS_NOTIFICATION_EMAIL='orders@yummytummy.co.ke',
+    )
+    def test_resend_email_settings_are_available(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.EMAIL_BACKEND, 'anymail.backends.resend.EmailBackend')
+        self.assertEqual(settings.RESEND_API_KEY, 'test-key')
+        self.assertEqual(settings.DEFAULT_FROM_EMAIL, 'YummyTummy <info@yummytummy.co.ke>')
+        self.assertEqual(settings.ADMIN_EMAIL, 'info@yummytummy.co.ke')
+        self.assertEqual(settings.ORDERS_EMAIL, 'orders@yummytummy.co.ke')
+
+    @override_settings(
+        DEFAULT_FROM_EMAIL='YummyTummy <info@yummytummy.co.ke>',
+        ADMIN_EMAIL='info@yummytummy.co.ke',
+        ORDERS_EMAIL='orders@yummytummy.co.ke',
+        BUSINESS_NOTIFICATION_EMAIL='legacy@example.com',
+    )
+    @patch('yummytummy_store.offline_views.send_mail')
+    def test_offline_order_alert_goes_to_orders_inbox(self, send_mail):
+        send_business_notification(self.order, self.sales_user)
+
+        self.assertEqual(send_mail.call_args.kwargs['recipient_list'], ['orders@yummytummy.co.ke'])
+        self.assertEqual(send_mail.call_args.kwargs['from_email'], 'YummyTummy <info@yummytummy.co.ke>')
 
 
 class PaymentBoundaryTests(StoreFixtureMixin, TestCase):

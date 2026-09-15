@@ -1,0 +1,15 @@
+{% extends "yummytummy_store/emails/base_email.html" %}
+
+{% block title %}Your secure YummyTummy sign-in link{% endblock %}
+{% block preheader %}Use this secure link to sign in to YummyTummy. It expires in {{ expires_minutes }} minutes.{% endblock %}
+
+{% block content %}
+<h1>Sign in to YummyTummy</h1>
+<p>Hi {{ customer_name }}, use the secure link below to sign in. The link expires in {{ expires_minutes }} minutes and can be used once.</p>
+
+<p><a class="button" href="{{ login_url }}">Sign in securely</a></p>
+
+<div class="panel warning">
+    <p>If you did not request this email, you can ignore it. Your account remains protected.</p>
+</div>
+{% endblock %}

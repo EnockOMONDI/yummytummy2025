@@ -20,6 +20,22 @@ from .models import Order, AutoCreatedAccount, OrderTrackingStatus
 logger = logging.getLogger(__name__)
 
 
+def _site_url():
+    return getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke').rstrip('/')
+
+
+def _email_context(**extra):
+    context = {
+        'site_name': 'YummyTummy',
+        'site_url': _site_url(),
+        'support_email': getattr(settings, 'ADMIN_EMAIL', 'info@yummytummy.co.ke'),
+        'admin_email': getattr(settings, 'ADMIN_EMAIL', 'info@yummytummy.co.ke'),
+        'orders_email': getattr(settings, 'ORDERS_EMAIL', 'orders@yummytummy.co.ke'),
+    }
+    context.update(extra)
+    return context
+
+
 class OrderTrackingEmailService:
     """Service for handling order tracking emails and account creation"""
     
@@ -140,10 +156,19 @@ class OrderTrackingEmailService:
         )
         path = reverse('yummytummy_store:magic_link_login', args=[token])
         login_url = request.build_absolute_uri(path)
-        message = (
-            f'Use this secure link to sign in to YummyTummy:\n\n{login_url}\n\n'
-            'The link expires in 15 minutes and can be used once. '
-            'If you did not request it, you can ignore this email.'
+        context = _email_context(
+            user=user,
+            login_url=login_url,
+            expires_minutes=15,
+            customer_name=user.get_full_name() or user.email,
+        )
+        message = render_to_string(
+            'yummytummy_store/emails/magic_login.txt',
+            context,
+        )
+        html_message = render_to_string(
+            'yummytummy_store/emails/magic_login.html',
+            context,
         )
         try:
             send_mail(
@@ -151,6 +176,7 @@ class OrderTrackingEmailService:
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
+                html_message=html_message,
                 fail_silently=False,
             )
             return True
@@ -166,14 +192,12 @@ class OrderTrackingEmailService:
         order_items = OrderTrackingEmailService.format_order_items_for_email(order)
         
         # Prepare email context
-        context = {
-            'order': order,
-            'order_items': order_items,
-            'order_number': order.get_order_number(),
-            'customer_name': order.get_customer_name(),
-            'site_name': 'YummyTummy',
-            'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
-        }
+        context = _email_context(
+            order=order,
+            order_items=order_items,
+            order_number=order.get_order_number(),
+            customer_name=order.get_customer_name(),
+        )
         
         # Add login URL if user has account
         if order.user:
@@ -182,7 +206,7 @@ class OrderTrackingEmailService:
                 protocol = 'https' if request.is_secure() else 'http'
             else:
                 # Use SITE_URL from settings (configured for production domain)
-                site_url = getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke')
+                site_url = _site_url()
                 # Extract domain and protocol from SITE_URL
                 if site_url.startswith('https://'):
                     protocol = 'https'
@@ -238,17 +262,15 @@ class OrderTrackingEmailService:
             login_url = OrderTrackingEmailService.get_first_login_url(auto_account, request)
 
             # Prepare email context
-            context = {
-                'order': order,
-                'user': order.user,
-                'login_url': login_url,
-                'order_items': order_items,
-                'order_number': order.get_order_number(),
-                'customer_name': order.get_customer_name(),
-                'site_name': 'YummyTummy',
-                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
-                'token_expires_days': 7,
-            }
+            context = _email_context(
+                order=order,
+                user=order.user,
+                login_url=login_url,
+                order_items=order_items,
+                order_number=order.get_order_number(),
+                customer_name=order.get_customer_name(),
+                token_expires_days=7,
+            )
 
             # Render email content
             html_message = render_to_string('yummytummy_store/emails/payment_confirmation_with_account.html', context)
@@ -278,15 +300,13 @@ class OrderTrackingEmailService:
             order_items = OrderTrackingEmailService.format_order_items_for_email(order)
 
             # Prepare email context
-            context = {
-                'order': order,
-                'tracking_status': tracking_status,
-                'order_items': order_items,
-                'order_number': order.get_order_number(),
-                'customer_name': order.get_customer_name(),
-                'site_name': 'YummyTummy',
-                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
-            }
+            context = _email_context(
+                order=order,
+                tracking_status=tracking_status,
+                order_items=order_items,
+                order_number=order.get_order_number(),
+                customer_name=order.get_customer_name(),
+            )
 
             # Render email content
             html_message = render_to_string('yummytummy_store/emails/order_status_update.html', context)
@@ -328,22 +348,20 @@ class OrderTrackingEmailService:
                 track_order_url = request.build_absolute_uri(reverse('yummytummy_store:guest_order_tracking'))
             else:
                 # Fallback URLs for callback context
-                site_url = getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke').rstrip('/')
+                site_url = _site_url()
                 retry_payment_url = f'{site_url}{retry_path}'
                 track_order_url = f"{site_url}{reverse('yummytummy_store:guest_order_tracking')}"
 
             # Prepare email context
-            context = {
-                'order': order,
-                'order_items': order_items,
-                'order_number': order.get_order_number(),
-                'customer_name': order.get_customer_name(),
-                'failure_reason': failure_reason,
-                'retry_payment_url': retry_payment_url,
-                'track_order_url': track_order_url,
-                'site_name': 'YummyTummy',
-                'support_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@yummytummy.com'),
-            }
+            context = _email_context(
+                order=order,
+                order_items=order_items,
+                order_number=order.get_order_number(),
+                customer_name=order.get_customer_name(),
+                failure_reason=failure_reason,
+                retry_payment_url=retry_payment_url,
+                track_order_url=track_order_url,
+            )
 
             # Render email content
             html_message = render_to_string('yummytummy_store/emails/payment_failed_notification.html', context)
@@ -403,14 +421,13 @@ class OrderTrackingEmailService:
             related_products = list(related_products)[:6]
 
             # Email context
-            context = {
-                'order': order,
-                'recipe_purchases': recipe_purchases,
-                'related_products': related_products,
-                'current_time': current_time,
-                'request': None,  # Will be set by template context processor if available
-                'site_url': getattr(settings, 'SITE_URL', 'https://www.yummytummy.co.ke').rstrip('/'),
-            }
+            context = _email_context(
+                order=order,
+                recipe_purchases=recipe_purchases,
+                related_products=related_products,
+                current_time=current_time,
+                request=None,  # Will be set by template context processor if available
+            )
 
             # Render email templates
             subject = f'Your YummyTummy Recipes Are Ready! Order #{order.id}'

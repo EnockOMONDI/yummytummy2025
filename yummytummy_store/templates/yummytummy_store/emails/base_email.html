@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}YummyTummy{% endblock %}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f6f1e7;
+            color: #25180c;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.55;
+        }
+        .preheader {
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            color: transparent;
+        }
+        .wrap {
+            width: 100%;
+            padding: 24px 12px;
+        }
+        .container {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #eadcc5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background: #593500;
+            color: #ffffff;
+            padding: 28px 28px 22px;
+        }
+        .brand {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+        .tagline {
+            margin: 8px 0 0;
+            color: #ffe1a6;
+            font-size: 14px;
+        }
+        .content {
+            padding: 28px;
+        }
+        h1 {
+            margin: 0 0 12px;
+            color: #593500;
+            font-size: 24px;
+            line-height: 1.25;
+        }
+        h2 {
+            margin: 24px 0 10px;
+            color: #593500;
+            font-size: 18px;
+        }
+        h3 {
+            margin: 18px 0 8px;
+            color: #593500;
+            font-size: 16px;
+        }
+        p {
+            margin: 0 0 14px;
+        }
+        a {
+            color: #593500;
+        }
+        .button {
+            display: inline-block;
+            margin: 12px 0;
+            padding: 13px 20px;
+            background: #593500;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+        .panel {
+            margin: 18px 0;
+            padding: 18px;
+            background: #fff9ec;
+            border: 1px solid #f0d7a7;
+            border-radius: 8px;
+        }
+        .panel.success {
+            background: #effaf0;
+            border-color: #b9dfbe;
+        }
+        .panel.warning {
+            background: #fff8dd;
+            border-color: #f0d174;
+        }
+        .panel.danger {
+            background: #fff0ef;
+            border-color: #e7b4ad;
+        }
+        .meta {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+        .meta td {
+            padding: 8px 0;
+            border-bottom: 1px solid #efe7da;
+            vertical-align: top;
+        }
+        .meta td:first-child {
+            width: 42%;
+            color: #72502b;
+            font-weight: 700;
+        }
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 0;
+        }
+        .items th,
+        .items td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #efe7da;
+            text-align: left;
+            vertical-align: top;
+        }
+        .items th {
+            background: #f8efdd;
+            color: #593500;
+            font-size: 13px;
+        }
+        .items td.amount,
+        .items th.amount {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .total {
+            margin-top: 14px;
+            text-align: right;
+            color: #593500;
+            font-size: 18px;
+            font-weight: 800;
+        }
+        .muted {
+            color: #6f6257;
+            font-size: 14px;
+        }
+        .footer {
+            padding: 20px 28px;
+            background: #2a1a0b;
+            color: #f7ead3;
+            font-size: 13px;
+        }
+        .footer a {
+            color: #ffe1a6;
+        }
+        @media only screen and (max-width: 600px) {
+            .wrap {
+                padding: 0;
+            }
+            .container {
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+            }
+            .header,
+            .content,
+            .footer {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+            .items th,
+            .items td {
+                padding-left: 4px;
+                padding-right: 4px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="preheader">{% block preheader %}{% endblock %}</div>
+    <div class="wrap">
+        <div class="container">
+            <div class="header">
+                <p class="brand">YummyTummy</p>
+                <p class="tagline">Healthy pantry essentials, recipes, and order updates.</p>
+            </div>
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+            <div class="footer">
+                <p>YummyTummy</p>
+                <p>Need help? Email <a href="mailto:{{ support_email|default:'info@yummytummy.co.ke' }}">{{ support_email|default:"info@yummytummy.co.ke" }}</a>.</p>
+                <p class="muted">This message was sent about your YummyTummy account, order, or inquiry.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
